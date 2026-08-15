@@ -33,7 +33,11 @@ function getSourceUrl(source: Source) {
     : `/${source.properties.file}`
 }
 
-function renderSource(source: Source) {
+function renderSource(
+  source: Source,
+  volume: number,
+  muted: boolean,
+) {
   const url = getSourceUrl(source)
 
   switch (source.type) {
@@ -52,25 +56,31 @@ function renderSource(source: Source) {
         </div>
       )
 
-    case 'media':
-      return url ? (
-        <video
-  className="preview-media preview-video"
-  src={url}
-  autoPlay
-  muted={muted}
-  loop
-  playsInline
-  controls={false}
-  volume={Math.max(0, Math.min(1, volume / 100))}
-/>
-
-      ) : (
-        <div className="preview-placeholder">
-          <Music2 size={28} />
-          <span>No media file selected</span>
-        </div>
-      )
+case 'media':
+  return url ? (
+    <video
+      className="preview-media preview-video"
+      src={url}
+      autoPlay
+      muted={muted}
+      loop
+      playsInline
+      controls={false}
+      ref={(element) => {
+        if (element) {
+          element.volume = Math.max(
+            0,
+            Math.min(1, volume / 100),
+          )
+        }
+      }}
+    />
+  ) : (
+    <div className="preview-placeholder">
+      <Music2 size={28} />
+      <span>No media file selected</span>
+    </div>
+  )
 
     case 'browser':
       return source.properties.url ? (
