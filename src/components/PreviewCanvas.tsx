@@ -5,105 +5,101 @@ import {
   Music2,
   Type,
 } from 'lucide-react'
-import type { CSSProperties } from 'react'
 import type { Source } from '../types/studio'
 
 interface PreviewCanvasProps {
-  sources: Source[];
-  enabled: boolean;
-  onToggle: () => void;
-  selectedSource: string | null;
-  onSelectSource: (source: string | null) => void;
-  volume: number;
-  muted: boolean;
+  sources: Source[]
+  enabled: boolean
+  onToggle: () => void
+  selectedSource: string | null
+  onSelectSource: (id: string) => void
 }
 
 function sourceIcon(type: Source['type']) {
-  if (type === 'image') return <ImageIcon size={16} />
-  if (type === 'browser') return <Globe size={16} />
-  if (type === 'media') return <Music2 size={16} />
-  return <Type size={16} />
+  if (type === 'image') return <ImageIcon size={18} />
+  if (type === 'browser') return <Globe size={18} />
+  if (type === 'media') return <Music2 size={18} />
+  return <Type size={18} />
+}
+
+function getSourceUrl(source: Source) {
+  if (!source.properties.file) return ''
+
+  // Files stored in /public are referenced from the root.
+  return source.properties.file.startsWith('/')
+    ? source.properties.file
+    : `/${source.properties.file}`
 }
 
 function renderSource(source: Source) {
-  const { properties } = source
+  const url = getSourceUrl(source)
 
-  if (source.type === 'image') {
-    if (properties.file) {
-      return (
+  switch (source.type) {
+    case 'image':
+      return url ? (
         <img
-          className="canvas-source-media"
-          src={properties.file}
+          src={url}
           alt={source.name}
+          className="preview-media preview-image"
+          draggable={false}
         />
+      ) : (
+        <div className="preview-placeholder">
+          <ImageIcon size={28} />
+          <span>No image selected</span>
+        </div>
       )
-    }
 
-    return (
-      <div className="canvas-source-placeholder">
-        <ImageIcon size={32} />
-        <span>{source.name}</span>
-        <small>No image selected</small>
-      </div>
-    )
-  }
-
-  if (source.type === 'media') {
-    if (properties.file) {
-      return (
+    case 'media':
+      return url ? (
         <video
-          className="canvas-source-media"
-          src={properties.file}
+          className="preview-media preview-video"
+          src={url}
           autoPlay
           muted
-          loop={properties.loop ?? true}
+          loop={source.properties.loop ?? true}
           playsInline
+          controls={false}
         />
+      ) : (
+        <div className="preview-placeholder">
+          <Music2 size={28} />
+          <span>No media file selected</span>
+        </div>
       )
-    }
 
-    return (
-      <div className="canvas-source-placeholder">
-        <Music2 size={32} />
-        <span>{source.name}</span>
-        <small>No media selected</small>
-      </div>
-    )
-  }
-
-  if (source.type === 'browser') {
-    if (properties.url) {
-      return (
+    case 'browser':
+      return source.properties.url ? (
         <iframe
-          className="canvas-source-browser"
-          src={properties.url}
+          src={source.properties.url}
           title={source.name}
+          className="preview-browser"
           sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
         />
+      ) : (
+        <div className="preview-placeholder">
+          <Globe size={28} />
+          <span>No browser URL configured</span>
+        </div>
       )
-    }
 
-    return (
-      <div className="canvas-source-placeholder">
-        <Globe size={32} />
-        <span>{source.name}</span>
-        <small>No URL configured</small>
-      </div>
-    )
+    case 'text':
+      return (
+        <div
+          className="preview-text"
+          style={{
+            fontFamily: source.properties.fontFamily || 'Inter, sans-serif',
+            fontSize: `${source.properties.fontSize || 32}px`,
+            color: source.properties.color || '#ffffff',
+          }}
+        >
+          {source.properties.text || source.name}
+        </div>
+      )
+
+    default:
+      return null
   }
-
-  return (
-    <div
-      className="canvas-source-text"
-      style={{
-        color: properties.color || '#ffffff',
-        fontFamily: properties.fontFamily || 'Inter, sans-serif',
-        fontSize: `${properties.fontSize || 32}px`,
-      }}
-    >
-      {properties.text || source.name}
-    </div>
-  )
 }
 
 export function PreviewCanvas({
@@ -138,53 +134,37 @@ export function PreviewCanvas({
 
         {enabled ? (
           <div className="canvas-content">
-            {visibleSources.length === 0 && (
+            {visibleSources.length === 0 ? (
               <div className="empty-canvas">
                 <ImageIcon size={32} />
                 <span>No visible sources</span>
               </div>
-            )}
-
-            {visibleSources.map((source, index) => {
-              const width =
-                source.properties.width ||
-                (source.type === 'text' ? 300 : 640)
-
-              const height =
-                source.properties.height ||
-                (source.type === 'text' ? 80 : 360)
-
-              const style: CSSProperties = {
-                width: `${Math.min(width, 1000) / 10}%`,
-                height:
-                  source.type === 'text'
-                    ? 'auto'
-                    : `${Math.min(height, 600) / 6}%`,
-                zIndex: index + 1,
-              }
-
-              return (
+            ) : (
+              visibleSources.map((source, index) => (
                 <button
-                  key={source.id}
                   type="button"
-                  className={`canvas-layer ${
+                  key={source.id}
+                  className={`canvas-layer layer-${index} ${
                     selectedSource === source.id ? 'selected' : ''
                   }`}
-                  style={style}
                   onClick={() => onSelectSource(source.id)}
-                  title={`Select ${source.name}`}
+                  style={{
+                    zIndex: index + 1,
+                  }}
                 >
-                  <div className="canvas-source-content">
+                  <div className="source-render">
                     {renderSource(source)}
                   </div>
 
-                  <div className="canvas-layer-toolbar">
+                  <div className="layer-toolbar">
                     <span className="layer-icon">
                       {sourceIcon(source.type)}
                     </span>
 
                     <span className="layer-label">
-                      {source.name}
+                      {source.type === 'text'
+                        ? source.properties.text || source.name
+                        : source.name}
                     </span>
 
                     {source.locked && (
@@ -192,8 +172,8 @@ export function PreviewCanvas({
                     )}
                   </div>
                 </button>
-              )
-            })}
+              ))
+            )}
           </div>
         ) : (
           <div className="preview-off">
@@ -202,7 +182,7 @@ export function PreviewCanvas({
         )}
 
         <div className="canvas-resolution">
-          1920 × 1080 · EDITOR CANVAS
+          1920 × 1080
         </div>
       </div>
     </section>
