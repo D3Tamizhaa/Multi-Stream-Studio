@@ -1,10 +1,23 @@
-import { Mic2, Settings2, Volume2, VolumeX } from 'lucide-react'
-import { useState } from 'react'
+import {
+  Mic2,
+  Settings2,
+  Volume2,
+  VolumeX,
+} from 'lucide-react'
 
-export function AudioMixer() {
-  const [volume, setVolume] = useState(80)
-  const [muted, setMuted] = useState(false)
+interface AudioMixerProps {
+  volume: number
+  muted: boolean
+  onVolumeChange: (volume: number) => void
+  onMuteToggle: () => void
+}
 
+export function AudioMixer({
+  volume,
+  muted,
+  onVolumeChange,
+  onMuteToggle,
+}: AudioMixerProps) {
   return (
     <section className="workspace-panel audio-panel">
       <div className="panel-header">
@@ -18,7 +31,7 @@ export function AudioMixer() {
 
         <div>
           <strong>Media File</strong>
-          <span>Audio source</span>
+          <span>Preview audio</span>
         </div>
       </div>
 
@@ -29,15 +42,17 @@ export function AudioMixer() {
         </div>
 
         <div className="slider-row">
-          <Volume2 size={14} />
+          {muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
 
           <input
             type="range"
             min="0"
             max="100"
             value={muted ? 0 : volume}
-            onChange={(event) => setVolume(Number(event.target.value))}
-            disabled={muted}
+            onChange={(event) =>
+              onVolumeChange(Number(event.target.value))
+            }
+            aria-label="Media volume"
           />
         </div>
       </div>
@@ -45,13 +60,14 @@ export function AudioMixer() {
       <div className="audio-actions">
         <button
           className={muted ? 'danger-text' : ''}
-          onClick={() => setMuted((value) => !value)}
+          onClick={onMuteToggle}
+          type="button"
         >
-          {muted ? <VolumeX size={15} /> : <VolumeX size={15} />}
+          {muted ? <VolumeX size={15} /> : <Volume2 size={15} />}
           {muted ? 'Unmute' : 'Mute'}
         </button>
 
-        <button>
+        <button type="button">
           <Settings2 size={15} />
           Properties
         </button>
