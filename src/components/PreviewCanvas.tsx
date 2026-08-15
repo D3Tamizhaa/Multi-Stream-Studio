@@ -5,6 +5,7 @@ import {
   Music2,
   Type,
 } from 'lucide-react'
+import type { CSSProperties } from 'react'
 import type { Source } from '../types/studio'
 
 interface PreviewCanvasProps {
@@ -13,35 +14,94 @@ interface PreviewCanvasProps {
   onToggle: () => void
   selectedSource: string | null
   onSelectSource: (id: string) => void
-  volume?: number
-  muted?: boolean
 }
 
 function sourceIcon(type: Source['type']) {
-  if (type === 'image') return <ImageIcon size={20} />
-  if (type === 'browser') return <Globe size={20} />
-  if (type === 'media') return <Music2 size={20} />
-  return <Type size={20} />
+  if (type === 'image') return <ImageIcon size={16} />
+  if (type === 'browser') return <Globe size={16} />
+  if (type === 'media') return <Music2 size={16} />
+  return <Type size={16} />
 }
 
-function getMediaUrl(file?: string) {
-  if (!file) return ''
+function renderSource(source: Source) {
+  const { properties } = source
 
-  if (
-    file.startsWith('blob:') ||
-    file.startsWith('data:') ||
-    file.startsWith('http://') ||
-    file.startsWith('https://') ||
-    file.startsWith('/')
-  ) {
-    return file
+  if (source.type === 'image') {
+    if (properties.file) {
+      return (
+        <img
+          className="canvas-source-media"
+          src={properties.file}
+          alt={source.name}
+        />
+      )
+    }
+
+    return (
+      <div className="canvas-source-placeholder">
+        <ImageIcon size={32} />
+        <span>{source.name}</span>
+        <small>No image selected</small>
+      </div>
+    )
   }
 
-  return `/${file.replace(/^\.?\//, '')}`
-}
+  if (source.type === 'media') {
+    if (properties.file) {
+      return (
+        <video
+          className="canvas-source-media"
+          src={properties.file}
+          autoPlay
+          muted
+          loop={properties.loop ?? true}
+          playsInline
+        />
+      )
+    }
 
-function isAudioFile(file: string) {
-  return /\.(mp3|wav|ogg|m4a|aac|flac)(\?.*)?$/i.test(file)
+    return (
+      <div className="canvas-source-placeholder">
+        <Music2 size={32} />
+        <span>{source.name}</span>
+        <small>No media selected</small>
+      </div>
+    )
+  }
+
+  if (source.type === 'browser') {
+    if (properties.url) {
+      return (
+        <iframe
+          className="canvas-source-browser"
+          src={properties.url}
+          title={source.name}
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+        />
+      )
+    }
+
+    return (
+      <div className="canvas-source-placeholder">
+        <Globe size={32} />
+        <span>{source.name}</span>
+        <small>No URL configured</small>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className="canvas-source-text"
+      style={{
+        color: properties.color || '#ffffff',
+        fontFamily: properties.fontFamily || 'Inter, sans-serif',
+        fontSize: `${properties.fontSize || 32}px`,
+      }}
+    >
+      {properties.text || source.name}
+    </div>
+  )
 }
 
 export function PreviewCanvas({
@@ -50,8 +110,6 @@ export function PreviewCanvas({
   onToggle,
   selectedSource,
   onSelectSource,
-  volume = 80,
-  muted = false,
 }: PreviewCanvasProps) {
   const visibleSources = sources.filter((source) => source.visible)
 
@@ -60,7 +118,7 @@ export function PreviewCanvas({
       <div className="section-heading">
         <div>
           <span className="eyebrow">EDITOR</span>
-          <h2>Preview</h2>
+          <h2>Canvas Preview</h2>
         </div>
 
         <label className="toggle-line">
@@ -73,11 +131,7 @@ export function PreviewCanvas({
         </label>
       </div>
 
-      <div
-        className={`preview-stage ${
-          !enabled ? 'preview-disabled' : ''
-        }`}
-      >
+      <div className={`preview-stage ${!enabled ? 'preview-disabled' : ''}`}>
         <div className="canvas-grid" />
 
         {enabled ? (
@@ -90,146 +144,52 @@ export function PreviewCanvas({
             )}
 
             {visibleSources.map((source, index) => {
-              const file = getMediaUrl(source.properties.file)
+              const width =
+                source.properties.width ||
+                (source.type === 'text' ? 300 : 640)
 
-              const width = source.properties.width ?? 640
-              const height = source.properties.height ?? 360
+              const height =
+                source.properties.height ||
+                (source.type === 'text' ? 80 : 360)
 
-              /*
-               * Keep source sizes inside the 16:9 preview.
-               * Convert the old 640x360 style into percentage sizing.
-               */
-              const widthPercent = Math.min(
-                100,
-                Math.max(10, (width / 1920) * 100),
-              )
-
-              const heightPercent = Math.min(
-                100,
-                Math.max(10, (height / 1080) * 100),
-              )
+              const style: CSSProperties = {
+                width: `${Math.min(width, 1000) / 10}%`,
+                height:
+                  source.type === 'text'
+                    ? 'auto'
+                    : `${Math.min(height, 600) / 6}%`,
+                zIndex: index + 1,
+              }
 
               return (
-                <div
+                <button
                   key={source.id}
-                  className={`canvas-layer layer-${index} ${
+                  type="button"
+                  className={`canvas-layer ${
                     selectedSource === source.id ? 'selected' : ''
                   }`}
-                  style={{
-                    width: `${widthPercent}%`,
-                    height: `${heightPercent}%`,
-                  }}
+                  style={style}
                   onClick={() => onSelectSource(source.id)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(event) => {
-                    if (
-                      event.key === 'Enter' ||
-                      event.key === ' '
-                    ) {
-                      event.preventDefault()
-                      onSelectSource(source.id)
-                    }
-                  }}
+                  title={`Select ${source.name}`}
                 >
-                  {source.type === 'image' && file && (
-                    <img
-                      src={file}
-                      alt={source.name}
-                      className="preview-media-content"
-                      onError={(event) => {
-                        event.currentTarget.style.display = 'none'
-                      }}
-                    />
-                  )}
+                  <div className="canvas-source-content">
+                    {renderSource(source)}
+                  </div>
 
-                  {source.type === 'media' &&
-                    file &&
-                    (isAudioFile(file) ? (
-                      <audio
-                        className="preview-audio"
-                        src={file}
-                        controls
-                        autoPlay
-                        loop={source.properties.loop ?? true}
-                        muted={muted}
-                        ref={(element) => {
-                          if (element) {
-                            element.volume = volume / 100
-                          }
-                        }}
-                      />
-                    ) : (
-                      <video
-                        className="preview-media-content"
-                        src={file}
-                        controls
-                        autoPlay
-                        loop={source.properties.loop ?? true}
-                        muted={muted}
-                        playsInline
-                        ref={(element) => {
-                          if (element) {
-                            element.volume = volume / 100
-                          }
-                        }}
-                      />
-                    ))}
-
-                  {source.type === 'browser' &&
-                    source.properties.url && (
-                      <iframe
-                        className="preview-browser"
-                        src={source.properties.url}
-                        title={source.name}
-                        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-                      />
-                    )}
-
-                  {source.type === 'text' && (
-                    <div
-                      className="preview-text"
-                      style={{
-                        fontFamily:
-                          source.properties.fontFamily ?? 'Inter',
-                        fontSize:
-                          source.properties.fontSize ?? 32,
-                        color:
-                          source.properties.color ?? '#ffffff',
-                      }}
-                    >
-                      {source.properties.text || source.name}
-                    </div>
-                  )}
-
-                  {!file &&
-                    source.type !== 'browser' &&
-                    source.type !== 'text' && (
-                      <div className="empty-source">
-                        {sourceIcon(source.type)}
-                        <span>No media selected</span>
-                      </div>
-                    )}
-
-                  <div className="layer-overlay">
+                  <div className="canvas-layer-toolbar">
                     <span className="layer-icon">
                       {sourceIcon(source.type)}
                     </span>
 
                     <span className="layer-label">
-                      {source.type === 'text'
-                        ? source.properties.text || source.name
-                        : source.name}
+                      {source.name}
                     </span>
 
                     {source.locked && (
-                      <Lock
-                        size={12}
-                        className="layer-lock"
-                      />
+                      <Lock size={12} className="layer-lock" />
                     )}
                   </div>
-                </div>
+                </button>
               )
             })}
           </div>
@@ -240,7 +200,7 @@ export function PreviewCanvas({
         )}
 
         <div className="canvas-resolution">
-          1920 × 1080
+          1920 × 1080 · EDITOR CANVAS
         </div>
       </div>
     </section>
