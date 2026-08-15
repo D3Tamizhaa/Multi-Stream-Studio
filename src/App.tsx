@@ -253,10 +253,14 @@ export default function App() {
               <div className="editor-main">
                 <PreviewCanvas
   sources={sources}
-  enabled={enabled}
-  onToggle={...}
+  enabled={previewEnabled}
+  onToggle={() =>
+    setPreviewEnabled((value) => !value)
+  }
   selectedSource={selectedSource}
   onSelectSource={setSelectedSource}
+  volume={audioVolume}
+  muted={audioMuted}
 />
 
               </div>
