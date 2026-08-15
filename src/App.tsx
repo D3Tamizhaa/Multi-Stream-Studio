@@ -52,8 +52,18 @@ export default function App() {
   const [settings, setSettings] =
     useState<StudioSettings>(defaultSettings)
 
-  const [previewEnabled, setPreviewEnabled] = useState(true)
-  const [streaming, setStreaming] = useState(false)
+  const [previewEnabled, setPreviewEnabled] =
+    useState(true)
+
+  const [audioVolume, setAudioVolume] =
+    useState(80)
+
+  const [audioMuted, setAudioMuted] =
+    useState(false)
+
+  const [streaming, setStreaming] =
+    useState(false)
+
   const [uptime, setUptime] = useState(0)
 
   const [modal, setModal] = useState<
