@@ -26,7 +26,6 @@ export function PlatformsPanel({
     <section className="bottom-panel">
       <div className="panel-header">
         <div>
-          <span className="eyebrow">STREAM</span>
           <h3>Platforms</h3>
         </div>
 
