@@ -180,35 +180,6 @@ export function PreviewCanvas({
     (source) => source.visible,
   )
 
-  function getCanvasCoordinates(
-    clientX: number,
-    clientY: number,
-  ) {
-    const canvas = canvasRef.current
-
-    if (!canvas) {
-      return {
-        x: 0,
-        y: 0,
-      }
-    }
-
-    const rect = canvas.getBoundingClientRect()
-
-    const x =
-      ((clientX - rect.left) / rect.width) *
-      CANVAS_WIDTH
-
-    const y =
-      ((clientY - rect.top) / rect.height) *
-      CANVAS_HEIGHT
-
-    return {
-      x,
-      y,
-    }
-  }
-
   function beginDrag(
     event: React.PointerEvent<HTMLDivElement>,
     source: Source,
