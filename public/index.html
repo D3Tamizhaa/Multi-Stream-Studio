@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi Stream Studio</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+  <header class="topbar">
+    <button id="menuButton" class="icon-button">☰</button>
+
+    <div class="logo">Multi Stream Studio</div>
+
+    <button class="user-button">
+      User ▾
+    </button>
+  </header>
+
+  <main class="app">
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar">
+
+      <button class="nav-item active" data-page="editor">
+        ▸ Editor
+      </button>
+
+      <div class="settings-title">
+        ⚙ Settings
+      </div>
+
+      <div class="settings-nav">
+        <button data-page="authorization">Authorization</button>
+        <button data-page="stream">Stream</button>
+        <button data-page="output">Output</button>
+        <button data-page="audio">Audio</button>
+        <button data-page="video">Video</button>
+        <button data-page="advanced">Advanced</button>
+      </div>
+
+    </aside>
+
+    <!-- Content -->
+    <section class="content">
+
+      <!-- Editor -->
+      <div id="editorPage" class="page active">
+
+        <section class="preview-panel">
+          <h2>Live Edit Canvas</h2>
+
+          <div class="canvas">
+            <div class="canvas-label">
+              1920 × 1080
+            </div>
+
+            <div class="sample-image">
+              🖼 Image
+            </div>
+
+            <div class="sample-text">
+              Hello Stream!
+            </div>
+
+            <div class="sample-browser">
+              Browser Source
+            </div>
+          </div>
+
+          <label class="preview-toggle">
+            <input type="checkbox" id="previewEnabled" checked>
+            Live Preview
+          </label>
+        </section>
+
+        <section class="workspace">
+
+          <!-- Scenes -->
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Scenes</h3>
+
+              <div>
+                <button>+</button>
+                <button>-</button>
+              </div>
+            </div>
+
+            <div id="scenes" class="list">
+              <button class="list-item selected">
+                Scene 1
+              </button>
+
+              <button class="list-item">
+                Scene 2
+              </button>
+            </div>
+
+            <div class="panel-actions">
+              ↑ Move Up &nbsp; ↓ Move Down
+            </div>
+          </div>
+
+          <!-- Sources -->
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Sources</h3>
+
+              <div>
+                <button>+</button>
+                <button>-</button>
+              </div>
+            </div>
+
+            <div class="source-list">
+
+              <div class="source-item">
+                <input type="checkbox" checked>
+                <span>🖼 Image</span>
+                <span>🔒</span>
+              </div>
+
+              <div class="source-item">
+                <input type="checkbox">
+                <span>🌐 Browser Source</span>
+                <span>🔒</span>
+              </div>
+
+              <div class="source-item">
+                <input type="checkbox" checked>
+                <span>🎬 Media File</span>
+                <span>🔒</span>
+              </div>
+
+              <div class="source-item">
+                <input type="checkbox">
+                <span> T Text</span>
+                <span>🔒</span>
+              </div>
+
+            </div>
+
+            <div class="panel-actions">
+              ↑ Move Up &nbsp; ↓ Move Down &nbsp; ⚙ Properties
+            </div>
+          </div>
+
+          <!-- Mixer -->
+          <div class="panel mixer">
+            <div class="panel-header">
+              <h3>Audio Mixer</h3>
+            </div>
+
+            <strong>Media File</strong>
+
+            <label>
+              Volume
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value="80"
+                id="volume"
+              >
+              <span id="volumeValue">80%</span>
+            </label>
+
+            <div class="mixer-actions">
+              <button>🔇 Mute</button>
+              <button>⚙ Properties</button>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- Bottom -->
+        <section class="bottom-workspace">
+
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Platforms</h3>
+
+              <div>
+                <button>+</button>
+                <button>-</button>
+              </div>
+            </div>
+
+            <div class="platform">
+              <label>
+                <input type="checkbox" checked>
+                YouTube
+              </label>
+
+              <button>✎ Edit</button>
+            </div>
+
+            <div class="platform">
+              <label>
+                <input type="checkbox">
+                Twitch
+              </label>
+
+              <button>✎ Edit</button>
+            </div>
+
+            <div class="platform">
+              <label>
+                <input type="checkbox">
+                Facebook
+              </label>
+
+              <button>✎ Edit</button>
+            </div>
+          </div>
+
+          <div class="panel controls">
+            <h3>Controls</h3>
+
+            <button id="startButton" class="start">
+              ▶ Start Streaming
+            </button>
+
+            <button id="stopButton" class="stop">
+              ■ End Streaming
+            </button>
+          </div>
+
+        </section>
+
+        <!-- Usage -->
+        <footer class="usage">
+          <div>
+            <span>Uptime</span>
+            <strong id="uptime">00:00:00</strong>
+          </div>
+
+          <div>
+            <span>Bitrate</span>
+            <strong id="bitrate">0 kbit/s</strong>
+          </div>
+
+          <div>
+            <span>FPS</span>
+            <strong id="fps">0</strong>
+          </div>
+
+          <div>
+            <span>CPU</span>
+            <strong id="cpu">0%</strong>
+          </div>
+
+          <div>
+            <span>RAM</span>
+            <strong id="ram">0%</strong>
+          </div>
+
+          <div>
+            <span>Status</span>
+            <strong id="status" class="offline">
+              ● Offline
+            </strong>
+          </div>
+        </footer>
+
+      </div>
+
+      <!-- Settings pages -->
+      <div id="settingsPage" class="page settings-page">
+
+        <div class="settings-card">
+
+          <h2 id="settingsTitle">Settings</h2>
+
+          <div id="settingsContent"></div>
+
+        </div>
+
+      </div>
+
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
