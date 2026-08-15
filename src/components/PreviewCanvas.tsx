@@ -1,7 +1,6 @@
 import {
   Image as ImageIcon,
   Music2,
-  Type,
   Globe,
 } from 'lucide-react'
 import {
