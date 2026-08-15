@@ -9,11 +9,13 @@ import type { CSSProperties } from 'react'
 import type { Source } from '../types/studio'
 
 interface PreviewCanvasProps {
-  sources: Source[]
-  enabled: boolean
-  onToggle: () => void
-  selectedSource: string | null
-  onSelectSource: (id: string) => void
+  sources: Source[];
+  enabled: boolean;
+  onToggle: () => void;
+  selectedSource: string | null;
+  onSelectSource: (source: string | null) => void;
+  volume: number;
+  muted: boolean;
 }
 
 function sourceIcon(type: Source['type']) {
