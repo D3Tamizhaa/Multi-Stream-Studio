@@ -1358,3 +1358,118 @@ textarea {
     max-height: 82px;
   }
 }
+
+/* =========================================
+   REAL PREVIEW
+   ========================================= */
+
+.canvas-layer {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  background: #11131b;
+  box-sizing: border-box;
+}
+
+.canvas-layer.selected {
+  outline: 2px solid #7c4dff;
+  outline-offset: -2px;
+}
+
+.preview-media-content {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.preview-browser {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #fff;
+}
+
+.preview-audio {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  width: calc(100% - 32px);
+}
+
+.preview-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.empty-source {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  gap: 8px;
+  color: #72798c;
+}
+
+.layer-overlay {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 7px 9px;
+
+  border-radius: 6px;
+
+  background: rgba(5, 7, 12, 0.78);
+
+  backdrop-filter: blur(6px);
+
+  color: #fff;
+
+  pointer-events: none;
+}
+
+.layer-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.layer-lock {
+  flex-shrink: 0;
+}
+
+.file-picker {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.file-picker input[type='file'] {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  opacity: 0;
+
+  cursor: pointer;
+}
