@@ -33,12 +33,19 @@ export interface Source {
   properties: {
     file?: string
     url?: string
+
+    // Preview canvas position
     x?: number
     y?: number
+
+    // Preview canvas size
     width?: number
     height?: number
+
     css?: string
     loop?: boolean
+
+    // Text settings
     fontFamily?: string
     fontSize?: number
     text?: string
