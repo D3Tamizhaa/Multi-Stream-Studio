@@ -299,6 +299,15 @@ p {
   accent-color: var(--accent);
 }
 
+.preview-section {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
 .preview-stage {
   position: relative;
   min-height: 0;
@@ -338,8 +347,8 @@ p {
 
 .canvas-content {
   position: relative;
-  width: min(100%, calc((100vh - 430px) * 16 / 9));
-  max-width: 92%;
+  width: min(96%, calc((100vh - 430px) * 16 / 9));
+  max-width: 96%;
   aspect-ratio: 16 / 9;
   overflow: hidden;
   border: 1px solid #364054;
