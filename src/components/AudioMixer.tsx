@@ -31,18 +31,24 @@ export function AudioMixer({
 
         <div>
           <strong>Media File</strong>
-          <span>Preview audio</span>
+          <span>Audio source</span>
         </div>
       </div>
 
       <div className="volume-block">
         <div className="volume-label">
           <span>Volume</span>
-          <strong>{muted ? 0 : volume}%</strong>
+          <strong>
+            {muted ? 0 : volume}%
+          </strong>
         </div>
 
         <div className="slider-row">
-          {muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+          {muted ? (
+            <VolumeX size={14} />
+          ) : (
+            <Volume2 size={14} />
+          )}
 
           <input
             type="range"
@@ -50,7 +56,9 @@ export function AudioMixer({
             max="100"
             value={muted ? 0 : volume}
             onChange={(event) =>
-              onVolumeChange(Number(event.target.value))
+              onVolumeChange(
+                Number(event.target.value),
+              )
             }
             aria-label="Media volume"
           />
@@ -59,11 +67,16 @@ export function AudioMixer({
 
       <div className="audio-actions">
         <button
+          type="button"
           className={muted ? 'danger-text' : ''}
           onClick={onMuteToggle}
-          type="button"
         >
-          {muted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+          {muted ? (
+            <VolumeX size={15} />
+          ) : (
+            <Volume2 size={15} />
+          )}
+
           {muted ? 'Unmute' : 'Mute'}
         </button>
 
