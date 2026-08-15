@@ -24,12 +24,9 @@ function sourceIcon(type: Source['type']) {
   return <Type size={22} />
 }
 
-function isAudioFile(file = '') {
-  return /\.(mp3|wav|ogg|m4a|aac|flac)(\?.*)?$/i.test(file)
-}
-
-function mediaUrl(file = '') {
+function getMediaUrl(file?: string) {
   if (!file) return ''
+
   if (
     file.startsWith('blob:') ||
     file.startsWith('data:') ||
@@ -41,6 +38,10 @@ function mediaUrl(file = '') {
   }
 
   return `/${file.replace(/^\.?\//, '')}`
+}
+
+function isAudioFile(file: string) {
+  return /\.(mp3|wav|ogg|m4a|aac|flac)(\?.*)?$/i.test(file)
 }
 
 export function PreviewCanvas({
@@ -72,7 +73,11 @@ export function PreviewCanvas({
         </label>
       </div>
 
-      <div className={`preview-stage ${!enabled ? 'preview-disabled' : ''}`}>
+      <div
+        className={`preview-stage ${
+          !enabled ? 'preview-disabled' : ''
+        }`}
+      >
         <div className="canvas-grid" />
 
         {enabled ? (
@@ -85,28 +90,37 @@ export function PreviewCanvas({
             )}
 
             {visibleSources.map((source, index) => {
-              const file = mediaUrl(source.properties.file)
-              const width = source.properties.width ?? 640
-              const height = source.properties.height ?? 360
+              const file = getMediaUrl(source.properties.file)
+
+              const width =
+                source.properties.width ?? 640
+
+              const height =
+                source.properties.height ?? 360
 
               return (
                 <div
                   key={source.id}
                   className={`canvas-layer layer-${index} ${
-                    selectedSource === source.id ? 'selected' : ''
+                    selectedSource === source.id
+                      ? 'selected'
+                      : ''
                   }`}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => onSelectSource(source.id)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault()
-                      onSelectSource(source.id)
-                    }
-                  }}
                   style={{
                     width,
                     height,
+                  }}
+                  onClick={() => onSelectSource(source.id)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    if (
+                      event.key === 'Enter' ||
+                      event.key === ' '
+                    ) {
+                      event.preventDefault()
+                      onSelectSource(source.id)
+                    }
                   }}
                 >
                   {source.type === 'image' && file && (
@@ -117,8 +131,9 @@ export function PreviewCanvas({
                     />
                   )}
 
-                  {source.type === 'media' && file && (
-                    isAudioFile(file) ? (
+                  {source.type === 'media' &&
+                    file &&
+                    (isAudioFile(file) ? (
                       <audio
                         className="preview-audio"
                         src={file}
@@ -138,8 +153,8 @@ export function PreviewCanvas({
                         src={file}
                         controls
                         autoPlay
-                        muted={muted}
                         loop={source.properties.loop ?? true}
+                        muted={muted}
                         playsInline
                         ref={(element) => {
                           if (element) {
@@ -147,29 +162,33 @@ export function PreviewCanvas({
                           }
                         }}
                       />
-                    )
-                  )}
+                    ))}
 
-                  {source.type === 'browser' && source.properties.url && (
-                    <iframe
-                      className="preview-browser"
-                      src={source.properties.url}
-                      title={source.name}
-                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-                    />
-                  )}
+                  {source.type === 'browser' &&
+                    source.properties.url && (
+                      <iframe
+                        className="preview-browser"
+                        src={source.properties.url}
+                        title={source.name}
+                        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                      />
+                    )}
 
                   {source.type === 'text' && (
                     <div
                       className="preview-text"
                       style={{
                         fontFamily:
-                          source.properties.fontFamily ?? 'Inter',
-                        fontSize: source.properties.fontSize ?? 32,
-                        color: source.properties.color ?? '#ffffff',
+                          source.properties.fontFamily ??
+                          'Inter',
+                        fontSize:
+                          source.properties.fontSize ?? 32,
+                        color:
+                          source.properties.color ?? '#ffffff',
                       }}
                     >
-                      {source.properties.text || source.name}
+                      {source.properties.text ||
+                        source.name}
                     </div>
                   )}
 
@@ -189,12 +208,16 @@ export function PreviewCanvas({
 
                     <span className="layer-label">
                       {source.type === 'text'
-                        ? source.properties.text || source.name
+                        ? source.properties.text ||
+                          source.name
                         : source.name}
                     </span>
 
                     {source.locked && (
-                      <Lock size={12} className="layer-lock" />
+                      <Lock
+                        size={12}
+                        className="layer-lock"
+                      />
                     )}
                   </div>
                 </div>
