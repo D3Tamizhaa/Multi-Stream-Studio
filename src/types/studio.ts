@@ -33,6 +33,8 @@ export interface Source {
   properties: {
     file?: string
     url?: string
+    x?: number
+    y?: number
     width?: number
     height?: number
     css?: string
