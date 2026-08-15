@@ -42,9 +42,7 @@ export default function App() {
   const [activeScene, setActiveScene] = useState(defaultScenes[0].id)
 
   const [sources, setSources] = useState<Source[]>(defaultSources)
-  const [selectedSource, setSelectedSource] = useState<string | null>(
-    defaultSources[0].id,
-  )
+  const [selectedSource, setSelectedSource] = useState<string | null>(null)
 
   const [platforms, setPlatforms] =
     useState<Platform[]>(defaultPlatforms)
