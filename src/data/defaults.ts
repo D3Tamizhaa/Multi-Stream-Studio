@@ -1,4 +1,9 @@
-import type { Platform, Scene, Source } from '../types/studio'
+import type {
+  Platform,
+  Scene,
+  Source,
+  StudioSettings,
+} from '../types/studio'
 
 export const defaultScenes: Scene[] = [
   {
