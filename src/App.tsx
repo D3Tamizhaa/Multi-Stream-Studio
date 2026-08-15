@@ -136,6 +136,25 @@ export default function App() {
     setModal(null)
   }
 
+  function updateSource(
+  id: string,
+  properties: Partial<Source['properties']>,
+) {
+  setSources((current) =>
+    current.map((source) =>
+      source.id === id
+        ? {
+            ...source,
+            properties: {
+              ...source.properties,
+              ...properties,
+            },
+          }
+        : source,
+    ),
+  )
+}
+
   function removeSource() {
     if (!selectedSource) return
 
@@ -257,6 +276,7 @@ export default function App() {
   }
   selectedSource={selectedSource}
   onSelectSource={setSelectedSource}
+  onUpdateSource={updateSource}
   volume={audioVolume}
   muted={audioMuted}
 />
