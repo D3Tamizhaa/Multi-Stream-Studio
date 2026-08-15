@@ -15,7 +15,6 @@ export function ControlsPanel({
     <section className="bottom-panel controls-panel">
       <div className="panel-header">
         <div>
-          <span className="eyebrow">LIVE</span>
           <h3>Controls</h3>
         </div>
 
