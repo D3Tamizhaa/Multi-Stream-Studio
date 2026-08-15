@@ -131,8 +131,7 @@ export function PreviewCanvas({
     <section className="preview-section">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">EDITOR</span>
-          <h2>Canvas Preview</h2>
+          <h2>Preview</h2>
         </div>
 
         <label className="toggle-line">
