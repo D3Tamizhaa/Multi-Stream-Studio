@@ -327,91 +327,252 @@ p {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: min(72%, calc((100% - 28px) * 16 / 9));
+
+  width: min(90%, calc((100% - 30px) * 16 / 9));
+  max-width: 960px;
+
   aspect-ratio: 16 / 9;
+
   transform: translate(-50%, -50%);
-  margin: 0;
+
+  overflow: hidden;
+
   border: 1px solid #364054;
+  border-radius: 4px;
+
   background:
-    linear-gradient(145deg, #1c2230, #0f131c);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    radial-gradient(
+      circle at center,
+      rgba(124, 92, 255, 0.08),
+      transparent 55%
+    ),
+    #05070b;
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.02);
 }
 
 .canvas-layer {
   position: absolute;
-  min-width: 110px;
-  min-height: 52px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 13px;
+
+  min-width: 80px;
+  min-height: 45px;
+
+  overflow: hidden;
+
   color: #e9edf4;
-  background: rgba(18, 24, 35, 0.94);
+
+  background: #111722;
+
   border: 1px solid #384355;
-  border-radius: 6px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
-  transition: 0.15s;
+  border-radius: 4px;
+
+  cursor: pointer;
+
+  box-sizing: border-box;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .canvas-layer:hover,
 .canvas-layer.selected {
   border-color: var(--accent);
-  box-shadow: 0 0 0 1px rgba(124, 92, 255, 0.25);
+
+  box-shadow:
+    0 0 0 1px rgba(124, 92, 255, 0.35),
+    0 8px 25px rgba(0, 0, 0, 0.35);
 }
 
-.layer-0 {
+.canvas-layer.layer-0 {
+  left: 0;
+  top: 0;
+}
+
+.canvas-layer.layer-1 {
+  left: 5%;
+  top: 5%;
+}
+
+.canvas-layer.layer-2 {
+  right: 5%;
+  bottom: 5%;
+}
+
+.canvas-layer.layer-3 {
   left: 10%;
-  top: 14%;
+  bottom: 10%;
 }
 
-.layer-1 {
-  left: 42%;
-  top: 43%;
+.preview-media-content {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  background: #000;
 }
 
-.layer-2 {
-  right: 8%;
-  bottom: 12%;
+.preview-browser {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  border: 0;
+
+  background: #fff;
 }
 
-.layer-3 {
-  left: 36%;
-  bottom: 22%;
+.preview-audio {
+  position: absolute;
+
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+
+  width: calc(100% - 20px);
+}
+
+.preview-text {
+  display: flex;
+
+  width: 100%;
+  height: 100%;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  text-align: center;
+
+  white-space: pre-wrap;
+
+  overflow: hidden;
+}
+
+.empty-source {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  color: var(--muted);
+
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.015),
+      rgba(255, 255, 255, 0.015) 10px,
+      transparent 10px,
+      transparent 20px
+    );
+
+  font-size: 11px;
+}
+
+.layer-overlay {
+  position: absolute;
+
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+
+  min-height: 27px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 6px;
+
+  padding: 5px 7px;
+
+  color: #fff;
+
+  background: rgba(5, 7, 11, 0.82);
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  border-radius: 5px;
+
+  pointer-events: none;
+
+  backdrop-filter: blur(5px);
 }
 
 .layer-icon {
-  color: var(--accent);
+  flex: 0 0 auto;
+
   display: flex;
+
+  color: var(--accent);
 }
 
 .layer-label {
-  font-size: 12px;
+  min-width: 0;
+
+  overflow: hidden;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+
+  font-size: 10px;
+
   font-weight: 600;
 }
 
 .layer-lock {
+  flex: 0 0 auto;
+
   margin-left: auto;
-  color: var(--muted-2);
+
+  color: var(--muted);
 }
 
 .canvas-resolution {
   position: absolute;
+
   right: 12px;
   bottom: 9px;
+
   color: var(--muted-2);
+
   font-size: 9px;
+
   font-family: monospace;
+
+  pointer-events: none;
 }
 
 .empty-canvas,
 .preview-off {
   position: absolute;
+
   inset: 0;
+
   display: flex;
+
   align-items: center;
   justify-content: center;
+
   gap: 9px;
+
   color: var(--muted-2);
+
   font-size: 12px;
 }
 
