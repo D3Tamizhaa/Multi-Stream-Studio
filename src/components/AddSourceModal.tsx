@@ -164,13 +164,40 @@ export function AddSourceModal({
           <label className="field">
             <span>Image File</span>
             <div className="file-row">
-              <input
-                value={file}
-                onChange={(event) => setFile(event.target.value)}
-                placeholder="Select image..."
-              />
-              <button className="secondary-button">Browse</button>
-            </div>
+  <input
+    value={
+      file.startsWith('blob:')
+        ? 'Selected image'
+        : file
+    }
+    onChange={(event) =>
+      setFile(event.target.value)
+    }
+    placeholder="Select image..."
+    readOnly={file.startsWith('blob:')}
+  />
+
+  <label className="secondary-button file-picker">
+    Browse
+
+    <input
+      type="file"
+      accept="image/png,image/jpeg,image/gif,image/bmp,image/webp"
+      hidden
+      onChange={(event) => {
+        const selected =
+          event.target.files?.[0]
+
+        if (!selected) return
+
+        setFile(
+          URL.createObjectURL(selected),
+        )
+      }}
+    />
+  </label>
+</div>
+
           </label>
         )}
 
