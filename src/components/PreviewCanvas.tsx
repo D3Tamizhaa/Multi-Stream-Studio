@@ -13,6 +13,8 @@ interface PreviewCanvasProps {
   onToggle: () => void
   selectedSource: string | null
   onSelectSource: (id: string) => void
+  volume?: number
+  muted?: boolean
 }
 
 function sourceIcon(type: Source['type']) {
