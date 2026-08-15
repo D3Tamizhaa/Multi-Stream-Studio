@@ -1,17 +1,493 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0b0f17" />
-    <meta
-      name="description"
-      content="Multi Stream Studio - browser based streaming studio"
-    />
-    <title>Multi Stream Studio</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="description"
+    content="Multi Stream Studio - lightweight browser-based streaming studio UI"
+  />
+  <title>Multi Stream Studio</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div class="app">
+
+    <!-- Header -->
+    <header class="topbar">
+      <button class="icon-btn" id="menuBtn" aria-label="Open navigation">
+        ☰
+      </button>
+
+      <div class="brand">Multi Stream Studio</div>
+
+      <button class="user-menu" id="userMenu">
+        User ▾
+      </button>
+    </header>
+
+    <div class="workspace">
+
+      <!-- Navigation -->
+      <aside class="sidebar" id="sidebar">
+        <button class="nav-item active" data-section="editor">
+          ▸ EDITOR
+        </button>
+
+        <div class="settings-nav">
+          <button class="nav-item" data-section="settings">
+            ⚙ Settings
+          </button>
+
+          <div class="settings-items">
+            <button data-setting="authorization">Authorization</button>
+            <button data-setting="stream">Stream</button>
+            <button data-setting="output">Output</button>
+            <button data-setting="audio">Audio</button>
+            <button data-setting="video">Video</button>
+            <button data-setting="advanced">Advanced</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <main class="main">
+
+        <!-- Preview -->
+        <section class="preview-panel">
+          <div class="panel-title">PREVIEW</div>
+
+          <div class="canvas-wrapper">
+            <div class="preview-canvas" id="previewCanvas">
+
+              <div class="preview-image source-preview">
+                🖼
+                <span>Image</span>
+              </div>
+
+              <div class="preview-text source-preview">
+                <span>T</span>
+                <span>My Text</span>
+              </div>
+
+              <div class="preview-browser source-preview">
+                🌐 Browser Source
+              </div>
+
+            </div>
+          </div>
+
+          <label class="preview-toggle">
+            <input type="checkbox" id="previewEnabled" checked />
+            Preview
+          </label>
+        </section>
+
+        <!-- Editor Panels -->
+        <section class="editor-panels">
+
+          <!-- Scenes -->
+          <section class="panel scenes-panel">
+            <div class="panel-header">
+              <h2>Scenes</h2>
+            </div>
+
+            <div class="toolbar">
+              <button id="addScene">+</button>
+              <button id="removeScene">−</button>
+            </div>
+
+            <div class="list" id="sceneList">
+              <button class="list-item selected">Scene 1</button>
+              <button class="list-item">Scene 2</button>
+            </div>
+
+            <div class="panel-actions">
+              <button>↑ Move Up</button>
+              <button>↓ Move Down</button>
+            </div>
+          </section>
+
+          <!-- Sources -->
+          <section class="panel sources-panel">
+            <div class="panel-header">
+              <h2>Sources</h2>
+            </div>
+
+            <div class="toolbar">
+              <button id="addSource">+</button>
+              <button id="removeSource">−</button>
+            </div>
+
+            <div class="source-list">
+
+              <div class="source-item">
+                <label>
+                  <input type="checkbox" checked />
+                  🖼 Image
+                </label>
+                <button>🔒</button>
+              </div>
+
+              <div class="source-item">
+                <label>
+                  <input type="checkbox" />
+                  🌐 Browser Source
+                </label>
+                <button>🔒</button>
+              </div>
+
+              <div class="source-item">
+                <label>
+                  <input type="checkbox" checked />
+                  🎬 Media File
+                </label>
+                <button>🔒</button>
+              </div>
+
+              <div class="source-item">
+                <label>
+                  <input type="checkbox" />
+                  T Text
+                </label>
+                <button>🔒</button>
+              </div>
+
+            </div>
+
+            <div class="panel-actions">
+              <button>↑ Move Up</button>
+              <button>↓ Move Down</button>
+              <button id="sourceProperties">⚙ Properties</button>
+            </div>
+          </section>
+
+          <!-- Audio Mixer -->
+          <section class="panel mixer-panel">
+            <div class="panel-header">
+              <h2>Audio Mixer</h2>
+            </div>
+
+            <div class="mixer-source">Media File</div>
+
+            <div class="volume-row">
+              <span>Volume</span>
+              <input
+                type="range"
+                id="volume"
+                min="0"
+                max="100"
+                value="80"
+              />
+              <span id="volumeValue">80%</span>
+            </div>
+
+            <div class="mixer-actions">
+              <button id="muteBtn">🔇 Mute</button>
+              <button id="audioProperties">⚙ Properties</button>
+            </div>
+          </section>
+
+        </section>
+
+        <!-- Platforms + Controls -->
+        <section class="bottom-panels">
+
+          <section class="panel platforms-panel">
+            <div class="panel-header">
+              <h2>Platforms</h2>
+            </div>
+
+            <div class="platform-toolbar">
+              <span>Platform</span>
+              <button id="addPlatform">+</button>
+              <button id="removePlatform">−</button>
+            </div>
+
+            <div class="platform-list">
+
+              <div class="platform-item">
+                <label>
+                  <input type="checkbox" checked />
+                  YouTube
+                </label>
+                <button>✎</button>
+              </div>
+
+              <div class="platform-item">
+                <label>
+                  <input type="checkbox" />
+                  Twitch
+                </label>
+                <button>✎</button>
+              </div>
+
+            </div>
+          </section>
+
+          <section class="panel controls-panel">
+            <div class="panel-header">
+              <h2>Controls</h2>
+            </div>
+
+            <button class="stream-btn start" id="startStreaming">
+              ▶ Start Streaming
+            </button>
+
+            <button class="stream-btn stop" id="stopStreaming">
+              ■ End Streaming
+            </button>
+          </section>
+
+        </section>
+
+        <!-- Usage -->
+        <section class="usage-bar">
+
+          <div>
+            <span>Uptime</span>
+            <strong id="uptime">00:00:00</strong>
+          </div>
+
+          <div>
+            <span>Bitrate</span>
+            <strong>6000 kbit/s</strong>
+          </div>
+
+          <div>
+            <span>FPS</span>
+            <strong>60</strong>
+          </div>
+
+          <div>
+            <span>CPU</span>
+            <strong id="cpu">12%</strong>
+          </div>
+
+          <div>
+            <span>RAM</span>
+            <strong id="ram">38%</strong>
+          </div>
+
+          <div>
+            <span>Status</span>
+            <strong class="status offline" id="status">
+              ● Offline
+            </strong>
+          </div>
+
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Source Dialog -->
+  <dialog id="sourceDialog">
+
+    <div class="dialog-header">
+      <h2>Add Source</h2>
+      <button class="close-dialog">×</button>
+    </div>
+
+    <div class="source-options">
+
+      <button data-source="image">
+        <strong>🖼 Image</strong>
+        <small>Add images to your scene</small>
+      </button>
+
+      <button data-source="browser">
+        <strong>🌐 Browser Source</strong>
+        <small>Websites, widgets, HTML</small>
+      </button>
+
+      <button data-source="media">
+        <strong>🎬 Media File</strong>
+        <small>Add videos or audio clips</small>
+      </button>
+
+      <button data-source="text">
+        <strong>T Text (GDI+)</strong>
+        <small>Add styled text</small>
+      </button>
+
+    </div>
+  </dialog>
+
+  <!-- Settings Dialog -->
+  <dialog id="settingsDialog">
+
+    <div class="dialog-header">
+      <h2 id="settingsTitle">Settings</h2>
+      <button class="close-settings">×</button>
+    </div>
+
+    <form id="settingsForm">
+
+      <div class="setting-content" data-setting-content="authorization">
+        <label>Username</label>
+        <input type="text" placeholder="Username" />
+
+        <label>Password</label>
+        <input type="password" placeholder="Password" />
+      </div>
+
+      <div class="setting-content" data-setting-content="stream">
+        <label>Service</label>
+        <select>
+          <option>YouTube</option>
+          <option>Facebook</option>
+          <option>Twitch</option>
+          <option>Kick</option>
+          <option>Custom</option>
+        </select>
+
+        <label>Server</label>
+        <input type="text" placeholder="rtmp://..." />
+
+        <label>Stream Key</label>
+        <input type="password" placeholder="Stream key" />
+      </div>
+
+      <div class="setting-content" data-setting-content="output">
+
+        <label>Encoder</label>
+        <select>
+          <option>Hardware</option>
+          <option>Software</option>
+        </select>
+
+        <label>Rate Control</label>
+        <select>
+          <option>CBR</option>
+          <option>VBR</option>
+        </select>
+
+        <label>Bitrate</label>
+        <input type="number" value="6000" />
+
+        <label>Keyframe Interval</label>
+        <input type="number" value="2" />
+
+        <label>Preset</label>
+        <select>
+          <option>Fast</option>
+          <option>Medium</option>
+          <option>Slow</option>
+        </select>
+
+        <label>Profile</label>
+        <select>
+          <option>High</option>
+          <option>Main</option>
+          <option>Baseline</option>
+        </select>
+
+        <label>Tune</label>
+        <select>
+          <option>None</option>
+          <option>Film</option>
+          <option>Animation</option>
+        </select>
+
+      </div>
+
+      <div class="setting-content" data-setting-content="audio">
+
+        <label>Encoder</label>
+        <select>
+          <option>AAC</option>
+          <option>Opus</option>
+        </select>
+
+        <label>Bitrate</label>
+        <select>
+          <option>128 kbit/s</option>
+          <option>160 kbit/s</option>
+          <option>192 kbit/s</option>
+          <option>256 kbit/s</option>
+          <option>320 kbit/s</option>
+        </select>
+
+        <label>Sample Rate</label>
+        <select>
+          <option>44.1 kHz</option>
+          <option>48 kHz</option>
+        </select>
+
+        <label>Channels</label>
+        <select>
+          <option>Mono</option>
+          <option>Stereo</option>
+        </select>
+
+      </div>
+
+      <div class="setting-content" data-setting-content="video">
+
+        <label>Base Resolution (Canvas)</label>
+        <select>
+          <option>1920x1080</option>
+          <option>1280x720</option>
+          <option>852x480</option>
+          <option>640x360</option>
+          <option>Custom</option>
+        </select>
+
+        <label>Output Resolution (Scaled)</label>
+        <select>
+          <option>1920x1080</option>
+          <option>1280x720</option>
+          <option>852x480</option>
+          <option>640x360</option>
+          <option>Custom</option>
+        </select>
+
+        <label>FPS Values</label>
+        <select>
+          <option>10</option>
+          <option>20</option>
+          <option>24 NTSC</option>
+          <option>25</option>
+          <option>29.97</option>
+          <option>30</option>
+          <option>48</option>
+          <option>59.94</option>
+          <option>60</option>
+        </select>
+
+      </div>
+
+      <div class="setting-content" data-setting-content="advanced">
+
+        <label class="checkbox-setting">
+          <input type="checkbox" checked />
+          Automatically Reconnect
+        </label>
+
+        <label>Network</label>
+        <select>
+          <option>Default</option>
+          <option>Low Latency</option>
+          <option>High Stability</option>
+        </select>
+
+      </div>
+
+      <div class="dialog-actions">
+        <button type="button" class="secondary close-settings">
+          Cancel
+        </button>
+        <button type="submit" class="primary">
+          Save
+        </button>
+      </div>
+
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
 </html>
