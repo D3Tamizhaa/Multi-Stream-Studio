@@ -687,14 +687,16 @@ p {
 
 .audio-panel {
   border-right: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .mixer-source {
   display: flex;
   gap: 8px;
   align-items: center;
-  padding: 8px 0;
-  margin-bottom: 8px;
+  padding: 5px 0;
+  margin-bottom: 5px;
 }
 
 .mixer-icon {
@@ -707,31 +709,12 @@ p {
   background: var(--accent-soft);
 }
 
-.mixer-source strong,
-.mixer-source span {
-  display: block;
-}
-
-.mixer-source strong {
-  font-size: 11px;
-}
-
-.mixer-source span {
-  margin-top: 2px;
-  color: var(--muted-2);
-  font-size: 9px;
-}
-
 .volume-label {
   display: flex;
   justify-content: space-between;
   color: var(--muted);
   font-size: 10px;
-  margin-bottom: 8px;
-}
-
-.volume-label strong {
-  color: white;
+  margin-bottom: 5px;
 }
 
 .slider-row {
@@ -741,19 +724,10 @@ p {
   color: var(--muted);
 }
 
-input[type="range"] {
-  flex: 1;
-  accent-color: var(--accent);
-}
-
 .audio-actions {
-  margin-top: 15px;
+  margin-top: 8px;
   display: flex;
   justify-content: space-between;
-}
-
-.audio-actions button:first-child {
-  color: var(--muted);
 }
 
 .danger-text {
@@ -1433,6 +1407,12 @@ textarea {
   .workspace-grid {
     height: 175px;
     flex-basis: 175px;
+    min-height: 0;
+  }
+
+  .audio-panel {
+    padding: 8px 13px;
+    overflow: hidden;
   }
 
   .stream-grid {
