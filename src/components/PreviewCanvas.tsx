@@ -169,7 +169,7 @@ export function PreviewCanvas({
                   }}
                 >
                   <div className="source-render">
-                    {renderSource(source)}
+                    {renderSource(source, volume, muted)}
                   </div>
 
                   <div className="layer-toolbar">
