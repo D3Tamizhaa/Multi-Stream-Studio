@@ -1,8 +1,26 @@
-node_modules/
-dist/
-.env
-.env.local
+# OS
 .DS_Store
-*.log
+Thumbs.db
+
+# Editors
 .vscode/
 .idea/
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Temporary files
+tmp/
+temp/
