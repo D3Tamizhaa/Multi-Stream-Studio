@@ -257,8 +257,6 @@ export default function App() {
   onToggle={...}
   selectedSource={selectedSource}
   onSelectSource={setSelectedSource}
-  volume={volume}
-  muted={muted}
 />
 
               </div>
