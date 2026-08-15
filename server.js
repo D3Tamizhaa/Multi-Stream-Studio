@@ -12,22 +12,19 @@ const HOST = '0.0.0.0'
 
 const distPath = path.join(__dirname, 'dist')
 
-// Serve React/Vite build
 app.use(express.static(distPath))
 
-// Health check
 app.get('/health', (req, res) => {
-  res.status(200).json({
+  res.json({
     status: 'ok',
     service: 'Multi Stream Studio'
   })
 })
 
-// React SPA fallback
 app.get('*', (req, res) => {
   res.sendFile(path.join(distPath, 'index.html'))
 })
 
 app.listen(PORT, HOST, () => {
-  console.log(`Multi Stream Studio running on ${HOST}:${PORT}`)
+  console.log(`Server running at http://${HOST}:${PORT}`)
 })
