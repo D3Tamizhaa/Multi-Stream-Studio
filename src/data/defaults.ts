@@ -6,8 +6,14 @@ import type {
 } from '../types/studio'
 
 export const defaultScenes: Scene[] = [
-  { id: 'scene-1', name: 'Scene 1' },
-  { id: 'scene-2', name: 'Scene 2' },
+  {
+    id: 'scene-1',
+    name: 'Scene 1',
+  },
+  {
+    id: 'scene-2',
+    name: 'Scene 2',
+  },
 ]
 
 export const defaultSources: Source[] = [
@@ -18,11 +24,16 @@ export const defaultSources: Source[] = [
     visible: true,
     locked: true,
     properties: {
-      file: 'studio-image.png',
-      width: 640,
-      height: 360,
+      /*
+       * Use the favicon that already exists in the project
+       * instead of the missing studio-image.png.
+       */
+      file: '/favicon.svg',
+      width: 1920,
+      height: 1080,
     },
   },
+
   {
     id: 'source-browser',
     name: 'Browser Source',
@@ -31,22 +42,29 @@ export const defaultSources: Source[] = [
     locked: true,
     properties: {
       url: 'https://example.com',
-      width: 640,
-      height: 360,
+      width: 1280,
+      height: 720,
       css: '',
     },
   },
+
   {
     id: 'source-media',
     name: 'Media File',
     type: 'media',
-    visible: true,
+    visible: false,
     locked: true,
     properties: {
-      file: 'media.mp4',
+      /*
+       * Empty until the user selects a real media file.
+       */
+      file: '',
       loop: true,
+      width: 1280,
+      height: 720,
     },
   },
+
   {
     id: 'source-text',
     name: 'Text',
@@ -56,10 +74,10 @@ export const defaultSources: Source[] = [
     properties: {
       text: 'My Text',
       fontFamily: 'Inter',
-      fontSize: 32,
+      fontSize: 48,
       color: '#ffffff',
-      width: 300,
-      height: 80,
+      width: 800,
+      height: 120,
     },
   },
 ]
@@ -86,11 +104,13 @@ export const defaultSettings: StudioSettings = {
     username: '',
     password: '',
   },
+
   stream: {
     service: 'YouTube',
     server: '',
     streamKey: '',
   },
+
   output: {
     encoder: 'H.264',
     rateControl: 'CBR',
@@ -100,17 +120,20 @@ export const defaultSettings: StudioSettings = {
     profile: 'High',
     tune: 'None',
   },
+
   audio: {
     encoder: 'AAC',
     bitrate: '160',
     sampleRate: '48 kHz',
     channels: 'Stereo',
   },
+
   video: {
     baseResolution: '1920x1080',
     outputResolution: '1920x1080',
     fps: '60',
   },
+
   advanced: {
     automaticallyReconnect: true,
     network: 'Auto',
