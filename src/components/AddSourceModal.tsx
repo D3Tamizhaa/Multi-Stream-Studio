@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { Source, SourceType } from '../types/studio'
 
 interface AddSourceModalProps {
@@ -17,25 +17,29 @@ const sourceTypes: {
   {
     type: 'image',
     title: 'Image',
-    description: 'Add images to your scene. Supports PNG, JPG, JPEG, GIF, TGA and BMP.',
+    description:
+      'Add images to your scene. Supports PNG, JPG, JPEG, GIF, TGA and BMP.',
     icon: '🖼',
   },
   {
     type: 'browser',
     title: 'Browser Source',
-    description: 'Add web-based content such as web pages, widgets and streaming video.',
+    description:
+      'Add web-based content such as web pages, widgets and streaming video.',
     icon: '🌐',
   },
   {
     type: 'media',
     title: 'Media File',
-    description: 'Add videos or audio clips to your scene. Supports MP4, MP3 and WebM.',
+    description:
+      'Add videos or audio clips to your scene. Supports MP4, MP3 and WebM.',
     icon: '🎬',
   },
   {
     type: 'text',
     title: 'Text (GDI+)',
-    description: 'Add text and adjust its style, font, color and size.',
+    description:
+      'Add text and adjust its style, font, color and size.',
     icon: 'T',
   },
 ]
@@ -45,7 +49,12 @@ export function AddSourceModal({
   onAdd,
   existing,
 }: AddSourceModalProps) {
-  const [type, setType] = useState<SourceType>(existing?.type ?? 'image')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const [type, setType] = useState<SourceType>(
+    existing?.type ?? 'image',
+  )
+
   const [name, setName] = useState(existing?.name ?? '')
 
   const [file, setFile] = useState(
@@ -88,7 +97,39 @@ export function AddSourceModal({
     existing?.properties.color ?? '#ffffff',
   )
 
-  const selected = sourceTypes.find((item) => item.type === type)!
+  const selected = sourceTypes.find(
+    (item) => item.type === type,
+  )!
+
+  const accept =
+    type === 'image'
+      ? 'image/png,image/jpeg,image/gif,image/bmp,image/tga'
+      : type === 'media'
+        ? 'video/mp4,video/webm,audio/mpeg,audio/mp3,audio/wav'
+        : ''
+
+  function openFilePicker() {
+    fileInputRef.current?.click()
+  }
+
+  function handleFileChange(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    const selectedFile = event.target.files?.[0]
+
+    if (!selectedFile) return
+
+    // Browser-safe local file URL.
+    const objectUrl = URL.createObjectURL(selectedFile)
+
+    setFile(objectUrl)
+
+    // Automatically use the actual filename when the name
+    // field hasn't been filled in yet.
+    if (!name.trim()) {
+      setName(selectedFile.name)
+    }
+  }
 
   function submit() {
     const source: Source = {
@@ -123,10 +164,16 @@ export function AddSourceModal({
         <div className="modal-header">
           <div>
             <span className="eyebrow">SOURCE</span>
-            <h2>{existing ? 'Source Properties' : 'Add Source'}</h2>
+            <h2>
+              {existing ? 'Source Properties' : 'Add Source'}
+            </h2>
           </div>
 
-          <button className="icon-button" onClick={onClose}>
+          <button
+            type="button"
+            className="icon-button"
+            onClick={onClose}
+          >
             <X size={18} />
           </button>
         </div>
@@ -135,6 +182,7 @@ export function AddSourceModal({
           <div className="source-type-grid">
             {sourceTypes.map((item) => (
               <button
+                type="button"
                 key={item.type}
                 className={type === item.type ? 'active' : ''}
                 onClick={() => setType(item.type)}
@@ -152,6 +200,7 @@ export function AddSourceModal({
 
         <label className="field">
           <span>Please enter the name of the source</span>
+
           <input
             autoFocus
             value={name}
@@ -160,44 +209,47 @@ export function AddSourceModal({
           />
         </label>
 
-        {type === 'image' && (
+        {(type === 'image' || type === 'media') && (
           <label className="field">
-            <span>Image File</span>
+            <span>
+              {type === 'image' ? 'Image File' : 'Media File'}
+            </span>
+
             <div className="file-row">
-  <input
-    value={
-      file.startsWith('blob:')
-        ? 'Selected image'
-        : file
-    }
-    onChange={(event) =>
-      setFile(event.target.value)
-    }
-    placeholder="Select image..."
-    readOnly={file.startsWith('blob:')}
-  />
+              <input
+                value={
+                  file.startsWith('blob:')
+                    ? 'Local file selected'
+                    : file
+                }
+                onChange={(event) =>
+                  setFile(event.target.value)
+                }
+                placeholder="Select file..."
+              />
 
-  <label className="secondary-button file-picker">
-    Browse
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={openFilePicker}
+              >
+                Browse
+              </button>
 
-    <input
-      type="file"
-      accept="image/png,image/jpeg,image/gif,image/bmp,image/webp"
-      hidden
-      onChange={(event) => {
-        const selected =
-          event.target.files?.[0]
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={accept}
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+              />
+            </div>
 
-        if (!selected) return
-
-        setFile(
-          URL.createObjectURL(selected),
-        )
-      }}
-    />
-  </label>
-</div>
-
+            {file && (
+              <small style={{ color: '#8490a3' }}>
+                File selected and ready for preview.
+              </small>
+            )}
           </label>
         )}
 
@@ -205,6 +257,7 @@ export function AddSourceModal({
           <>
             <label className="field">
               <span>URL</span>
+
               <input
                 value={url}
                 onChange={(event) => setUrl(event.target.value)}
@@ -215,25 +268,32 @@ export function AddSourceModal({
             <div className="settings-grid">
               <label className="field">
                 <span>Width</span>
+
                 <input
                   type="number"
                   value={width}
-                  onChange={(event) => setWidth(event.target.value)}
+                  onChange={(event) =>
+                    setWidth(event.target.value)
+                  }
                 />
               </label>
 
               <label className="field">
                 <span>Height</span>
+
                 <input
                   type="number"
                   value={height}
-                  onChange={(event) => setHeight(event.target.value)}
+                  onChange={(event) =>
+                    setHeight(event.target.value)
+                  }
                 />
               </label>
             </div>
 
             <label className="field">
               <span>Custom CSS</span>
+
               <textarea
                 value={css}
                 onChange={(event) => setCss(event.target.value)}
@@ -244,128 +304,125 @@ export function AddSourceModal({
         )}
 
         {type === 'media' && (
-          <>
-            <label className="field">
-              <span>Local File</span>
-              <div className="file-row">
-  <input
-    value={
-      file.startsWith('blob:')
-        ? 'Selected media'
-        : file
-    }
-    onChange={(event) =>
-      setFile(event.target.value)
-    }
-    placeholder="Select media..."
-    readOnly={file.startsWith('blob:')}
-  />
+          <label className="checkbox-setting">
+            <input
+              type="checkbox"
+              checked={loop}
+              onChange={(event) =>
+                setLoop(event.target.checked)
+              }
+            />
 
-  <label className="secondary-button file-picker">
-    Browse
-
-    <input
-      type="file"
-      accept="video/mp4,video/webm,audio/mpeg,audio/wav,audio/ogg,audio/mp4,audio/aac"
-      hidden
-      onChange={(event) => {
-        const selected =
-          event.target.files?.[0]
-
-        if (!selected) return
-
-        setFile(
-          URL.createObjectURL(selected),
-        )
-      }}
-    />
-  </label>
-</div>
-
-            </label>
-
-            <label className="checkbox-setting">
-              <input
-                type="checkbox"
-                checked={loop}
-                onChange={(event) => setLoop(event.target.checked)}
-              />
-              <span>
-                <strong>Loop</strong>
-                <small>Repeat this media continuously.</small>
-              </span>
-            </label>
-          </>
+            <span>
+              <strong>Loop</strong>
+              <small>
+                Repeat this media continuously.
+              </small>
+            </span>
+          </label>
         )}
 
         {type === 'text' && (
           <div className="settings-grid">
             <label className="field">
               <span>Font Family</span>
+
               <input
                 value={fontFamily}
-                onChange={(event) => setFontFamily(event.target.value)}
+                onChange={(event) =>
+                  setFontFamily(event.target.value)
+                }
               />
             </label>
 
             <label className="field">
               <span>Font Size</span>
+
               <input
                 type="number"
                 value={fontSize}
-                onChange={(event) => setFontSize(event.target.value)}
+                onChange={(event) =>
+                  setFontSize(event.target.value)
+                }
               />
             </label>
 
             <label className="field field-wide">
               <span>Text</span>
+
               <textarea
                 value={text}
-                onChange={(event) => setText(event.target.value)}
+                onChange={(event) =>
+                  setText(event.target.value)
+                }
               />
             </label>
 
             <label className="field">
               <span>Color</span>
+
               <div className="color-row">
                 <input
                   type="color"
                   value={color}
-                  onChange={(event) => setColor(event.target.value)}
+                  onChange={(event) =>
+                    setColor(event.target.value)
+                  }
                 />
+
                 <input
                   value={color}
-                  onChange={(event) => setColor(event.target.value)}
+                  onChange={(event) =>
+                    setColor(event.target.value)
+                  }
                 />
               </div>
             </label>
 
             <label className="field">
               <span>Width</span>
+
               <input
                 type="number"
                 value={width}
-                onChange={(event) => setWidth(event.target.value)}
+                onChange={(event) =>
+                  setWidth(event.target.value)
+                }
               />
             </label>
 
             <label className="field">
               <span>Height</span>
+
               <input
                 type="number"
                 value={height}
-                onChange={(event) => setHeight(event.target.value)}
+                onChange={(event) =>
+                  setHeight(event.target.value)
+                }
               />
             </label>
           </div>
         )}
 
         <div className="modal-actions">
-          <button className="secondary-button" onClick={onClose}>
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={onClose}
+          >
             Close
           </button>
 
-          <button className="primary-button" onClick={submit}>
+          <button
+            type="button"
+            className="primary-button"
+            onClick={submit}
+            disabled={
+              (type === 'image' || type === 'media') &&
+              !file
+            }
+          >
             {existing ? 'Save Changes' : 'Add Source'}
           </button>
         </div>
