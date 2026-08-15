@@ -255,11 +255,14 @@ export default function App() {
                   sources={sources}
                   enabled={previewEnabled}
                   onToggle={() =>
-                    setPreviewEnabled((value) => !value)
+                  setPreviewEnabled((value) => !value)
                   }
                   selectedSource={selectedSource}
                   onSelectSource={setSelectedSource}
+                  volume={audioVolume}
+                  muted={audioMuted}
                 />
+
               </div>
 
               <div className="workspace-grid">
@@ -286,7 +289,15 @@ export default function App() {
                   onMove={moveSource}
                 />
 
-                <AudioMixer />
+                <AudioMixer
+                  volume={audioVolume}
+                  muted={audioMuted}
+                  onVolumeChange={setAudioVolume}
+                  onMuteToggle={() =>
+                  setAudioMuted((value) => !value)
+                  }
+                />
+
               </div>
 
               <div className="stream-grid">
