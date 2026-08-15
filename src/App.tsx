@@ -288,13 +288,14 @@ export default function App() {
                 />
 
                 <AudioMixer
-                  volume={audioVolume}
-                  muted={audioMuted}
-                  onVolumeChange={setAudioVolume}
-                  onMuteToggle={() =>
-                  setAudioMuted((value) => !value)
-                  }
-                />
+  sources={sources}
+  volume={audioVolume}
+  muted={audioMuted}
+  onVolumeChange={setAudioVolume}
+  onMuteToggle={() =>
+    setAudioMuted((value) => !value)
+  }
+/>
 
               </div>
 
