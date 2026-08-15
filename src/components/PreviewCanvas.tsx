@@ -13,15 +13,15 @@ interface PreviewCanvasProps {
   onToggle: () => void
   selectedSource: string | null
   onSelectSource: (id: string) => void
-  volume: number
-  muted: boolean
+  volume?: number
+  muted?: boolean
 }
 
 function sourceIcon(type: Source['type']) {
-  if (type === 'image') return <ImageIcon size={22} />
-  if (type === 'browser') return <Globe size={22} />
-  if (type === 'media') return <Music2 size={22} />
-  return <Type size={22} />
+  if (type === 'image') return <ImageIcon size={20} />
+  if (type === 'browser') return <Globe size={20} />
+  if (type === 'media') return <Music2 size={20} />
+  return <Type size={20} />
 }
 
 function getMediaUrl(file?: string) {
@@ -50,8 +50,8 @@ export function PreviewCanvas({
   onToggle,
   selectedSource,
   onSelectSource,
-  volume,
-  muted,
+  volume = 80,
+  muted = false,
 }: PreviewCanvasProps) {
   const visibleSources = sources.filter((source) => source.visible)
 
@@ -92,23 +92,32 @@ export function PreviewCanvas({
             {visibleSources.map((source, index) => {
               const file = getMediaUrl(source.properties.file)
 
-              const width =
-                source.properties.width ?? 640
+              const width = source.properties.width ?? 640
+              const height = source.properties.height ?? 360
 
-              const height =
-                source.properties.height ?? 360
+              /*
+               * Keep source sizes inside the 16:9 preview.
+               * Convert the old 640x360 style into percentage sizing.
+               */
+              const widthPercent = Math.min(
+                100,
+                Math.max(10, (width / 1920) * 100),
+              )
+
+              const heightPercent = Math.min(
+                100,
+                Math.max(10, (height / 1080) * 100),
+              )
 
               return (
                 <div
                   key={source.id}
                   className={`canvas-layer layer-${index} ${
-                    selectedSource === source.id
-                      ? 'selected'
-                      : ''
+                    selectedSource === source.id ? 'selected' : ''
                   }`}
                   style={{
-                    width,
-                    height,
+                    width: `${widthPercent}%`,
+                    height: `${heightPercent}%`,
                   }}
                   onClick={() => onSelectSource(source.id)}
                   role="button"
@@ -128,6 +137,9 @@ export function PreviewCanvas({
                       src={file}
                       alt={source.name}
                       className="preview-media-content"
+                      onError={(event) => {
+                        event.currentTarget.style.display = 'none'
+                      }}
                     />
                   )}
 
@@ -179,16 +191,14 @@ export function PreviewCanvas({
                       className="preview-text"
                       style={{
                         fontFamily:
-                          source.properties.fontFamily ??
-                          'Inter',
+                          source.properties.fontFamily ?? 'Inter',
                         fontSize:
                           source.properties.fontSize ?? 32,
                         color:
                           source.properties.color ?? '#ffffff',
                       }}
                     >
-                      {source.properties.text ||
-                        source.name}
+                      {source.properties.text || source.name}
                     </div>
                   )}
 
@@ -208,8 +218,7 @@ export function PreviewCanvas({
 
                     <span className="layer-label">
                       {source.type === 'text'
-                        ? source.properties.text ||
-                          source.name
+                        ? source.properties.text || source.name
                         : source.name}
                     </span>
 
