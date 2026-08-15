@@ -288,7 +288,6 @@ export default function App() {
                 />
 
                 <AudioMixer
-  sources={sources}
   volume={audioVolume}
   muted={audioMuted}
   onVolumeChange={setAudioVolume}
