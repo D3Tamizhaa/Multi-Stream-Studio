@@ -1,50 +1,48 @@
 # Multi Stream Studio
 
-A browser-based multi-platform streaming studio built with React and Vite.
+A lightweight browser-based UI for Multi Stream Studio.
 
 ## Features
 
-- Login screen
-- Editor workspace
-- Editable canvas
+- Live editing canvas preview
 - Scene management
 - Source management
 - Image source
 - Browser source
-- Media source
+- Media file source
 - Text source
-- Source visibility
-- Source locking
-- Source layer ordering
-- Drag sources around the canvas
 - Audio mixer
 - Platform management
-- YouTube
-- Twitch
-- Facebook
-- Kick
-- Custom streaming destination
-- Start / End Streaming controls
-- Uptime
-- Bitrate
-- FPS
-- CPU
-- RAM
+- Streaming controls
+- Usage monitoring
 - Authorization settings
 - Stream settings
 - Output settings
 - Audio settings
 - Video settings
 - Advanced settings
-- LocalStorage persistence
-- Responsive UI
-- Dark studio interface
+- Responsive layout
+- No framework
+- No build system
+- No external dependencies
 
-## Requirements
+## Run
 
-Node.js 20+ recommended.
+Simply open:
 
-## Install
+    index.html
 
-```bash
-npm install
+in a modern browser.
+
+For local development, you can also use any static HTTP server.
+
+## Repository
+
+```text
+multi-stream-studio/
+├── index.html
+├── styles.css
+├── app.js
+├── README.md
+├── LICENSE
+└── .gitignore
