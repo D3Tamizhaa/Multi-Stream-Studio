@@ -55,14 +55,16 @@ function renderSource(source: Source) {
     case 'media':
       return url ? (
         <video
-          className="preview-media preview-video"
-          src={url}
-          autoPlay
-          muted
-          loop={source.properties.loop ?? true}
-          playsInline
-          controls={false}
-        />
+  className="preview-media preview-video"
+  src={url}
+  autoPlay
+  muted={muted}
+  loop
+  playsInline
+  controls={false}
+  volume={Math.max(0, Math.min(1, volume / 100))}
+/>
+
       ) : (
         <div className="preview-placeholder">
           <Music2 size={28} />
@@ -110,6 +112,8 @@ export function PreviewCanvas({
   onToggle,
   selectedSource,
   onSelectSource,
+  volume = 80,
+  muted = false,
 }: PreviewCanvasProps) {
   const visibleSources = sources.filter((source) => source.visible)
 
