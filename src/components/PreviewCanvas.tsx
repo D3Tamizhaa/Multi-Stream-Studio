@@ -16,12 +16,25 @@ interface PreviewCanvasProps {
   onToggle: () => void
   selectedSource: string | null
   onSelectSource: (id: string) => void
-  onUpdateSource: (
-    id: string,
-    properties: Partial<Source['properties']>,
-  ) => void
+  baseResolution: string
   volume?: number
   muted?: boolean
+}
+
+function parseResolution(value: string) {
+  const match = value.match(/^(\d+)\s*x\s*(\d+)$/i)
+
+  if (!match) {
+    return {
+      width: 1920,
+      height: 1080,
+    }
+  }
+
+  return {
+    width: Number(match[1]),
+    height: Number(match[2]),
+  }
 }
 
 const CANVAS_WIDTH = 1920
@@ -167,6 +180,7 @@ export function PreviewCanvas({
   selectedSource,
   onSelectSource,
   onUpdateSource,
+  baseResolution,
   volume = 80,
   muted = false,
 }: PreviewCanvasProps) {
@@ -175,6 +189,9 @@ export function PreviewCanvas({
     useRef<Interaction>(null)
 
   const [, forceUpdate] = useState(0)
+
+  const { width: canvasWidth, height: canvasHeight } =
+    parseResolution(baseResolution)
 
   const visibleSources = sources.filter(
     (source) => source.visible,
@@ -399,17 +416,20 @@ export function PreviewCanvas({
 
         {enabled ? (
           <div
-            ref={canvasRef}
-            className="canvas-content"
-            onPointerDown={(event) => {
-              if (
-                event.target ===
-                event.currentTarget
-              ) {
-                onSelectSource('')
-              }
-            }}
-          >
+  ref={canvasRef}
+  className="canvas-content"
+  style={{
+    aspectRatio: `${canvasWidth} / ${canvasHeight}`,
+  }}
+  onPointerDown={(event) => {
+    if (
+      event.target ===
+      event.currentTarget
+    ) {
+      onSelectSource('')
+    }
+  }}
+>
             {visibleSources.length === 0 ? (
               <div className="empty-canvas">
                 <ImageIcon size={32} />
@@ -508,8 +528,8 @@ export function PreviewCanvas({
         )}
 
         <div className="canvas-resolution">
-          1920 × 1080
-        </div>
+  {canvasWidth} × {canvasHeight}
+</div>
       </div>
     </section>
   )
