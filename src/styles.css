@@ -335,19 +335,16 @@ p {
 .canvas-content {
   position: relative;
 
-  /* 16:9 canvas constrained by BOTH width and height */
-  width: min(92cqw, calc(92cqh * 16 / 9));
-
-  aspect-ratio: 16 / 9;
-
-  max-width: 92%;
-  max-height: 92%;
+  width: min(92cqw, calc(92cqh * var(--canvas-ratio)));
+  aspect-ratio: var(--canvas-ratio);
 
   overflow: hidden;
   border: 1px solid #364054;
   border-radius: 4px;
   background: #000;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+
+  touch-action: none;
 }
 
 /* Actual source rendering */
