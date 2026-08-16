@@ -91,11 +91,11 @@ export default function App() {
   async function updateSystemStats() {
     try {
       const response = await fetch(
-        'http://127.0.0.1:3001/api/system-stats',
-        {
-          cache: 'no-store',
-        },
-      )
+  '/api/system-stats',
+  {
+    cache: 'no-store',
+  },
+)
 
       if (!response.ok) {
         throw new Error('Failed to read system stats')
