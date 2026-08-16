@@ -552,25 +552,28 @@ p {
   inset: 0;
   width: 100%;
   height: 100%;
-  background: #fff;
+  overflow: hidden;
+  background: #000;
   box-sizing: border-box;
 }
 
-.preview-media {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  pointer-events: none;
-  user-select: none;
-}
-
+.preview-media,
 .preview-browser {
   display: block;
   width: 100%;
   height: 100%;
   border: 0;
+}
+
+.preview-image,
+.preview-video {
+  object-fit: contain;
+  background: #000;
+}
+
+.preview-video {
   pointer-events: none;
+  user-select: none;
 }
 
 .preview-text {
