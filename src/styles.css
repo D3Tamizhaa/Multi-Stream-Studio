@@ -347,17 +347,12 @@ p {
 .canvas-content {
   position: relative;
 
-  width: min(
-    86cqw,
-    calc(86cqh * var(--canvas-ratio))
-  );
-
-  aspect-ratio: var(--canvas-ratio);
+  width: min(86cqw, calc(86cqh * 16 / 9));
+  aspect-ratio: 16 / 9;
 
   overflow: hidden;
 
   background: #000;
-
   border: 1px solid #3a4353;
   border-radius: 2px;
 
@@ -381,23 +376,13 @@ p {
 }
 
 .safe-area-outer {
-  width: min(
-    86cqw,
-    calc(86cqh * var(--canvas-ratio))
-  );
-
+  width: min(86cqw, calc(86cqh * 16 / 9));
   height: auto;
 }
 
 .safe-area-inner {
-  width: min(
-    78cqw,
-    calc(78cqh * var(--canvas-ratio))
-  );
-
+  width: min(78cqw, calc(78cqh * 16 / 9));
   height: auto;
-
-  border-color: rgba(124, 92, 255, 0.45);
 }
 
 .safe-guide {
