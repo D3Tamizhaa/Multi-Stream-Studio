@@ -252,7 +252,8 @@ button:disabled {
 .editor-main {
   min-width: 0;
   min-height: 0;
-  flex: 1 1 auto;
+  height: 50%;
+  flex: 0 0 50%;
   padding: 0;
   display: flex;
   overflow: hidden;
@@ -622,8 +623,8 @@ p {
 }
 
 .workspace-grid {
-  height: 205px;
-  flex: 0 0 205px;
+  min-height: 0;
+  flex: 1 1 auto;
   display: grid;
   grid-template-columns: 1fr 1.55fr 1fr;
   border-top: 1px solid var(--border);
