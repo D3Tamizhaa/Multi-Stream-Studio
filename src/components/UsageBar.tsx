@@ -1,6 +1,8 @@
 interface UsageBarProps {
   streaming: boolean
   uptime: number
+  cpu: number
+  ram: number
 }
 
 function formatTime(totalSeconds: number) {
@@ -13,7 +15,12 @@ function formatTime(totalSeconds: number) {
     .join(':')
 }
 
-export function UsageBar({ streaming, uptime }: UsageBarProps) {
+export function UsageBar({
+  streaming,
+  uptime,
+  cpu,
+  ram,
+}: UsageBarProps) {
   return (
     <footer className="usage-bar">
       <div className="metric">
@@ -23,7 +30,9 @@ export function UsageBar({ streaming, uptime }: UsageBarProps) {
 
       <div className="metric">
         <span>Bitrate</span>
-        <strong>{streaming ? '6000' : '0'} <small>kbit/s</small></strong>
+        <strong>
+          {streaming ? '6000' : '0'} <small>kbit/s</small>
+        </strong>
       </div>
 
       <div className="metric">
@@ -33,12 +42,12 @@ export function UsageBar({ streaming, uptime }: UsageBarProps) {
 
       <div className="metric">
         <span>CPU</span>
-        <strong>{streaming ? '12' : '4'}%</strong>
+        <strong>{cpu}%</strong>
       </div>
 
       <div className="metric">
         <span>RAM</span>
-        <strong>{streaming ? '38' : '31'}%</strong>
+        <strong>{ram}%</strong>
       </div>
 
       <div className="status-metric">
