@@ -555,16 +555,67 @@ p {
 
 .resize-handle {
   position: absolute;
-  right: -7px;
-  bottom: -7px;
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
+
+  right: -8px;
+  bottom: -8px;
+
+  width: 16px;
+  height: 16px;
+
+  box-sizing: border-box;
+
+  border-radius: 4px;
+
   background: var(--accent);
   border: 2px solid #fff;
-  box-sizing: border-box;
+
   cursor: nwse-resize;
-  z-index: 100;
+
+  z-index: 1000;
+
+  touch-action: none;
+
+  user-select: none;
+
+  -webkit-user-select: none;
+}
+
+.canvas-layer {
+  position: absolute;
+
+  box-sizing: border-box;
+
+  overflow: visible;
+
+  padding: 0;
+  margin: 0;
+
+  background: transparent;
+
+  border: 2px solid transparent;
+
+  cursor: move;
+
+  touch-action: none;
+
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.canvas-layer.selected {
+  border-color: var(--accent);
+
+  box-shadow:
+    0 0 0 1px rgba(124, 92, 255, 0.35),
+    0 0 16px rgba(124, 92, 255, 0.15);
+}
+
+.canvas-layer:active {
+  cursor: grabbing;
+}
+
+.resize-handle:active {
+  cursor: nwse-resize;
 }
 
 .canvas-layer .layer-toolbar {
