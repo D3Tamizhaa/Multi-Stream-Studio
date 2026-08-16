@@ -274,11 +274,6 @@ p {
   margin: 0;
 }
 
-.section-heading h2 {
-  font-size: 17px;
-  letter-spacing: -0.02em;
-}
-
 .toggle-line {
   display: flex;
   align-items: center;
@@ -314,7 +309,7 @@ p {
   font-weight: 600;
 }
 
-/* ONE SINGLE PREVIEW AREA */
+/* ONE SINGLE 16:9 PREVIEW */
 .preview-stage {
   position: relative;
   width: 100%;
@@ -330,7 +325,7 @@ p {
   overflow: hidden;
 }
 
-/* Actual 1920x1080 canvas */
+/* ACTUAL PREVIEW - FULL SIZE */
 .canvas-content {
   position: absolute;
   inset: 0;
@@ -338,21 +333,26 @@ p {
   width: 100%;
   height: 100%;
 
-  aspect-ratio: 16 / 9;
-
   background: #000;
   overflow: hidden;
 }
 
-/* Remove the old grid */
-.canvas-grid {
-  display: none !important;
+/* SAFE AREA - EXACT SAME SIZE/POSITION */
+.safe-area-overlay {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  z-index: 50;
+
+  pointer-events: none;
 }
 
-/* Bottom-right Preview checkbox */
+/* PREVIEW TOGGLE */
 .preview-toggle {
   position: absolute;
-
   right: 12px;
   bottom: 12px;
 
@@ -375,25 +375,27 @@ p {
   margin: 0;
 
   cursor: pointer;
-  accent-color: #3b82f6;
+  accent-color: var(--accent);
 }
 
-/* Keep the resolution label inside the canvas */
+/* RESOLUTION */
 .canvas-resolution {
   position: absolute;
-  left: 12px;
-  bottom: 12px;
+  right: 12px;
+  bottom: 9px;
 
   z-index: 100;
 
-  color: rgba(255, 255, 255, 0.65);
-  font-size: 11px;
+  color: var(--muted-2);
+  font-size: 9px;
+  font-family: monospace;
+
   pointer-events: none;
 }
 
-/* Disabled state */
+/* DISABLED */
 .preview-disabled {
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
 .preview-off {
@@ -491,20 +493,6 @@ p {
   gap: 9px;
   color: var(--muted-2);
   font-size: 12px;
-}
-
-.preview-disabled {
-  opacity: 0.55;
-}
-
-.canvas-resolution {
-  position: absolute;
-  right: 12px;
-  bottom: 9px;
-  z-index: 100;
-  color: var(--muted-2);
-  font-size: 9px;
-  font-family: monospace;
 }
 
 .source-render {
@@ -1351,11 +1339,6 @@ textarea {
   .audio-panel {
     display: none;
   }
-
-  .canvas-content {
-    inset: 7% 10%;
-    max-width: 80%;
-  }
 }
 
 @media (max-width: 760px) {
@@ -1440,10 +1423,6 @@ textarea {
 
   .preview-stage {
     min-height: 240px;
-  }
-
-  .canvas-content {
-    max-width: 90%;
   }
 
   .usage-bar {
