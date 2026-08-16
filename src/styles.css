@@ -325,29 +325,24 @@ p {
   overflow: hidden;
 }
 
-/* ACTUAL PREVIEW - FULL SIZE */
 .canvas-content {
-  position: absolute;
-  inset: 0;
-
-  width: 100%;
-  height: 100%;
-
-  background: #000;
+  position: relative;
+  width: min(92cqw, calc(92cqh * var(--canvas-ratio)));
+  aspect-ratio: var(--canvas-ratio);
   overflow: hidden;
+  background: #fff;
+  border: 1px solid #d9dce3;
+  box-sizing: border-box;
 }
 
 /* SAFE AREA - EXACT SAME SIZE/POSITION */
 .safe-area-overlay {
   position: absolute;
   inset: 0;
-
   width: 100%;
   height: 100%;
-
-  z-index: 50;
-
   pointer-events: none;
+  box-sizing: border-box;
 }
 
 /* PREVIEW TOGGLE */
@@ -500,8 +495,8 @@ p {
   inset: 0;
   width: 100%;
   height: 100%;
-  overflow: hidden;
-  pointer-events: none;
+  background: #fff;
+  box-sizing: border-box;
 }
 
 .preview-media {
