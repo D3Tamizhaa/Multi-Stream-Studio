@@ -389,156 +389,116 @@ export function PreviewCanvas({
     }
   }, [sources, onUpdateSource])
 
-  return (
+    return (
     <section className="preview-section">
       <div className="section-heading">
-  <h2>Preview</h2>
-</div>
-      
-<div
-  className={`preview-stage ${
-    !enabled
-      ? 'preview-disabled'
-      : ''
-  }`}
->
+        <h2>Preview</h2>
+      </div>
+
+      {/* ONE SINGLE 16:9 PREVIEW CANVAS */}
+      <div
+        className={`preview-stage ${
+          !enabled ? 'preview-disabled' : ''
+        }`}
+      >
         {enabled ? (
-  <div
-    ref={canvasRef}
-    className="canvas-content"
-    style={{
-      aspectRatio: `${canvasWidth} / ${canvasHeight}`,
-    }}
-    onPointerDown={(event) => {
-      if (
-        event.target ===
-        event.currentTarget
-      ) {
-        onSelectSource('')
-      }
-    }}
-  >
-    {/* existing sources code stays here */}
-  </div>
-) : (
-  <div className="preview-off">
-    <span>Preview disabled</span>
-  </div>
-)}
-
-<div className="canvas-resolution">
-  {canvasWidth} × {canvasHeight}
-</div>
-
-<label className="preview-toggle">
-  <input
-    type="checkbox"
-    checked={enabled}
-    onChange={onToggle}
-  />
-  <span>Preview</span>
-</label>
-
+          <div
+            ref={canvasRef}
+            className="canvas-content"
+            style={{
+              aspectRatio: `${canvasWidth} / ${canvasHeight}`,
+            }}
+            onPointerDown={(event) => {
+              if (event.target === event.currentTarget) {
+                onSelectSource('')
+              }
+            }}
+          >
             {visibleSources.length === 0 ? (
               <div className="empty-canvas">
                 <ImageIcon size={32} />
-                <span>
-                  No visible sources
-                </span>
+                <span>No visible sources</span>
               </div>
             ) : (
-              visibleSources.map(
-                (source, index) => {
-                  const bounds =
-                    getSourceBounds(source)
+              visibleSources.map((source, index) => {
+                const bounds = getSourceBounds(source)
 
-                  const left =
-                    (bounds.x /
-                      CANVAS_WIDTH) *
-                    100
+                const left =
+                  (bounds.x / CANVAS_WIDTH) * 100
 
-                  const top =
-                    (bounds.y /
-                      CANVAS_HEIGHT) *
-                    100
+                const top =
+                  (bounds.y / CANVAS_HEIGHT) * 100
 
-                  const width =
-                    (bounds.width /
-                      CANVAS_WIDTH) *
-                    100
+                const width =
+                  (bounds.width / CANVAS_WIDTH) * 100
 
-                  const height =
-                    (bounds.height /
-                      CANVAS_HEIGHT) *
-                    100
+                const height =
+                  (bounds.height / CANVAS_HEIGHT) * 100
 
-                  const isSelected =
-                    selectedSource ===
-                    source.id
+                const isSelected =
+                  selectedSource === source.id
 
-                  return (
-                    <div
-                      key={source.id}
-                      className={`canvas-layer ${
-                        isSelected
-                          ? 'selected'
-                          : ''
-                      }`}
-                      style={{
-                        left: `${left}%`,
-                        top: `${top}%`,
-                        width: `${width}%`,
-                        height: `${height}%`,
-                        zIndex: index + 1,
-                      }}
-                      onPointerDown={(
-                        event,
-                      ) =>
-                        beginDrag(
-                          event,
-                          source,
-                        )
-                      }
-                    >
-                      <div className="source-render">
-                        {renderSource(
-                          source,
-                          volume,
-                          muted,
-                        )}
-                      </div>
-
-                      {isSelected &&
-                        !source.locked && (
-                          <div
-                            className="resize-handle"
-                            onPointerDown={(
-                              event,
-                            ) =>
-                              beginResize(
-                                event,
-                                source,
-                              )
-                            }
-                          />
-                        )}
+                return (
+                  <div
+                    key={source.id}
+                    className={`canvas-layer ${
+                      isSelected ? 'selected' : ''
+                    }`}
+                    style={{
+                      left: `${left}%`,
+                      top: `${top}%`,
+                      width: `${width}%`,
+                      height: `${height}%`,
+                      zIndex: index + 1,
+                    }}
+                    onPointerDown={(event) =>
+                      beginDrag(event, source)
+                    }
+                  >
+                    <div className="source-render">
+                      {renderSource(
+                        source,
+                        volume,
+                        muted,
+                      )}
                     </div>
-                  )
-                },
-              )
+
+                    {isSelected && !source.locked && (
+                      <div
+                        className="resize-handle"
+                        onPointerDown={(event) =>
+                          beginResize(event, source)
+                        }
+                      />
+                    )}
+                  </div>
+                )
+              })
             )}
           </div>
         ) : (
           <div className="preview-off">
-            <span>
-              Preview disabled
-            </span>
+            <span>Preview disabled</span>
           </div>
         )}
 
+        {/* SAFE AREA - SAME SIZE AS PREVIEW */}
+        <div className="safe-area-overlay" />
+
+        {/* Resolution */}
         <div className="canvas-resolution">
-  {canvasWidth} × {canvasHeight}
-</div>
+          {canvasWidth} × {canvasHeight}
+        </div>
+
+        {/* Preview checkbox - bottom right */}
+        <label className="preview-toggle">
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={onToggle}
+          />
+          <span>Preview</span>
+        </label>
       </div>
     </section>
   )
