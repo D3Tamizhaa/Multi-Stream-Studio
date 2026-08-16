@@ -326,6 +326,7 @@ export default function App() {
   />
 </div>
 
+
               <div className="workspace-grid">
                 <ScenesPanel
                   scenes={scenes}
