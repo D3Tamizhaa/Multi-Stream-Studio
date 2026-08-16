@@ -31,7 +31,8 @@ export function UsageBar({
       <div className="metric">
         <span>Bitrate</span>
         <strong>
-          {streaming ? '6000' : '0'} <small>kbit/s</small>
+          {streaming ? '6000' : '0'}{' '}
+          <small>kbit/s</small>
         </strong>
       </div>
 
@@ -42,12 +43,12 @@ export function UsageBar({
 
       <div className="metric">
         <span>CPU</span>
-        <strong>{cpu}%</strong>
+        <strong>{cpu.toFixed(1)}%</strong>
       </div>
 
       <div className="metric">
         <span>RAM</span>
-        <strong>{ram}%</strong>
+        <strong>{ram.toFixed(1)}%</strong>
       </div>
 
       <div className="status-metric">
