@@ -498,6 +498,14 @@ export function PreviewCanvas({
       <div className="canvas-resolution">
         {canvasWidth} × {canvasHeight}
       </div>
+      <label className="preview-toggle">
+  <input
+    type="checkbox"
+    checked={enabled}
+    onChange={onToggle}
+  />
+  <span>Preview</span>
+</label>
     </div>
   </section>
 )
