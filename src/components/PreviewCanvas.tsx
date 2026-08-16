@@ -47,22 +47,23 @@ type Interaction =
   | {
       type: 'drag'
       sourceId: string
+      startClientX: number
+      startClientY: number
       startX: number
       startY: number
-      sourceX: number
-      sourceY: number
       width: number
       height: number
     }
   | {
       type: 'resize'
       sourceId: string
+      startClientX: number
+      startClientY: number
       startX: number
       startY: number
-      sourceX: number
-      sourceY: number
       width: number
       height: number
+      aspectRatio: number
       fontSize: number
     }
   | null
@@ -237,194 +238,277 @@ export function PreviewCanvas({
   )
 
   function beginDrag(
-    event: React.PointerEvent<HTMLDivElement>,
-    source: Source,
-  ) {
-    if (source.locked) return
+  event: React.PointerEvent<HTMLDivElement>,
+  source: Source,
+) {
+  if (source.locked) return
 
-    event.preventDefault()
-    event.stopPropagation()
+  event.preventDefault()
+  event.stopPropagation()
 
-    const bounds = getSourceBounds(source)
+  const bounds = getSourceBounds(source)
 
-    interactionRef.current = {
-      type: 'drag',
-      sourceId: source.id,
-      startX: event.clientX,
-      startY: event.clientY,
-      sourceX: bounds.x,
-      sourceY: bounds.y,
-      width: bounds.width,
-      height: bounds.height,
-    }
+  event.currentTarget.setPointerCapture(event.pointerId)
 
-    onSelectSource(source.id)
+  interactionRef.current = {
+    type: 'drag',
+    sourceId: source.id,
+
+    startClientX: event.clientX,
+    startClientY: event.clientY,
+
+    startX: bounds.x,
+    startY: bounds.y,
+
+    width: bounds.width,
+    height: bounds.height,
   }
+
+  onSelectSource(source.id)
+}
 
   function beginResize(
-    event: React.PointerEvent<HTMLDivElement>,
-    source: Source,
-  ) {
-    if (source.locked) return
+  event: React.PointerEvent<HTMLDivElement>,
+  source: Source,
+) {
+  if (source.locked) return
 
-    event.preventDefault()
-    event.stopPropagation()
+  event.preventDefault()
+  event.stopPropagation()
 
-    const bounds = getSourceBounds(source)
+  const bounds = getSourceBounds(source)
 
-    interactionRef.current = {
-      type: 'resize',
-      sourceId: source.id,
-      startX: event.clientX,
-      startY: event.clientY,
-      sourceX: bounds.x,
-      sourceY: bounds.y,
-      width: bounds.width,
-      height: bounds.height,
-      fontSize:
-        source.properties.fontSize ?? 32,
-    }
+  event.currentTarget.setPointerCapture(event.pointerId)
 
-    onSelectSource(source.id)
+  interactionRef.current = {
+    type: 'resize',
+    sourceId: source.id,
+
+    startClientX: event.clientX,
+    startClientY: event.clientY,
+
+    startX: bounds.x,
+    startY: bounds.y,
+
+    width: bounds.width,
+    height: bounds.height,
+
+    aspectRatio:
+      bounds.width / Math.max(bounds.height, 1),
+
+    fontSize:
+      source.properties.fontSize ?? 32,
   }
 
+  onSelectSource(source.id)
+}
+
   useEffect(() => {
-    function handlePointerMove(
-      event: PointerEvent,
-    ) {
-      const interaction =
-        interactionRef.current
+  function handlePointerMove(event: PointerEvent) {
+    const interaction = interactionRef.current
 
-      if (!interaction) return
+    if (!interaction) return
 
-      const canvas = canvasRef.current
+    const canvas = canvasRef.current
 
-      if (!canvas) return
+    if (!canvas) return
 
-      const rect = canvas.getBoundingClientRect()
+    const rect = canvas.getBoundingClientRect()
 
-      const deltaX =
-        ((event.clientX -
-          interaction.startX) /
-          rect.width) *
-        CANVAS_WIDTH
+    if (!rect.width || !rect.height) return
 
-      const deltaY =
-        ((event.clientY -
-          interaction.startY) /
-          rect.height) *
-        CANVAS_HEIGHT
+    const scaleX = CANVAS_WIDTH / rect.width
+    const scaleY = CANVAS_HEIGHT / rect.height
 
-      if (interaction.type === 'drag') {
-        const x = Math.max(
-          0,
-          Math.min(
-            CANVAS_WIDTH -
-              interaction.width,
-            interaction.sourceX + deltaX,
-          ),
-        )
+    const deltaX =
+      (event.clientX - interaction.startClientX) *
+      scaleX
 
-        const y = Math.max(
-          0,
-          Math.min(
-            CANVAS_HEIGHT -
-              interaction.height,
-            interaction.sourceY + deltaY,
-          ),
-        )
+    const deltaY =
+      (event.clientY - interaction.startClientY) *
+      scaleY
 
-        onUpdateSource(
-          interaction.sourceId,
-          {
-            x,
-            y,
-          },
-        )
+    if (interaction.type === 'drag') {
+      const x = Math.max(
+        0,
+        Math.min(
+          CANVAS_WIDTH - interaction.width,
+          interaction.startX + deltaX,
+        ),
+      )
+
+      const y = Math.max(
+        0,
+        Math.min(
+          CANVAS_HEIGHT - interaction.height,
+          interaction.startY + deltaY,
+        ),
+      )
+
+      onUpdateSource(
+        interaction.sourceId,
+        {
+          x,
+          y,
+        },
+      )
+    }
+
+    if (interaction.type === 'resize') {
+
+      const rawWidth =
+        interaction.width + deltaX
+
+      const rawHeight =
+        interaction.height + deltaY
+
+      const minWidth = 40
+      const minHeight = 30
+
+      let width = Math.max(
+        minWidth,
+        rawWidth,
+      )
+
+      let height = Math.max(
+        minHeight,
+        rawHeight,
+      )
+
+      if (interaction.aspectRatio > 0) {
+        const widthFromHeight =
+          height * interaction.aspectRatio
+
+        const heightFromWidth =
+          width / interaction.aspectRatio
+
+        if (
+          Math.abs(deltaX) >=
+          Math.abs(deltaY)
+        ) {
+          height = Math.max(
+            minHeight,
+            width / interaction.aspectRatio,
+          )
+        } else {
+          width = Math.max(
+            minWidth,
+            height * interaction.aspectRatio,
+          )
+        }
       }
 
-      if (interaction.type === 'resize') {
-        const width = Math.max(
-          40,
-          Math.min(
-            CANVAS_WIDTH -
-              interaction.sourceX,
-            interaction.width + deltaX,
-          ),
-        )
+      const maxWidth =
+        CANVAS_WIDTH - interaction.startX
 
-        const height = Math.max(
-          30,
-          Math.min(
-            CANVAS_HEIGHT -
-              interaction.sourceY,
-            interaction.height + deltaY,
-          ),
-        )
+      const maxHeight =
+        CANVAS_HEIGHT - interaction.startY
 
-        const source = sources.find(
-          (item) =>
-            item.id === interaction.sourceId,
-        )
+      width = Math.min(
+        width,
+        maxWidth,
+      )
 
-        if (!source) return
+      height = Math.min(
+        height,
+        maxHeight,
+      )
 
-        const properties: Partial<
-          Source['properties']
-        > = {
+      if (interaction.aspectRatio > 0) {
+        if (
+          width / interaction.aspectRatio <=
+          maxHeight
+        ) {
+          height =
+            width /
+            interaction.aspectRatio
+        } else {
+          height = maxHeight
+          width =
+            height *
+            interaction.aspectRatio
+        }
+
+        width = Math.min(
           width,
+          maxWidth,
+        )
+
+        height = Math.min(
           height,
-        }
-
-        if (source.type === 'text') {
-          const scale =
-            height / interaction.height
-
-          properties.fontSize =
-            Math.max(
-              8,
-              Math.round(
-                interaction.fontSize *
-                  scale,
-              ),
-            )
-        }
-
-        onUpdateSource(
-          interaction.sourceId,
-          properties,
+          maxHeight,
         )
       }
 
-      forceUpdate((value) => value + 1)
+      const source = sources.find(
+        (item) =>
+          item.id === interaction.sourceId,
+      )
+
+      if (!source) return
+
+      const properties: Partial<
+        Source['properties']
+      > = {
+        width,
+        height,
+      }
+
+      if (source.type === 'text') {
+        const scale =
+          height /
+          Math.max(
+            interaction.height,
+            1,
+          )
+
+        properties.fontSize =
+          Math.max(
+            8,
+            Math.round(
+              interaction.fontSize *
+                scale,
+            ),
+          )
+      }
+
+      onUpdateSource(
+        interaction.sourceId,
+        properties,
+      )
     }
 
-    function handlePointerUp() {
-      interactionRef.current = null
-    }
+    forceUpdate(
+      (value) => value + 1,
+    )
+  }
 
-    window.addEventListener(
+  function handlePointerUp() {
+    interactionRef.current = null
+  }
+
+  window.addEventListener(
+    'pointermove',
+    handlePointerMove,
+  )
+
+  window.addEventListener(
+    'pointerup',
+    handlePointerUp,
+  )
+
+  return () => {
+    window.removeEventListener(
       'pointermove',
       handlePointerMove,
     )
 
-    window.addEventListener(
+    window.removeEventListener(
       'pointerup',
       handlePointerUp,
     )
-
-    return () => {
-      window.removeEventListener(
-        'pointermove',
-        handlePointerMove,
-      )
-
-      window.removeEventListener(
-        'pointerup',
-        handlePointerUp,
-      )
-    }
-  }, [sources, onUpdateSource])
+  }
+}, [sources, onUpdateSource])
 
   return (
   <section className="preview-section">
@@ -499,11 +583,16 @@ export function PreviewCanvas({
 
                   {isSelected && !source.locked && (
                     <div
-                      className="resize-handle"
-                      onPointerDown={(event) =>
-                        beginResize(event, source)
-                      }
-                    />
+  className="resize-handle"
+  role="presentation"
+  onPointerDown={(event) => {
+    event.preventDefault()
+    event.stopPropagation()
+
+    beginResize(event, source)
+  }}
+/>
+
                   )}
                 </div>
               )
