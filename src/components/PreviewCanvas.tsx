@@ -447,9 +447,6 @@ export function PreviewCanvas({
             }
           }}
         >
-          {/* Safe area guides */}
-          <div className="safe-guide safe-guide-outer" />
-          <div className="safe-guide safe-guide-inner" />
 
           {visibleSources.length === 0 ? (
             <div className="empty-canvas">
@@ -518,9 +515,7 @@ export function PreviewCanvas({
           <span>Preview disabled</span>
         </div>
       )}
-
-      <div className="safe-area-overlay" />
-
+      
       <div className="canvas-resolution">
         {canvasWidth} × {canvasHeight}
       </div>
