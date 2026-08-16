@@ -84,11 +84,20 @@ function getSourceBounds(source: Source) {
 }
 
 function getSourceUrl(source: Source) {
-  if (!source.properties.file) return ''
+  const file = source.properties.file?.trim()
 
-  return source.properties.file.startsWith('/')
-    ? source.properties.file
-    : `/${source.properties.file}`
+  if (!file) return ''
+
+  if (
+    file.startsWith('blob:') ||
+    file.startsWith('data:') ||
+    /^https?:\/\//i.test(file) ||
+    file.startsWith('file:')
+  ) {
+    return file
+  }
+
+  return file.startsWith('/') ? file : `/${file}`
 }
 
 function renderSource(
