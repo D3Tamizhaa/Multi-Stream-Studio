@@ -1,5 +1,6 @@
 const http = require('node:http')
 const process = require('node:process')
+const os = require('node:os')
 
 let previousCpu = process.cpuUsage()
 let previousTime = process.hrtime.bigint()
