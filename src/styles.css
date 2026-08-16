@@ -399,6 +399,23 @@ p {
   border-color: rgba(124, 92, 255, 0.45);
 }
 
+.safe-guide {
+  position: absolute;
+  pointer-events: none;
+  z-index: 80;
+  box-sizing: border-box;
+}
+
+.safe-guide-outer {
+  inset: 5%;
+  border: 1px dashed rgba(255, 255, 255, 0.22);
+}
+
+.safe-guide-inner {
+  inset: 10%;
+  border: 1px dashed rgba(124, 92, 255, 0.45);
+}
+
 .preview-toggle {
   position: absolute;
   right: 12px;
