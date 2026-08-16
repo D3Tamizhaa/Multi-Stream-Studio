@@ -335,8 +335,12 @@ p {
 .canvas-content {
   position: relative;
 
-  width: min(92cqw, calc(92cqh * var(--canvas-ratio)));
-  aspect-ratio: var(--canvas-ratio);
+  /* Keep the 1920x1080 canvas inside the preview stage */
+  width: min(92cqw, calc(92cqh * 16 / 9));
+  aspect-ratio: 16 / 9;
+
+  max-width: 92%;
+  max-height: 92%;
 
   overflow: hidden;
   border: 1px solid #364054;
@@ -396,14 +400,6 @@ p {
   gap: 8px;
   color: #737d90;
   font-size: 12px;
-}
-
-.canvas-content {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  touch-action: none;
 }
 
 .canvas-layer {
