@@ -390,17 +390,29 @@ export function PreviewCanvas({
   }, [sources, onUpdateSource])
 
     return (
-    <section className="preview-section">
-      <div className="section-heading">
-        <h2>Preview</h2>
-      </div>
+   <section className="preview-section">
+  <div className="section-heading">
+    <div>
+      <h2>Preview</h2>
+    </div>
 
-      {/* ONE SINGLE 16:9 PREVIEW CANVAS */}
-      <div
+    <label className="toggle-line">
+      ...
+      <span>Preview</span>
+    </label>
+  </div>
+
         className={`preview-stage ${
           !enabled ? 'preview-disabled' : ''
         }`}
       >
+
+        <div className="canvas-grid" />
+        
+        <div className="safe-area safe-area-outer" />
+        <div className="safe-area safe-area-inner" />
+
+        
         {enabled ? (
           <div
             ref={canvasRef}
