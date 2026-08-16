@@ -66,6 +66,22 @@ type Interaction =
       fontSize: number
     }
   | null
+  
+function getSourceBounds(source: Source) {
+  const width = source.properties.width ?? 640
+  const height = source.properties.height ?? 360
+
+  return {
+    x:
+      source.properties.x ??
+      (CANVAS_WIDTH - width) / 2,
+    y:
+      source.properties.y ??
+      (CANVAS_HEIGHT - height) / 2,
+    width,
+    height,
+  }
+}
 
 function getSourceUrl(source: Source) {
   const file = source.properties.file?.trim()
