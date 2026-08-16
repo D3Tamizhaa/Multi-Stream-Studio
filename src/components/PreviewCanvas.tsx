@@ -112,13 +112,22 @@ function renderSource(
       return url ? (
         <img
           src={url}
-          alt=""
+          alt={source.name}
           className="preview-media preview-image"
           draggable={false}
+          onError={(event) => {
+            console.error(
+              'Image preview failed:',
+              source.name,
+              url,
+              event.currentTarget,
+            )
+          }}
         />
       ) : (
         <div className="preview-placeholder">
           <ImageIcon size={28} />
+          <span>No image selected</span>
         </div>
       )
 
@@ -129,21 +138,38 @@ function renderSource(
           src={url}
           autoPlay
           muted={muted}
-          loop
+          loop={source.properties.loop ?? true}
           playsInline
+          preload="auto"
           controls={false}
-          ref={(element) => {
-            if (element) {
-              element.volume = Math.max(
-                0,
-                Math.min(1, volume / 100),
+          onLoadedData={(event) => {
+            const video = event.currentTarget
+
+            video.volume = Math.max(
+              0,
+              Math.min(1, volume / 100),
+            )
+
+            video.play().catch((error) => {
+              console.warn(
+                'Video autoplay was blocked:',
+                error,
               )
-            }
+            })
+          }}
+          onError={(event) => {
+            console.error(
+              'Video preview failed:',
+              source.name,
+              url,
+              event.currentTarget.error,
+            )
           }}
         />
       ) : (
         <div className="preview-placeholder">
           <Music2 size={28} />
+          <span>No media selected</span>
         </div>
       )
 
@@ -151,13 +177,15 @@ function renderSource(
       return source.properties.url ? (
         <iframe
           src={source.properties.url}
-          title="Browser source"
+          title={source.name}
           className="preview-browser"
+          allow="autoplay; fullscreen"
           sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
         />
       ) : (
         <div className="preview-placeholder">
           <Globe size={28} />
+          <span>No URL configured</span>
         </div>
       )
 
