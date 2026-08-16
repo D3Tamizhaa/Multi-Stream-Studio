@@ -2,6 +2,7 @@ const http = require('node:http')
 const os = require('node:os')
 
 let previousCpu = null
+let currentCpu = 0
 
 function getCpuSnapshot() {
   const cpus = os.cpus()
@@ -10,69 +11,89 @@ function getCpuSnapshot() {
   let total = 0
 
   for (const cpu of cpus) {
-    const times = cpu.times
+    const { user, nice, sys, idle: cpuIdle, irq } = cpu.times
 
-    idle += times.idle
-    total +=
-      times.user +
-      times.nice +
-      times.sys +
-      times.idle +
-      times.irq
+    idle += cpuIdle
+    total += user + nice + sys + cpuIdle + irq
   }
 
   return { idle, total }
 }
 
-function getCpuUsage() {
+function updateCpuUsage() {
   const current = getCpuSnapshot()
 
-  if (!previousCpu) {
-    previousCpu = current
-    return 0
-  }
+  if (previousCpu) {
+    const idleDelta = current.idle - previousCpu.idle
+    const totalDelta = current.total - previousCpu.total
 
-  const idleDelta = current.idle - previousCpu.idle
-  const totalDelta = current.total - previousCpu.total
+    if (totalDelta > 0) {
+      currentCpu = Math.max(
+        0,
+        Math.min(
+          100,
+          100 - (idleDelta / totalDelta) * 100,
+        ),
+      )
+    }
+  }
 
   previousCpu = current
-
-  if (totalDelta <= 0) {
-    return 0
-  }
-
-  return Math.max(
-    0,
-    Math.min(
-      100,
-      100 - (idleDelta / totalDelta) * 100,
-    ),
-  )
 }
+
+// Take CPU samples continuously.
+updateCpuUsage()
+setInterval(updateCpuUsage, 1000)
 
 function getSystemStats() {
   const totalMemory = os.totalmem()
   const freeMemory = os.freemem()
-  const usedMemory = totalMemory - freeMemory
+
+  const ramUsage =
+    ((totalMemory - freeMemory) / totalMemory) * 100
 
   return {
-    cpu: Number(getCpuUsage().toFixed(1)),
-    ram: Number(
-      ((usedMemory / totalMemory) * 100).toFixed(1),
-    ),
+    cpu: Number(currentCpu.toFixed(1)),
+    ram: Number(ramUsage.toFixed(1)),
   }
 }
 
 const statsServer = http.createServer((req, res) => {
-  if (req.method === 'GET' &&
-      req.url === '/api/system-stats') {
+  // CORS
+  res.setHeader(
+    'Access-Control-Allow-Origin',
+    '*',
+  )
+
+  res.setHeader(
+    'Access-Control-Allow-Methods',
+    'GET, OPTIONS',
+  )
+
+  res.setHeader(
+    'Cache-Control',
+    'no-store',
+  )
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204)
+    res.end()
+    return
+  }
+
+  if (
+    req.method === 'GET' &&
+    req.url === '/api/system-stats'
+  ) {
+    const stats = getSystemStats()
+
+    console.log('System stats:', stats)
+
     res.writeHead(200, {
       'Content-Type': 'application/json',
-      'Cache-Control': 'no-store',
-      'Access-Control-Allow-Origin': '*',
     })
 
-    res.end(JSON.stringify(getSystemStats()))
+    res.end(JSON.stringify(stats))
     return
   }
 
@@ -80,8 +101,20 @@ const statsServer = http.createServer((req, res) => {
   res.end('Not found')
 })
 
-statsServer.listen(3001, '127.0.0.1', () => {
-  console.log(
-    'System stats API running at http://127.0.0.1:3001',
+statsServer.on('error', (error) => {
+  console.error(
+    'System stats server error:',
+    error,
   )
 })
+
+statsServer.listen(
+  3001,
+  '127.0.0.1',
+  () => {
+    console.log(
+      'System stats API running at:',
+      'http://127.0.0.1:3001/api/system-stats',
+    )
+  },
+)
