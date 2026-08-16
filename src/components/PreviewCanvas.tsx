@@ -193,7 +193,7 @@ export function PreviewCanvas({
   const [, forceUpdate] = useState(0)
 
   const { width: canvasWidth, height: canvasHeight } =
-    parseResolution(baseResolution)
+    parseResolution('1920x1080')
 
   const visibleSources = sources.filter(
     (source) => source.visible,
