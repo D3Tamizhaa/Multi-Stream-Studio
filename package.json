@@ -1,7 +1,10 @@
 {
   "name": "multi-stream-studio",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "engines": {
+    "node": "20.x"
+  },
   "type": "module",
   "description": "Multi Stream Studio - browser-based live production studio UI",
   "scripts": {
