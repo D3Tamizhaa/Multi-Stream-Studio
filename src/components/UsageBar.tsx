@@ -48,7 +48,7 @@ export function UsageBar({
 
       <div className="metric">
         <span>RAM</span>
-        <strong>{ram.toFixed(1)}MB</strong>
+        <strong>{ram.toFixed(1)} MB</strong>
       </div>
 
       <div className="status-metric">
