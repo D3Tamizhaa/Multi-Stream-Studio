@@ -85,6 +85,49 @@ export default function App() {
     return () => window.clearInterval(interval)
   }, [streaming])
 
+  useEffect(() => {
+  let cancelled = false
+
+  async function updateSystemStats() {
+    try {
+      const response = await fetch(
+        'http://127.0.0.1:3001/api/system-stats',
+        {
+          cache: 'no-store',
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to read system stats')
+      }
+
+      const data = await response.json()
+
+      if (!cancelled) {
+        setCpu(Number(data.cpu) || 0)
+        setRam(Number(data.ram) || 0)
+      }
+    } catch {
+      if (!cancelled) {
+        setCpu(0)
+        setRam(0)
+      }
+    }
+  }
+
+  updateSystemStats()
+
+  const interval = window.setInterval(
+    updateSystemStats,
+    1000,
+  )
+
+  return () => {
+    cancelled = true
+    window.clearInterval(interval)
+  }
+}, [])
+  
   function login(name: string) {
     setUsername(name)
     setLoggedIn(true)
@@ -348,9 +391,12 @@ export default function App() {
           )}
 
           <UsageBar
-            streaming={streaming}
-            uptime={uptime}
-          />
+  streaming={streaming}
+  uptime={uptime}
+  cpu={cpu}
+  ram={ram}
+/>
+
         </div>
       </div>
 
