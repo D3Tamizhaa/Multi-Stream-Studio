@@ -72,24 +72,6 @@ function getSourceUrl(source: Source) {
 
   if (!file) return ''
 
-  // Browser-created uploaded files use blob: URLs.
-  // Do not prepend "/" to them.
-  if (
-    file.startsWith('blob:') ||
-    file.startsWith('data:') ||
-    /^https?:\/\//i.test(file)
-  ) {
-    return file
-  }
-
-  return file.startsWith('/') ? file : `/${file}`
-}
-
-function getSourceUrl(source: Source) {
-  const file = source.properties.file?.trim()
-
-  if (!file) return ''
-
   if (
     file.startsWith('blob:') ||
     file.startsWith('data:') ||
