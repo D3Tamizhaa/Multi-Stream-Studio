@@ -502,3 +502,4 @@ export function PreviewCanvas({
     </div>
   </section>
 )
+}
