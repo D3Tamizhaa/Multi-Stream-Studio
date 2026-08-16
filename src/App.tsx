@@ -312,20 +312,19 @@ export default function App() {
           {page === 'editor' ? (
             <>
               <div className="editor-main">
-                <PreviewCanvas
-  sources={sources}
-  enabled={previewEnabled}
-  onToggle={() =>
-    setPreviewEnabled((value) => !value)
-  }
-  selectedSource={selectedSource}
-  onSelectSource={setSelectedSource}
-  onUpdateSource={updateSource}
-  volume={audioVolume}
-  muted={audioMuted}
-/>
-
-              </div>
+  <PreviewCanvas
+    sources={sources}
+    enabled={previewEnabled}
+    onToggle={() =>
+      setPreviewEnabled((value) => !value)
+    }
+    selectedSource={selectedSource}
+    onSelectSource={setSelectedSource}
+    onUpdateSource={updateSource}
+    volume={audioVolume}
+    muted={audioMuted}
+  />
+</div>
 
               <div className="workspace-grid">
                 <ScenesPanel
