@@ -376,12 +376,6 @@ export function PreviewCanvas({
       )
 
       if (interaction.aspectRatio > 0) {
-        const widthFromHeight =
-          height * interaction.aspectRatio
-
-        const heightFromWidth =
-          width / interaction.aspectRatio
-
         if (
           Math.abs(deltaX) >=
           Math.abs(deltaY)
