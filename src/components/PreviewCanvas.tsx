@@ -392,46 +392,53 @@ export function PreviewCanvas({
   return (
     <section className="preview-section">
       <div className="section-heading">
-        <div>
-          <h2>Preview</h2>
-        </div>
-
-        <label className="toggle-line">
-          <input
-            type="checkbox"
-            checked={enabled}
-            onChange={onToggle}
-          />
-
-          <span>Preview</span>
-        </label>
-      </div>
-
-      <div
-        className={`preview-stage ${
-          !enabled
-            ? 'preview-disabled'
-            : ''
-        }`}
-      >
-        <div className="canvas-grid" />
-
-        {enabled ? (
-          <div
-  ref={canvasRef}
-  className="canvas-content"
-  style={{
-    aspectRatio: `${canvasWidth} / ${canvasHeight}`,
-  }}
-  onPointerDown={(event) => {
-    if (
-      event.target ===
-      event.currentTarget
-    ) {
-      onSelectSource('')
-    }
-  }}
+  <h2>Preview</h2>
+</div>
+      
+<div
+  className={`preview-stage ${
+    !enabled
+      ? 'preview-disabled'
+      : ''
+  }`}
 >
+        {enabled ? (
+  <div
+    ref={canvasRef}
+    className="canvas-content"
+    style={{
+      aspectRatio: `${canvasWidth} / ${canvasHeight}`,
+    }}
+    onPointerDown={(event) => {
+      if (
+        event.target ===
+        event.currentTarget
+      ) {
+        onSelectSource('')
+      }
+    }}
+  >
+    {/* existing sources code stays here */}
+  </div>
+) : (
+  <div className="preview-off">
+    <span>Preview disabled</span>
+  </div>
+)}
+
+<div className="canvas-resolution">
+  {canvasWidth} × {canvasHeight}
+</div>
+
+<label className="preview-toggle">
+  <input
+    type="checkbox"
+    checked={enabled}
+    onChange={onToggle}
+  />
+  <span>Preview</span>
+</label>
+
             {visibleSources.length === 0 ? (
               <div className="empty-canvas">
                 <ImageIcon size={32} />
