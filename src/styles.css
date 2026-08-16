@@ -434,30 +434,6 @@ p {
   font-size: 12px;
 }
 
-.canvas-layer {
-  position: absolute;
-  box-sizing: border-box;
-  overflow: visible;
-  padding: 0;
-  margin: 0;
-  background: transparent;
-  border: 2px solid transparent;
-  border-radius: 0;
-  cursor: move;
-  touch-action: none;
-}
-
-.canvas-layer.selected {
-  border-color: var(--accent);
-  box-shadow:
-    0 0 0 1px rgba(124, 92, 255, 0.35),
-    0 0 16px rgba(124, 92, 255, 0.15);
-}
-
-.canvas-layer:active {
-  cursor: grabbing;
-}
-
 .empty-canvas,
 .preview-off {
   position: absolute;
