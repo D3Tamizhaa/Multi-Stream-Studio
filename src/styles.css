@@ -363,45 +363,6 @@ p {
   touch-action: none;
 }
 
-.safe-area {
-  position: absolute;
-  pointer-events: none;
-  z-index: 90;
-
-  aspect-ratio: 16 / 9;
-
-  border: 1px dashed rgba(255, 255, 255, 0.22);
-
-  box-sizing: border-box;
-}
-
-.safe-area-outer {
-  width: min(86cqw, calc(86cqh * 16 / 9));
-  height: auto;
-}
-
-.safe-area-inner {
-  width: min(78cqw, calc(78cqh * 16 / 9));
-  height: auto;
-}
-
-.safe-guide {
-  position: absolute;
-  pointer-events: none;
-  z-index: 80;
-  box-sizing: border-box;
-}
-
-.safe-guide-outer {
-  inset: 5%;
-  border: 1px dashed rgba(255, 255, 255, 0.22);
-}
-
-.safe-guide-inner {
-  inset: 10%;
-  border: 1px dashed rgba(124, 92, 255, 0.45);
-}
-
 .preview-toggle {
   position: absolute;
   right: 12px;
