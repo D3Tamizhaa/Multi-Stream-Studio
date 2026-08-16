@@ -67,20 +67,22 @@ type Interaction =
     }
   | null
 
-function getSourceBounds(source: Source) {
-  const width = source.properties.width ?? 640
-  const height = source.properties.height ?? 360
+function getSourceUrl(source: Source) {
+  const file = source.properties.file?.trim()
 
-  return {
-    x:
-      source.properties.x ??
-      (CANVAS_WIDTH - width) / 2,
-    y:
-      source.properties.y ??
-      (CANVAS_HEIGHT - height) / 2,
-    width,
-    height,
+  if (!file) return ''
+
+  // Browser-created uploaded files use blob: URLs.
+  // Do not prepend "/" to them.
+  if (
+    file.startsWith('blob:') ||
+    file.startsWith('data:') ||
+    /^https?:\/\//i.test(file)
+  ) {
+    return file
   }
+
+  return file.startsWith('/') ? file : `/${file}`
 }
 
 function getSourceUrl(source: Source) {
