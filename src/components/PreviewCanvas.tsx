@@ -183,7 +183,6 @@ export function PreviewCanvas({
   selectedSource,
   onSelectSource,
   onUpdateSource,
-  baseResolution,
   volume = 80,
   muted = false,
 }: PreviewCanvasProps) {
