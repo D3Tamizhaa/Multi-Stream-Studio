@@ -320,7 +320,6 @@ export default function App() {
   }
   selectedSource={selectedSource}
   onSelectSource={setSelectedSource}
-  onUpdateSource={updateSource}
   volume={audioVolume}
   muted={audioMuted}
 />
