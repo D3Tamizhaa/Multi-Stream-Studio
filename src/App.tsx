@@ -63,6 +63,8 @@ export default function App() {
     useState(false)
 
   const [uptime, setUptime] = useState(0)
+  const [cpu, setCpu] = useState(0)
+  const [ram, setRam] = useState(0)
 
   const [modal, setModal] = useState<
     | 'scene'
