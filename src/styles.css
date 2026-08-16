@@ -258,14 +258,6 @@ button:disabled {
   overflow: hidden;
 }
 
-.section-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 42px;
-  margin-bottom: 9px;
-}
-
 .eyebrow {
   display: block;
   color: var(--accent);
@@ -300,53 +292,121 @@ p {
 }
 
 .preview-section {
+  position: relative;
   width: 100%;
+  height: 100%;
   min-width: 0;
   min-height: 0;
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
+.section-heading {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  margin-bottom: 12px;
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* ONE SINGLE PREVIEW AREA */
 .preview-stage {
   position: relative;
-  min-height: 0;
-  flex: 1;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+
+  margin: 0 auto;
+
+  background: #000;
+  border: 1px solid #2f3542;
+  border-radius: 8px;
+
+  overflow: hidden;
+}
+
+/* Actual 1920x1080 canvas */
+.canvas-content {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  aspect-ratio: 16 / 9;
+
+  background: #000;
+  overflow: hidden;
+}
+
+/* Remove the old grid */
+.canvas-grid {
+  display: none !important;
+}
+
+/* Bottom-right Preview checkbox */
+.preview-toggle {
+  position: absolute;
+
+  right: 12px;
+  bottom: 12px;
+
+  z-index: 100;
+
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  color: #fff;
+  font-size: 13px;
+
+  cursor: pointer;
+  user-select: none;
+}
+
+.preview-toggle input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+/* Keep the resolution label inside the canvas */
+.canvas-resolution {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+
+  z-index: 100;
+
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 11px;
+  pointer-events: none;
+}
+
+/* Disabled state */
+.preview-disabled {
+  opacity: 0.6;
+}
+
+.preview-off {
+  position: absolute;
+  inset: 0;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
 
-  /* Use the actual stage as the sizing reference */
-  container-type: size;
-
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background:
-    radial-gradient(
-      circle at center,
-      rgba(124, 92, 255, 0.06),
-      transparent 40%
-    ),
-    #0a0d13;
-  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.25);
-}
-
-.canvas-content {
-  position: relative;
-  width: min(92cqw, calc(92cqh * 16 / 9));
-  aspect-ratio: 16 / 9;
-  max-width: 92%;
-  max-height: 92%;
-  overflow: hidden;
-  border: none;
-  border-radius: 0;
+  color: #6b7280;
   background: #000;
-  box-shadow: none;
-  touch-action: none;
 }
-
-/* Actual source rendering */
 
 .source-render {
   position: absolute;
