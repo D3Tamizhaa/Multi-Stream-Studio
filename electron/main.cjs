@@ -1,65 +1,57 @@
 const http = require('node:http')
-const os = require('node:os')
+const process = require('node:process')
 
-let previousCpu = null
+let previousCpu = process.cpuUsage()
+let previousTime = process.hrtime.bigint()
+
 let currentCpu = 0
 
-function getCpuSnapshot() {
-  const cpus = os.cpus()
-
-  let idle = 0
-  let total = 0
-
-  for (const cpu of cpus) {
-    const { user, nice, sys, idle: cpuIdle, irq } = cpu.times
-
-    idle += cpuIdle
-    total += user + nice + sys + cpuIdle + irq
-  }
-
-  return { idle, total }
-}
-
 function updateCpuUsage() {
-  const current = getCpuSnapshot()
+  const currentCpuUsage = process.cpuUsage()
+  const currentTime = process.hrtime.bigint()
 
-  if (previousCpu) {
-    const idleDelta = current.idle - previousCpu.idle
-    const totalDelta = current.total - previousCpu.total
+  const cpuDelta =
+    (currentCpuUsage.user - previousCpu.user) +
+    (currentCpuUsage.system - previousCpu.system)
 
-    if (totalDelta > 0) {
-      currentCpu = Math.max(
-        0,
-        Math.min(
-          100,
-          100 - (idleDelta / totalDelta) * 100,
-        ),
-      )
-    }
+  const timeDelta =
+    Number(currentTime - previousTime) / 1000
+
+  if (timeDelta > 0) {
+    currentCpu =
+      (cpuDelta / timeDelta) * 100
+
+    currentCpu = Math.max(
+      0,
+      Math.min(100, currentCpu),
+    )
   }
 
-  previousCpu = current
+  previousCpu = currentCpuUsage
+  previousTime = currentTime
 }
 
-// Take CPU samples continuously.
+// Update every second.
 updateCpuUsage()
 setInterval(updateCpuUsage, 1000)
 
 function getSystemStats() {
-  const totalMemory = os.totalmem()
-  const freeMemory = os.freemem()
-
-  const ramUsage =
-    ((totalMemory - freeMemory) / totalMemory) * 100
+  const memory = process.memoryUsage()
 
   return {
+    // CPU used by Multi-Stream Studio's
+    // Electron/Node process.
     cpu: Number(currentCpu.toFixed(1)),
-    ram: Number(ramUsage.toFixed(1)),
+
+    // RAM used by Multi-Stream Studio's
+    // Electron/Node process, in MB.
+    ram: Number(
+      (memory.rss / 1024 / 1024).toFixed(1),
+    ),
   }
 }
 
 const statsServer = http.createServer((req, res) => {
-  // CORS
   res.setHeader(
     'Access-Control-Allow-Origin',
     '*',
@@ -87,7 +79,7 @@ const statsServer = http.createServer((req, res) => {
   ) {
     const stats = getSystemStats()
 
-    console.log('System stats:', stats)
+    console.log('Multi-Stream Studio stats:', stats)
 
     res.writeHead(200, {
       'Content-Type': 'application/json',
