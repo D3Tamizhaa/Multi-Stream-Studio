@@ -402,9 +402,6 @@ export function PreviewCanvas({
 
   return (
   <section className="preview-section">
-    <div className="section-heading">
-      <h2>Preview</h2>
-    </div>
 
     <div
       className={`preview-stage ${
@@ -501,15 +498,6 @@ export function PreviewCanvas({
       <div className="canvas-resolution">
         {canvasWidth} × {canvasHeight}
       </div>
-
-      <label className="preview-toggle">
-        <input
-          type="checkbox"
-          checked={enabled}
-          onChange={onToggle}
-        />
-        <span>Preview</span>
-      </label>
     </div>
   </section>
 )
