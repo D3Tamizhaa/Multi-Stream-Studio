@@ -16,7 +16,10 @@ interface PreviewCanvasProps {
   onToggle: () => void
   selectedSource: string | null
   onSelectSource: (id: string) => void
-  baseResolution: string
+  onUpdateSource: (
+    id: string,
+    properties: Partial<Source['properties']>,
+  ) => void
   volume?: number
   muted?: boolean
 }
