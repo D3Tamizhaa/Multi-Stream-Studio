@@ -45,41 +45,34 @@ export function AudioMixer({
         </div>
 
         <div className="slider-row">
-          <button
-            type="button"
-            className={`volume-mute-button ${
-              muted ? 'muted' : ''
-            }`}
-            onClick={onMuteToggle}
-            aria-label={muted ? 'Unmute audio' : 'Mute audio'}
-            title={muted ? 'Unmute' : 'Mute'}
-          >
-            {muted ? (
-              <VolumeX size={14} />
-            ) : (
-              <Volume2 size={14} />
-            )}
-          </button>
+  <button
+    type="button"
+    className={`volume-toggle ${muted ? 'muted' : ''}`}
+    onClick={onMuteToggle}
+    aria-label={muted ? 'Unmute audio' : 'Mute audio'}
+    title={muted ? 'Unmute' : 'Mute'}
+  >
+    {muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+  </button>
 
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={volume}
-            onChange={(event) =>
-              onVolumeChange(Number(event.target.value))
-            }
-            aria-label="Audio volume"
-          />
-        </div>
-      </div>
+  <input
+    type="range"
+    min="0"
+    max="100"
+    value={muted ? 0 : volume}
+    onChange={(event) =>
+      onVolumeChange(Number(event.target.value))
+    }
+    disabled={muted}
+  />
+</div>
 
-      <div className="audio-actions">
-        <button type="button">
-          <Settings2 size={15} />
-          Properties
-        </button>
-      </div>
+<div className="audio-actions">
+  <button>
+    <Settings2 size={15} />
+    Properties
+  </button>
+</div>
     </section>
   )
 }
