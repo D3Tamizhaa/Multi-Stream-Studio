@@ -493,29 +493,44 @@ p {
 
 .resize-handle {
   position: absolute;
-
-  right: -8px;
-  bottom: -8px;
-
-  width: 16px;
-  height: 16px;
-
+  width: 14px;
+  height: 14px;
   box-sizing: border-box;
-
   border-radius: 4px;
-
   background: var(--accent);
   border: 2px solid #fff;
-
-  cursor: nwse-resize;
-
   z-index: 1000;
-
   touch-action: none;
-
   user-select: none;
-
   -webkit-user-select: none;
+}
+
+.resize-nw {
+  left: -7px;
+  top: -7px;
+  cursor: nwse-resize;
+}
+
+.resize-ne {
+  right: -7px;
+  top: -7px;
+  cursor: nesw-resize;
+}
+
+.resize-sw {
+  left: -7px;
+  bottom: -7px;
+  cursor: nesw-resize;
+}
+
+.resize-se {
+  right: -7px;
+  bottom: -7px;
+  cursor: nwse-resize;
+}
+
+.resize-handle:active {
+  background: var(--accent-hover);
 }
 
 .canvas-layer {
