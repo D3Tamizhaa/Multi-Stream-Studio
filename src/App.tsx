@@ -223,19 +223,26 @@ export default function App() {
   }
 
   function addOrUpdateSource(source: Source) {
-    setSources((current) => {
-      const exists = current.some((item) => item.id === source.id)
+  setSources((current) => {
+    const existing = current.find(
+      (item) => item.id === source.id,
+    )
 
-      return exists
-        ? current.map((item) =>
-            item.id === source.id ? source : item,
-          )
-        : [...current, source]
-    })
+    const sourceWithScene: Source = {
+      ...source,
+      sceneId: existing?.sceneId ?? activeScene,
+    }
 
-    setSelectedSource(source.id)
-    setModal(null)
-  }
+    return existing
+      ? current.map((item) =>
+          item.id === source.id ? sourceWithScene : item,
+        )
+      : [...current, sourceWithScene]
+  })
+
+  setSelectedSource(source.id)
+  setModal(null)
+}
 
   function updateSource(
   id: string,
@@ -394,19 +401,22 @@ export default function App() {
                   onMove={moveScene}
                 />
 
-                <SourcesPanel
-                  sources={sources}
-                  selectedSource={selectedSource}
-                  onSelect={setSelectedSource}
-                  onAdd={() => setModal('source')}
-                  onRemove={removeSource}
-                  onToggleVisibility={toggleSourceVisibility}
-                  onToggleLock={toggleSourceLock}
-                  onProperties={() =>
-                    selectedSource && setModal('source-properties')
-                  }
-                  onMove={moveSource}
-                />
+ <SourcesPanel
+  sources={sources.filter(
+    (source) => source.sceneId === activeScene,
+  )}
+  selectedSource={selectedSource}
+  onSelect={setSelectedSource}
+  onAdd={() => setModal('source')}
+  onRemove={removeSource}
+  onToggleVisibility={toggleSourceVisibility}
+  onToggleLock={toggleSourceLock}
+  onProperties={() =>
+    selectedSource && setModal('source-properties')
+  }
+  onMove={moveSource}
+/>
+
 
                 <AudioMixer
   volume={audioVolume}
