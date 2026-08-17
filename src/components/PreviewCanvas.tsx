@@ -494,108 +494,159 @@ if (interaction.type === 'resize') {
   }
 }, [sources, onUpdateSource])
 
-  return (
+return (
   <section className="preview-section">
+    <div className="preview-stage">
+      <div
+        ref={canvasRef}
+        className={`canvas-content ${
+          !enabled ? 'canvas-content-disabled' : ''
+        }`}
+        style={{
+          aspectRatio: `${canvasWidth} / ${canvasHeight}`,
+        }}
+        onPointerDown={(event) => {
+          if (event.target === event.currentTarget) {
+            onSelectSource('')
+          }
+        }}
+      >
+        {enabled && (
+          <>
+            {visibleSources.length === 0 ? (
+              <div className="empty-canvas">
+                <ImageIcon size={32} />
+                <span>No visible sources</span>
+              </div>
+            ) : (
+              visibleSources.map((source, index) => {
+                const bounds = getSourceBounds(source)
 
-    <div
-      className={`preview-stage ${
-        !enabled ? 'preview-disabled' : ''
-      }`}
-    >
-      {enabled ? (
-<div
-  ref={canvasRef}
-  className={`canvas-content ${
-    !enabled ? 'canvas-content-disabled' : ''
-  }`}
-  style={{
-    aspectRatio: `${canvasWidth} / ${canvasHeight}`,
-  }}
-  onPointerDown={(event) => {
-    if (event.target === event.currentTarget) {
-      onSelectSource('')
-    }
-  }}
->
-  {enabled ? (
-    visibleSources.length === 0 ? (
-      <div className="empty-canvas">
-        <ImageIcon size={32} />
-        <span>No visible sources</span>
-      </div>
-    ) : (
-      visibleSources.map((source, index) => {
-        const bounds = getSourceBounds(source)
+                const left =
+                  (bounds.x / CANVAS_WIDTH) * 100
 
-        const left =
-          (bounds.x / CANVAS_WIDTH) * 100
+                const top =
+                  (bounds.y / CANVAS_HEIGHT) * 100
 
-        const top =
-          (bounds.y / CANVAS_HEIGHT) * 100
+                const width =
+                  (bounds.width / CANVAS_WIDTH) * 100
 
-        const width =
-          (bounds.width / CANVAS_WIDTH) * 100
+                const height =
+                  (bounds.height / CANVAS_HEIGHT) * 100
 
-        const height =
-          (bounds.height / CANVAS_HEIGHT) * 100
+                const isSelected =
+                  selectedSource === source.id
 
-        const isSelected =
-          selectedSource === source.id
+                return (
+                  <div
+                    key={source.id}
+                    className={`canvas-layer ${
+                      isSelected ? 'selected' : ''
+                    }`}
+                    style={{
+                      left: `${left}%`,
+                      top: `${top}%`,
+                      width: `${width}%`,
+                      height: `${height}%`,
+                      zIndex: index + 1,
+                    }}
+                    onPointerDown={(event) =>
+                      beginDrag(event, source)
+                    }
+                  >
+                    <div className="source-render">
+                      {renderSource(
+                        source,
+                        volume,
+                        muted,
+                      )}
+                    </div>
 
-        return (
-          <div
-            key={source.id}
-            className={`canvas-layer ${
-              isSelected ? 'selected' : ''
-            }`}
-            style={{
-              left: `${left}%`,
-              top: `${top}%`,
-              width: `${width}%`,
-              height: `${height}%`,
-              zIndex: index + 1,
-            }}
-            onPointerDown={(event) =>
-              beginDrag(event, source)
-            }
-          >
-            <div className="source-render">
-              {renderSource(
-                source,
-                volume,
-                muted,
-              )}
-            </div>
+                    {isSelected && !source.locked && (
+                      <>
+                        <div
+                          className="resize-handle resize-nw"
+                          role="presentation"
+                          onPointerDown={(event) => {
+                            event.preventDefault()
+                            event.stopPropagation()
+                            beginResize(
+                              event,
+                              source,
+                              'nw',
+                            )
+                          }}
+                        />
 
-            {isSelected && !source.locked && (
-              <>
-                {/* keep your existing resize handles here */}
-              </>
+                        <div
+                          className="resize-handle resize-ne"
+                          role="presentation"
+                          onPointerDown={(event) => {
+                            event.preventDefault()
+                            event.stopPropagation()
+                            beginResize(
+                              event,
+                              source,
+                              'ne',
+                            )
+                          }}
+                        />
+
+                        <div
+                          className="resize-handle resize-sw"
+                          role="presentation"
+                          onPointerDown={(event) => {
+                            event.preventDefault()
+                            event.stopPropagation()
+                            beginResize(
+                              event,
+                              source,
+                              'sw',
+                            )
+                          }}
+                        />
+
+                        <div
+                          className="resize-handle resize-se"
+                          role="presentation"
+                          onPointerDown={(event) => {
+                            event.preventDefault()
+                            event.stopPropagation()
+                            beginResize(
+                              event,
+                              source,
+                              'se',
+                            )
+                          }}
+                        />
+                      </>
+                    )}
+                  </div>
+                )
+              })
             )}
-          </div>
-        )
-      })
-    )
-  ) : (
-    <div className="preview-disabled-content">
-      <span>Preview disabled</span>
-    </div>
-  )}
-</div>
+          </>
+        )}
 
-      )}
-      
+        {!enabled && (
+          <div className="preview-disabled-content">
+            <span>Preview disabled</span>
+          </div>
+        )}
+      </div>
+
       <div className="canvas-resolution">
         {canvasWidth} × {canvasHeight}
       </div>
+
       <label className="preview-toggle">
-  <input
-    type="checkbox"
-    checked={enabled}
-    onChange={onToggle}
-  />
-  <span>Preview</span>
-</label>
+        <input
+          type="checkbox"
+          checked={enabled}
+          onChange={onToggle}
+        />
+        <span>Preview</span>
+      </label>
     </div>
   </section>
 )
