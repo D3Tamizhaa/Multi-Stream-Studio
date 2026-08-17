@@ -101,6 +101,11 @@ export function SettingsPanel({
 
   return (
     <main className="settings-page">
+      {notification && (
+  <div className="settings-notification">
+    {notification}
+  </div>
+)}
       <div className="settings-heading">
         <div>
           <span className="eyebrow">SETTINGS</span>
