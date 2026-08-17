@@ -444,6 +444,26 @@ p {
   border-radius: 2px;
 }
 
+.canvas-content-disabled {
+  border-color: #303746;
+  background: #000;
+}
+
+.preview-disabled-content {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #3f4858;
+  background: #000;
+
+  font-size: 12px;
+  pointer-events: none;
+}
+
 .preview-toggle {
   position: absolute;
 
@@ -490,12 +510,7 @@ p {
   pointer-events: none;
 }
 
-.preview-disabled {
-  opacity: 0.55;
-}
-
-.empty-canvas,
-.preview-off {
+.empty-canvas {
   position: absolute;
   inset: 0;
 
