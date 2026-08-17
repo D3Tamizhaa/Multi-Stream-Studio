@@ -47,8 +47,65 @@ export default function App() {
   const [platforms, setPlatforms] =
     useState<Platform[]>(defaultPlatforms)
 
-  const [settings, setSettings] =
-    useState<StudioSettings>(defaultSettings)
+  const SETTINGS_STORAGE_KEY = 'multi-stream-studio-settings'
+
+function loadSettings(): StudioSettings {
+  try {
+    const saved = localStorage.getItem(SETTINGS_STORAGE_KEY)
+
+    if (!saved) {
+      return defaultSettings
+    }
+
+    const parsed = JSON.parse(saved) as Partial<StudioSettings>
+
+    return {
+      ...defaultSettings,
+      ...parsed,
+      authorization: {
+        ...defaultSettings.authorization,
+        ...(parsed.authorization ?? {}),
+      },
+      stream: {
+        ...defaultSettings.stream,
+        ...(parsed.stream ?? {}),
+      },
+      output: {
+        ...defaultSettings.output,
+        ...(parsed.output ?? {}),
+      },
+      audio: {
+        ...defaultSettings.audio,
+        ...(parsed.audio ?? {}),
+      },
+      video: {
+        ...defaultSettings.video,
+        ...(parsed.video ?? {}),
+      },
+      advanced: {
+        ...defaultSettings.advanced,
+        ...(parsed.advanced ?? {}),
+      },
+    }
+  } catch (error) {
+    console.error('Failed to load saved settings:', error)
+    return defaultSettings
+  }
+}
+
+const [settings, setSettings] =
+  useState<StudioSettings>(loadSettings)
+
+useEffect(() => {
+  try {
+    localStorage.setItem(
+      SETTINGS_STORAGE_KEY,
+      JSON.stringify(settings),
+    )
+  } catch (error) {
+    console.error('Failed to save settings:', error)
+  }
+}, [settings])
 
   const [previewEnabled, setPreviewEnabled] =
     useState(true)
