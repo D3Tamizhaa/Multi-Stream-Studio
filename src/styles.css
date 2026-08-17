@@ -498,22 +498,6 @@ p {
   accent-color: var(--accent);
 }
 
-.canvas-resolution {
-  position: absolute;
-
-  right: 12px;
-  bottom: 9px;
-
-  z-index: 100;
-
-  color: var(--muted-2);
-
-  font-size: 9px;
-  font-family: monospace;
-
-  pointer-events: none;
-}
-
 .empty-canvas {
   position: absolute;
   inset: 0;
