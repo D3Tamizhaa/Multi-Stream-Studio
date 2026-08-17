@@ -416,14 +416,22 @@ function removeSource() {
 </div>
 
               <div className="workspace-grid">
-                <ScenesPanel
-                  scenes={scenes}
-                  activeScene={activeScene}
-                  onSelect={setActiveScene}
-                  onAdd={() => setModal('scene')}
-                  onRemove={removeScene}
-                  onMove={moveScene}
-                />
+<ScenesPanel
+  scenes={scenes}
+  activeScene={activeScene}
+  onSelect={(sceneId) => {
+    setActiveScene(sceneId)
+
+    setSelectedSource(
+      sources.find(
+        (source) => source.sceneId === sceneId,
+      )?.id ?? null,
+    )
+  }}
+  onAdd={() => setModal('scene')}
+  onRemove={removeScene}
+  onMove={moveScene}
+/>
 
  <SourcesPanel
   sources={sources.filter(
