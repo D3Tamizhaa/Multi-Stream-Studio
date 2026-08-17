@@ -55,17 +55,18 @@ type Interaction =
       height: number
     }
   | {
-      type: 'resize'
-      sourceId: string
-      startClientX: number
-      startClientY: number
-      startX: number
-      startY: number
-      width: number
-      height: number
-      aspectRatio: number
-      fontSize: number
-    }
+    type: 'resize'
+    sourceId: string
+    handle: 'nw' | 'ne' | 'sw' | 'se'
+    startClientX: number
+    startClientY: number
+    startX: number
+    startY: number
+    width: number
+    height: number
+    aspectRatio: number
+    fontSize: number
+  }
   | null
   
 function getSourceBounds(source: Source) {
@@ -267,9 +268,10 @@ export function PreviewCanvas({
   onSelectSource(source.id)
 }
 
-  function beginResize(
+function beginResize(
   event: React.PointerEvent<HTMLDivElement>,
   source: Source,
+  handle: 'nw' | 'ne' | 'sw' | 'se',
 ) {
   if (source.locked) return
 
@@ -283,26 +285,19 @@ export function PreviewCanvas({
   interactionRef.current = {
     type: 'resize',
     sourceId: source.id,
-
+    handle,
     startClientX: event.clientX,
     startClientY: event.clientY,
-
     startX: bounds.x,
     startY: bounds.y,
-
     width: bounds.width,
     height: bounds.height,
-
-    aspectRatio:
-      bounds.width / Math.max(bounds.height, 1),
-
-    fontSize:
-      source.properties.fontSize ?? 32,
+    aspectRatio: bounds.width / Math.max(bounds.height, 1),
+    fontSize: source.properties.fontSize ?? 32,
   }
 
   onSelectSource(source.id)
 }
-
   useEffect(() => {
   function handlePointerMove(event: PointerEvent) {
     const interaction = interactionRef.current
@@ -353,98 +348,90 @@ export function PreviewCanvas({
         },
       )
     }
-
-    if (interaction.type === 'resize') {
+if (interaction.type === 'resize') {
   const minWidth = 40
   const minHeight = 30
-  const centerX =
-    interaction.startX + interaction.width / 2
-  const centerY =
-    interaction.startY + interaction.height / 2
 
-  const startHalfWidth = interaction.width / 2
-  const startHalfHeight = interaction.height / 2
+  const {
+    startX,
+    startY,
+    width: startWidth,
+    height: startHeight,
+    aspectRatio,
+    handle,
+  } = interaction
 
-  const targetHalfWidth =
-    startHalfWidth + deltaX / 2
-  const targetHalfHeight =
-    startHalfHeight + deltaY / 2
+  let width = startWidth
+  let height = startHeight
 
-  let width = Math.max(
-    minWidth,
-    targetHalfWidth * 2,
-  )
+  // Calculate raw size based on the corner being dragged.
+  switch (handle) {
+    case 'se':
+      width = startWidth + deltaX
+      height = startHeight + deltaY
+      break
 
-  let height = Math.max(
-    minHeight,
-    targetHalfHeight * 2,
-  )
+    case 'sw':
+      width = startWidth - deltaX
+      height = startHeight + deltaY
+      break
+
+    case 'ne':
+      width = startWidth + deltaX
+      height = startHeight - deltaY
+      break
+
+    case 'nw':
+      width = startWidth - deltaX
+      height = startHeight - deltaY
+      break
+  }
+
+  width = Math.max(minWidth, width)
+  height = Math.max(minHeight, height)
 
   // Preserve aspect ratio.
-  if (interaction.aspectRatio > 0) {
+  if (aspectRatio > 0) {
     if (Math.abs(deltaX) >= Math.abs(deltaY)) {
-      height = Math.max(
-        minHeight,
-        width / interaction.aspectRatio,
-      )
+      height = Math.max(minHeight, width / aspectRatio)
     } else {
-      width = Math.max(
-        minWidth,
-        height * interaction.aspectRatio,
-      )
+      width = Math.max(minWidth, height * aspectRatio)
     }
   }
 
-  // Keep the resized source inside the canvas.
-  const maxWidth = Math.min(
-    CANVAS_WIDTH,
-    centerX * 2,
-    (CANVAS_WIDTH - centerX) * 2,
-  )
+  // Keep the opposite corner fixed.
+  let x = startX
+  let y = startY
 
-  const maxHeight = Math.min(
-    CANVAS_HEIGHT,
-    centerY * 2,
-    (CANVAS_HEIGHT - centerY) * 2,
-  )
-
-  if (interaction.aspectRatio > 0) {
-    const maxWidthFromHeight =
-      maxHeight * interaction.aspectRatio
-
-    const maxHeightFromWidth =
-      maxWidth / interaction.aspectRatio
-
-    if (width > maxWidth) {
-      width = maxWidth
-      height = maxHeightFromWidth
-    }
-
-    if (height > maxHeight) {
-      height = maxHeight
-      width = maxWidthFromHeight
-    }
-  } else {
-    width = Math.min(width, maxWidth)
-    height = Math.min(height, maxHeight)
+  if (handle === 'nw' || handle === 'sw') {
+    x = startX + startWidth - width
   }
 
-  // Re-center the source after resizing.
-  const x = Math.max(
-    0,
-    Math.min(
-      CANVAS_WIDTH - width,
-      centerX - width / 2,
-    ),
-  )
+  if (handle === 'nw' || handle === 'ne') {
+    y = startY + startHeight - height
+  }
 
-  const y = Math.max(
-    0,
-    Math.min(
-      CANVAS_HEIGHT - height,
-      centerY - height / 2,
-    ),
-  )
+  // Keep inside the canvas.
+  if (x < 0) {
+    width += x
+    x = 0
+  }
+
+  if (y < 0) {
+    height += y
+    y = 0
+  }
+
+  if (x + width > CANVAS_WIDTH) {
+    width = CANVAS_WIDTH - x
+  }
+
+  if (y + height > CANVAS_HEIGHT) {
+    height = CANVAS_HEIGHT - y
+  }
+
+  width = Math.max(minWidth, width)
+  height = Math.max(minHeight, height)
 
   const source = sources.find(
     (item) => item.id === interaction.sourceId,
@@ -578,19 +565,50 @@ export function PreviewCanvas({
                     )}
                   </div>
 
-                  {isSelected && !source.locked && (
-                    <div
-  className="resize-handle"
-  role="presentation"
-  onPointerDown={(event) => {
-    event.preventDefault()
-    event.stopPropagation()
+{isSelected && !source.locked && (
+  <>
+    <div
+      className="resize-handle resize-nw"
+      role="presentation"
+      onPointerDown={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        beginResize(event, source, 'nw')
+      }}
+    />
 
-    beginResize(event, source)
-  }}
-/>
+    <div
+      className="resize-handle resize-ne"
+      role="presentation"
+      onPointerDown={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        beginResize(event, source, 'ne')
+      }}
+    />
 
-                  )}
+    <div
+      className="resize-handle resize-sw"
+      role="presentation"
+      onPointerDown={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        beginResize(event, source, 'sw')
+      }}
+    />
+
+    <div
+      className="resize-handle resize-se"
+      role="presentation"
+      onPointerDown={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        beginResize(event, source, 'se')
+      }}
+    />
+  </>
+)}
+
                 </div>
               )
             })
