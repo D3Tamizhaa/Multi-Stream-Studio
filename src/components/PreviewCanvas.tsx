@@ -355,122 +355,125 @@ export function PreviewCanvas({
     }
 
     if (interaction.type === 'resize') {
+  const minWidth = 40
+  const minHeight = 30
+  const centerX =
+    interaction.startX + interaction.width / 2
+  const centerY =
+    interaction.startY + interaction.height / 2
 
-      const rawWidth =
-        interaction.width + deltaX
+  const startHalfWidth = interaction.width / 2
+  const startHalfHeight = interaction.height / 2
 
-      const rawHeight =
-        interaction.height + deltaY
+  const targetHalfWidth =
+    startHalfWidth + deltaX / 2
+  const targetHalfHeight =
+    startHalfHeight + deltaY / 2
 
-      const minWidth = 40
-      const minHeight = 30
+  let width = Math.max(
+    minWidth,
+    targetHalfWidth * 2,
+  )
 
-      let width = Math.max(
-        minWidth,
-        rawWidth,
-      )
+  let height = Math.max(
+    minHeight,
+    targetHalfHeight * 2,
+  )
 
-      let height = Math.max(
+  // Preserve aspect ratio.
+  if (interaction.aspectRatio > 0) {
+    if (Math.abs(deltaX) >= Math.abs(deltaY)) {
+      height = Math.max(
         minHeight,
-        rawHeight,
+        width / interaction.aspectRatio,
       )
-
-      if (interaction.aspectRatio > 0) {
-        if (
-          Math.abs(deltaX) >=
-          Math.abs(deltaY)
-        ) {
-          height = Math.max(
-            minHeight,
-            width / interaction.aspectRatio,
-          )
-        } else {
-          width = Math.max(
-            minWidth,
-            height * interaction.aspectRatio,
-          )
-        }
-      }
-
-      const maxWidth =
-        CANVAS_WIDTH - interaction.startX
-
-      const maxHeight =
-        CANVAS_HEIGHT - interaction.startY
-
-      width = Math.min(
-        width,
-        maxWidth,
-      )
-
-      height = Math.min(
-        height,
-        maxHeight,
-      )
-
-      if (interaction.aspectRatio > 0) {
-        if (
-          width / interaction.aspectRatio <=
-          maxHeight
-        ) {
-          height =
-            width /
-            interaction.aspectRatio
-        } else {
-          height = maxHeight
-          width =
-            height *
-            interaction.aspectRatio
-        }
-
-        width = Math.min(
-          width,
-          maxWidth,
-        )
-
-        height = Math.min(
-          height,
-          maxHeight,
-        )
-      }
-
-      const source = sources.find(
-        (item) =>
-          item.id === interaction.sourceId,
-      )
-
-      if (!source) return
-
-      const properties: Partial<
-        Source['properties']
-      > = {
-        width,
-        height,
-      }
-
-      if (source.type === 'text') {
-        const scale =
-          height /
-          Math.max(
-            interaction.height,
-            1,
-          )
-
-        properties.fontSize =
-          Math.max(
-            8,
-            Math.round(
-              interaction.fontSize *
-                scale,
-            ),
-          )
-      }
-
-      onUpdateSource(
-        interaction.sourceId,
-        properties,
+    } else {
+      width = Math.max(
+        minWidth,
+        height * interaction.aspectRatio,
       )
     }
+  }
+
+  // Keep the resized source inside the canvas.
+  const maxWidth = Math.min(
+    CANVAS_WIDTH,
+    centerX * 2,
+    (CANVAS_WIDTH - centerX) * 2,
+  )
+
+  const maxHeight = Math.min(
+    CANVAS_HEIGHT,
+    centerY * 2,
+    (CANVAS_HEIGHT - centerY) * 2,
+  )
+
+  if (interaction.aspectRatio > 0) {
+    const maxWidthFromHeight =
+      maxHeight * interaction.aspectRatio
+
+    const maxHeightFromWidth =
+      maxWidth / interaction.aspectRatio
+
+    if (width > maxWidth) {
+      width = maxWidth
+      height = maxHeightFromWidth
+    }
+
+    if (height > maxHeight) {
+      height = maxHeight
+      width = maxWidthFromHeight
+    }
+  } else {
+    width = Math.min(width, maxWidth)
+    height = Math.min(height, maxHeight)
+  }
+
+  // Re-center the source after resizing.
+  const x = Math.max(
+    0,
+    Math.min(
+      CANVAS_WIDTH - width,
+      centerX - width / 2,
+    ),
+  )
+
+  const y = Math.max(
+    0,
+    Math.min(
+      CANVAS_HEIGHT - height,
+      centerY - height / 2,
+    ),
+  )
+
+  const source = sources.find(
+    (item) => item.id === interaction.sourceId,
+  )
+
+  if (!source) return
+
+  const properties: Partial<Source['properties']> = {
+    x,
+    y,
+    width,
+    height,
+  }
+
+  if (source.type === 'text') {
+    const scale =
+      height / Math.max(interaction.height, 1)
+
+    properties.fontSize = Math.max(
+      8,
+      Math.round(interaction.fontSize * scale),
+    )
+  }
+
+  onUpdateSource(
+    interaction.sourceId,
+    properties,
+  )
+}
 
     forceUpdate(
       (value) => value + 1,
