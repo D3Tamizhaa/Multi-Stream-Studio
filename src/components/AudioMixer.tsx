@@ -23,17 +23,6 @@ export function AudioMixer({
         <h3>Audio Mixer</h3>
       </div>
 
-      <div className="mixer-source">
-        <div className="mixer-icon">
-          <Volume2 size={16} />
-        </div>
-
-        <div>
-          <strong>Media File</strong>
-          <span>Audio source</span>
-        </div>
-      </div>
-
       <div className="volume-block">
         <div className="volume-label">
           <span>Volume</span>
