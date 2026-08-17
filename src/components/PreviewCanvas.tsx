@@ -503,121 +503,86 @@ if (interaction.type === 'resize') {
       }`}
     >
       {enabled ? (
-        <div
-          ref={canvasRef}
-          className="canvas-content"
-          style={{
-            aspectRatio: `${canvasWidth} / ${canvasHeight}`,
-          }}
-          onPointerDown={(event) => {
-            if (event.target === event.currentTarget) {
-              onSelectSource('')
+<div
+  ref={canvasRef}
+  className={`canvas-content ${
+    !enabled ? 'canvas-content-disabled' : ''
+  }`}
+  style={{
+    aspectRatio: `${canvasWidth} / ${canvasHeight}`,
+  }}
+  onPointerDown={(event) => {
+    if (event.target === event.currentTarget) {
+      onSelectSource('')
+    }
+  }}
+>
+  {enabled ? (
+    visibleSources.length === 0 ? (
+      <div className="empty-canvas">
+        <ImageIcon size={32} />
+        <span>No visible sources</span>
+      </div>
+    ) : (
+      visibleSources.map((source, index) => {
+        const bounds = getSourceBounds(source)
+
+        const left =
+          (bounds.x / CANVAS_WIDTH) * 100
+
+        const top =
+          (bounds.y / CANVAS_HEIGHT) * 100
+
+        const width =
+          (bounds.width / CANVAS_WIDTH) * 100
+
+        const height =
+          (bounds.height / CANVAS_HEIGHT) * 100
+
+        const isSelected =
+          selectedSource === source.id
+
+        return (
+          <div
+            key={source.id}
+            className={`canvas-layer ${
+              isSelected ? 'selected' : ''
+            }`}
+            style={{
+              left: `${left}%`,
+              top: `${top}%`,
+              width: `${width}%`,
+              height: `${height}%`,
+              zIndex: index + 1,
+            }}
+            onPointerDown={(event) =>
+              beginDrag(event, source)
             }
-          }}
-        >
-
-          {visibleSources.length === 0 ? (
-            <div className="empty-canvas">
-              <ImageIcon size={32} />
-              <span>No visible sources</span>
+          >
+            <div className="source-render">
+              {renderSource(
+                source,
+                volume,
+                muted,
+              )}
             </div>
-          ) : (
-            visibleSources.map((source, index) => {
-              const bounds = getSourceBounds(source)
 
-              const left =
-                (bounds.x / CANVAS_WIDTH) * 100
+            {isSelected && !source.locked && (
+              <>
+                {/* keep your existing resize handles here */}
+              </>
+            )}
+          </div>
+        )
+      })
+    )
+  ) : (
+    <div className="preview-disabled-content">
+      <span>Preview disabled</span>
+    </div>
+  )}
+</div>
 
-              const top =
-                (bounds.y / CANVAS_HEIGHT) * 100
-
-              const width =
-                (bounds.width / CANVAS_WIDTH) * 100
-
-              const height =
-                (bounds.height / CANVAS_HEIGHT) * 100
-
-              const isSelected =
-                selectedSource === source.id
-
-              return (
-                <div
-                  key={source.id}
-                  className={`canvas-layer ${
-                    isSelected ? 'selected' : ''
-                  }`}
-                  style={{
-                    left: `${left}%`,
-                    top: `${top}%`,
-                    width: `${width}%`,
-                    height: `${height}%`,
-                    zIndex: index + 1,
-                  }}
-                  onPointerDown={(event) =>
-                    beginDrag(event, source)
-                  }
-                >
-                  <div className="source-render">
-                    {renderSource(
-                      source,
-                      volume,
-                      muted,
-                    )}
-                  </div>
-
-{isSelected && !source.locked && (
-  <>
-    <div
-      className="resize-handle resize-nw"
-      role="presentation"
-      onPointerDown={(event) => {
-        event.preventDefault()
-        event.stopPropagation()
-        beginResize(event, source, 'nw')
-      }}
-    />
-
-    <div
-      className="resize-handle resize-ne"
-      role="presentation"
-      onPointerDown={(event) => {
-        event.preventDefault()
-        event.stopPropagation()
-        beginResize(event, source, 'ne')
-      }}
-    />
-
-    <div
-      className="resize-handle resize-sw"
-      role="presentation"
-      onPointerDown={(event) => {
-        event.preventDefault()
-        event.stopPropagation()
-        beginResize(event, source, 'sw')
-      }}
-    />
-
-    <div
-      className="resize-handle resize-se"
-      role="presentation"
-      onPointerDown={(event) => {
-        event.preventDefault()
-        event.stopPropagation()
-        beginResize(event, source, 'se')
-      }}
-    />
-  </>
-)}
-
-                </div>
-              )
-            })
-          )}
-        </div>
-      ) : (
-        <div className="preview-off">
-          <span>Preview disabled</span>
-        </div>
       )}
       
       <div className="canvas-resolution">
