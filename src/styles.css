@@ -444,6 +444,10 @@ p {
   border-radius: 2px;
 }
 
+.preview-source-hidden {
+  visibility: hidden;
+}
+
 .canvas-content-disabled {
   border-color: #303746;
   background: #000;
