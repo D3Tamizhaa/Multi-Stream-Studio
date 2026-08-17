@@ -37,6 +37,7 @@ export function SettingsPanel({
   onSave,
 }: SettingsPanelProps) {
   const [draft, setDraft] = useState<StudioSettings>(settings)
+  const [notification, setNotification] = useState<string | null>(null)
   useEffect(() => {
     setDraft(settings)
   }, [settings, section])
@@ -70,11 +71,23 @@ export function SettingsPanel({
         ...draft.advanced,
       },
     })
-  }
+    
+    setNotification('Settings saved successfully')
+
+  setTimeout(() => {
+    setNotification(null)
+  }, 2500)
+}
 
   function cancel() {
-    setDraft(settings)
-  }
+  setDraft(settings)
+
+  setNotification('Changes cancelled')
+
+  setTimeout(() => {
+    setNotification(null)
+  }, 2500)
+}
 
   function update<K extends keyof StudioSettings>(
     key: K,
