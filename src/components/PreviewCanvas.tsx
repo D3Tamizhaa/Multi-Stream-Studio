@@ -558,47 +558,51 @@ return (
         </div>
 
         {enabled && isSelected && !source.locked && (
-  <>
-    <div
-      className="resize-handle resize-nw"
-      role="presentation"
-      onPointerDown={(event) => {
-        event.preventDefault()
-        event.stopPropagation()
-        beginResize(event, source, 'nw')
-      }}
-    />
+          <>
+            <div
+              className="resize-handle resize-nw"
+              role="presentation"
+              onPointerDown={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                beginResize(event, source, 'nw')
+              }}
+            />
 
-    <div
-      className="resize-handle resize-ne"
-      role="presentation"
-      onPointerDown={(event) => {
-        event.preventDefault()
-        event.stopPropagation()
-        beginResize(event, source, 'ne')
-      }}
-    />
+            <div
+              className="resize-handle resize-ne"
+              role="presentation"
+              onPointerDown={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                beginResize(event, source, 'ne')
+              }}
+            />
 
-    <div
-      className="resize-handle resize-sw"
-      role="presentation"
-      onPointerDown={(event) => {
-        event.preventDefault()
-        event.stopPropagation()
-        beginResize(event, source, 'sw')
-      }}
-    />
+            <div
+              className="resize-handle resize-sw"
+              role="presentation"
+              onPointerDown={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                beginResize(event, source, 'sw')
+              }}
+            />
 
-    <div
-      className="resize-handle resize-se"
-      role="presentation"
-      onPointerDown={(event) => {
-        event.preventDefault()
-        event.stopPropagation()
-        beginResize(event, source, 'se')
-      }}
-    />
-  </>
+            <div
+              className="resize-handle resize-se"
+              role="presentation"
+              onPointerDown={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                beginResize(event, source, 'se')
+              }}
+            />
+          </>
+        )}
+      </div>
+    )
+  })
 )}
 
 {!enabled && (
