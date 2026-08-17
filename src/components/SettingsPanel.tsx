@@ -36,10 +36,40 @@ export function SettingsPanel({
   settings,
   onSave,
 }: SettingsPanelProps) {
-  const [draft, setDraft] = useState(settings)
+  const [draft, setDraft] = useState<StudioSettings>(settings)
+  useEffect(() => {
+    setDraft(settings)
+  }, [settings, section])
 
   function save() {
-    onSave(draft)
+    onSave({
+      ...settings,
+      ...draft,
+      authorization: {
+        ...settings.authorization,
+        ...draft.authorization,
+      },
+      stream: {
+        ...settings.stream,
+        ...draft.stream,
+      },
+      output: {
+        ...settings.output,
+        ...draft.output,
+      },
+      audio: {
+        ...settings.audio,
+        ...draft.audio,
+      },
+      video: {
+        ...settings.video,
+        ...draft.video,
+      },
+      advanced: {
+        ...settings.advanced,
+        ...draft.advanced,
+      },
+    })
   }
 
   function cancel() {
