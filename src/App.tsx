@@ -200,15 +200,31 @@ export default function App() {
     setModal(null)
   }
 
-  function removeScene() {
-    if (scenes.length <= 1) return
+function removeScene() {
+  if (scenes.length <= 1) return
 
-    const index = scenes.findIndex((scene) => scene.id === activeScene)
-    const next = scenes.filter((scene) => scene.id !== activeScene)
+  const index = scenes.findIndex(
+    (scene) => scene.id === activeScene,
+  )
 
-    setScenes(next)
-    setActiveScene(next[Math.max(0, index - 1)].id)
-  }
+  const nextScenes = scenes.filter(
+    (scene) => scene.id !== activeScene,
+  )
+
+  setSources((current) =>
+    current.filter(
+      (source) => source.sceneId !== activeScene,
+    ),
+  )
+
+  setSelectedSource(null)
+
+  const nextActiveScene =
+    nextScenes[Math.max(0, index - 1)]
+
+  setScenes(nextScenes)
+  setActiveScene(nextActiveScene.id)
+}
 
   function moveScene(direction: 'up' | 'down') {
     const index = scenes.findIndex((scene) => scene.id === activeScene)
@@ -263,16 +279,23 @@ export default function App() {
   )
 }
 
-  function removeSource() {
-    if (!selectedSource) return
+function removeSource() {
+  if (!selectedSource) return
 
-    const next = sources.filter(
-      (source) => source.id !== selectedSource,
-    )
+  const next = sources.filter(
+    (source) => source.id !== selectedSource,
+  )
 
-    setSources(next)
-    setSelectedSource(next[0]?.id ?? null)
-  }
+  setSources(next)
+
+  const remainingSources = next.filter(
+    (source) => source.sceneId === activeScene,
+  )
+
+  setSelectedSource(
+    remainingSources[0]?.id ?? null,
+  )
+}
 
   function toggleSourceVisibility(id: string) {
     setSources((current) =>
@@ -377,7 +400,9 @@ export default function App() {
             <>
               <div className="editor-main">
   <PreviewCanvas
-    sources={sources}
+    sources={sources.filter(
+      (source) => source.sceneId === activeScene,
+    )}
     enabled={previewEnabled}
     onToggle={() =>
       setPreviewEnabled((value) => !value)
@@ -389,7 +414,6 @@ export default function App() {
     muted={audioMuted}
   />
 </div>
-
 
               <div className="workspace-grid">
                 <ScenesPanel
