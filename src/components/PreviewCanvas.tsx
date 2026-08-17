@@ -612,10 +612,6 @@ return (
 )}
       </div>
 
-      <div className="canvas-resolution">
-        {canvasWidth} × {canvasHeight}
-      </div>
-
       <label className="preview-toggle">
         <input
           type="checkbox"
