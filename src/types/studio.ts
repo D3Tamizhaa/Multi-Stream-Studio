@@ -28,6 +28,7 @@ export interface Source {
   id: string
   name: string
   type: SourceType
+  sceneId: string
   visible: boolean
   locked: boolean
   properties: {
