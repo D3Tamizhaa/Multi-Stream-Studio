@@ -119,38 +119,36 @@ export function AddSourceModal({
 
     if (!selectedFile) return
 
-    // Browser-safe local file URL.
     const objectUrl = URL.createObjectURL(selectedFile)
 
     setFile(objectUrl)
 
-    // Automatically use the actual filename when the name
-    // field hasn't been filled in yet.
     if (!name.trim()) {
       setName(selectedFile.name)
     }
   }
 
   function submit() {
-    const source: Source = {
-      id: existing?.id ?? `source-${Date.now()}`,
-      name: name.trim() || selected.title,
-      type,
-      visible: existing?.visible ?? true,
-      locked: existing?.locked ?? false,
-      properties: {
-        file,
-        url,
-        width: Number(width),
-        height: Number(height),
-        css,
-        loop,
-        fontFamily,
-        fontSize: Number(fontSize),
-        text,
-        color,
-      },
-    }
+const source: Source = {
+  id: existing?.id ?? `source-${Date.now()}`,
+  name: name.trim() || selected.title,
+  type,
+  sceneId: existing?.sceneId ?? '',
+  visible: existing?.visible ?? true,
+  locked: existing?.locked ?? false,
+  properties: {
+    file,
+    url,
+    width: Number(width),
+    height: Number(height),
+    css,
+    loop,
+    fontFamily,
+    fontSize: Number(fontSize),
+    text,
+    color,
+  },
+}
 
     onAdd(source)
   }
