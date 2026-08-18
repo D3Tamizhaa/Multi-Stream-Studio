@@ -389,11 +389,21 @@ function removePlatform() {
 function editPlatform(platform: Platform) {
   setSelectedPlatform(platform.id)
 
-  setSettings((current): StudioSettings => ({
+  const service =
+    platform.name === 'YouTube' ||
+    platform.name === 'Facebook' ||
+    platform.name === 'Twitch' ||
+    platform.name === 'Kick'
+      ? platform.name
+      : 'Custom'
+
+  setSettings((current) => ({
     ...current,
     stream: {
       ...current.stream,
-      service: platform.name as StudioSettings['stream']['service'],
+      service,
+      customServiceName:
+        service === 'Custom' ? platform.name : '',
       server: platform.server,
       streamKey: platform.streamKey,
     },
