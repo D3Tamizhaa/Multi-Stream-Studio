@@ -535,54 +535,55 @@ function removePlatform() {
             </>
           ) : (
             <SettingsPanel
-  section={settingsSection}
-  settings={settings}
-  onSave={(nextSettings) => {
-    setSettings(nextSettings)
+              section={settingsSection}
+              settings={settings}
+              onSave={(nextSettings) => {
+                setSettings(nextSettings)
 
-    if (settingsSection === 'Stream') {
-      const stream = nextSettings.stream
+                if (settingsSection === 'Stream') {
+                  const stream = nextSettings.stream
 
-      setPlatforms((current) => {
-        // Editing an existing platform
-        if (selectedPlatform) {
-          return current.map((platform) =>
-            platform.id === selectedPlatform
-              ? {
-                  ...platform,
-                  name: stream.service,
-                  server: stream.server,
-                  streamKey: stream.streamKey,
+                  setPlatforms((current) => {
+                    // Editing an existing platform
+                    if (selectedPlatform) {
+                      return current.map((platform) =>
+                        platform.id === selectedPlatform
+                          ? {
+                              ...platform,
+                              name: stream.service,
+                              server: stream.server,
+                              streamKey: stream.streamKey,
+                            }
+                          : platform,
+                      )
+                    }
+
+                    // Adding a new platform
+                    const newPlatform: Platform = {
+                      id: `platform-${Date.now()}`,
+                      name: stream.service,
+                      enabled: true,
+                      server: stream.server,
+                      streamKey: stream.streamKey,
+                    }
+
+                    setSelectedPlatform(newPlatform.id)
+
+                    return [...current, newPlatform]
+                  })
                 }
-              : platform,
-          )
-        }
 
-        // Adding a new platform
-        const newPlatform: Platform = {
-          id: `platform-${Date.now()}`,
-          name: stream.service,
-          enabled: true,
-          server: stream.server,
-          streamKey: stream.streamKey,
-        }
-
-        setSelectedPlatform(newPlatform.id)
-
-        return [...current, newPlatform]
-      })
-    }
-
-    setPage('editor')
-  }}
-/>
+                setPage('editor')
+              }}
+            />
+          )}
 
           <UsageBar
-  streaming={streaming}
-  uptime={uptime}
-  cpu={cpu}
-  ram={ram}
-/>
+            streaming={streaming}
+            uptime={uptime}
+            cpu={cpu}
+            ram={ram}
+          />
 
         </div>
       </div>
