@@ -97,12 +97,6 @@ export function PlatformsPanel({
             </button>
           </div>
         ))}
-
-        {platforms.length === 0 && (
-          <div className="platform-empty">
-            No platforms added
-          </div>
-        )}
       </div>
     </section>
   )
