@@ -4,6 +4,11 @@ export type SourceType =
   | 'media'
   | 'text'
 
+export type AudioMonitoringMode =
+  | 'off'
+  | 'monitor-only'
+  | 'monitor-and-output'
+
 export type SettingsSection =
   | 'Authorization'
   | 'Stream'
