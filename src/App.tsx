@@ -21,6 +21,7 @@ import {
 } from './data/defaults'
 import type {
   AudioMonitoringMode,
+  Platform,
   Scene,
   SettingsSection,
   Source,
