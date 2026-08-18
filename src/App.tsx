@@ -417,6 +417,7 @@ function removeSource() {
     onUpdateSource={updateSource}
     volume={audioVolume}
     muted={audioMuted}
+    monitoringMode={audioMonitoringMode}
   />
 </div>
 
