@@ -460,7 +460,6 @@ function removeSource() {
                   }}
                   onRemove={removePlatform}
                   onToggle={togglePlatform}
-                  }}
                 />
 
                 <ControlsPanel
