@@ -232,6 +232,7 @@ export function PreviewCanvas({
   onUpdateSource,
   volume = 80,
   muted = false,
+  monitoringMode = 'off',
 }: PreviewCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null)
   const interactionRef =
