@@ -8,7 +8,10 @@ import {
   useRef,
   useState,
 } from 'react'
-import type { Source } from '../types/studio'
+import type {
+  AudioMonitoringMode,
+  Source,
+} from '../types/studio'
 
 interface PreviewCanvasProps {
   sources: Source[]
@@ -22,6 +25,7 @@ interface PreviewCanvasProps {
   ) => void
   volume?: number
   muted?: boolean
+  monitoringMode?: AudioMonitoringMode
 }
 
 function parseResolution(value: string) {
@@ -106,6 +110,7 @@ function renderSource(
   source: Source,
   volume: number,
   muted: boolean,
+  monitoringMode: AudioMonitoringMode,
 ) {
   const url = getSourceUrl(source)
 
@@ -139,7 +144,10 @@ function renderSource(
           className="preview-media preview-video"
           src={url}
           autoPlay
-          muted={muted}
+          muted={
+            muted ||
+            monitoringMode === 'off'
+          }
           loop={source.properties.loop ?? true}
           playsInline
           preload="auto"
