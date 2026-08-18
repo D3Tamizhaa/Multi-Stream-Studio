@@ -563,6 +563,7 @@ return (
             source,
             volume,
             muted,
+            monitoringMode,
           )}
         </div>
 
