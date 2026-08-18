@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { AddPlatformModal } from './components/AddPlatformModal'
 import { AddSceneModal } from './components/AddSceneModal'
 import { AddSourceModal } from './components/AddSourceModal'
 import { AudioMixer } from './components/AudioMixer'
@@ -130,7 +129,6 @@ export default function App() {
   const [modal, setModal] = useState<
     | 'scene'
     | 'source'
-    | 'platform'
     | 'source-properties'
     | 'platform-edit'
     | 'audio-properties'
@@ -493,11 +491,46 @@ function removeSource() {
               </div>
             </>
           ) : (
-            <SettingsPanel
-              section={settingsSection}
-              settings={settings}
-              onSave={setSettings}
-            />
+<SettingsPanel
+  section={settingsSection}
+  settings={settings}
+  onSave={(nextSettings) => {
+    setSettings(nextSettings)
+
+    if (settingsSection === 'Stream') {
+      const stream = nextSettings.stream
+
+      setPlatforms((current) => {
+        const existing = current.find(
+          (platform) => platform.name === stream.service,
+        )
+
+        if (existing) {
+          return current.map((platform) =>
+            platform.id === existing.id
+              ? {
+                  ...platform,
+                  server: stream.server,
+                  streamKey: stream.streamKey,
+                }
+              : platform,
+          )
+        }
+
+        return [
+          ...current,
+          {
+            id: `platform-${Date.now()}`,
+            name: stream.service,
+            enabled: true,
+            server: stream.server,
+            streamKey: stream.streamKey,
+          },
+        ]
+      })
+    }
+  }}
+/>
           )}
 
           <UsageBar
@@ -535,13 +568,6 @@ function removeSource() {
           )}
           onClose={() => setModal(null)}
           onAdd={addOrUpdateSource}
-        />
-      )}
-
-      {modal === 'platform' && (
-        <AddPlatformModal
-          onClose={() => setModal(null)}
-          onAdd={addOrUpdatePlatform}
         />
       )}
 
