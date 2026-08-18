@@ -1,6 +1,6 @@
 import { X } from 'lucide-react'
 import { useState } from 'react'
-import type { Platform } from '../types/studio'
+import type { Platform, PlatformName } from '../types/studio'
 
 interface AddPlatformModalProps {
   onClose: () => void
@@ -13,7 +13,7 @@ export function AddPlatformModal({
   onAdd,
   existing,
 }: AddPlatformModalProps) {
- const [name, setName] = useState(
+ const [name, setName] = useState<PlatformName>(
   existing?.name ?? 'YouTube',
 )
   const [server, setServer] = useState(existing?.server ?? '')
@@ -48,7 +48,9 @@ export function AddPlatformModal({
             <span>Platform</span>
             <select
               value={name}
-              onChange={(event) => setName(event.target.value as PlatformName)}
+              onChange={(event) =>
+  setName(event.target.value as PlatformName)
+}
             >
               <option>YouTube</option>
               <option>Facebook</option>
