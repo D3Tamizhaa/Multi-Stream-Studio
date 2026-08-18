@@ -550,6 +550,17 @@ function removeSource() {
           onAdd={addOrUpdatePlatform}
         />
       )}
+
+      {modal === 'audio-properties' && (
+  <AudioPropertiesModal
+    monitoringMode={audioMonitoringMode}
+    onMonitoringModeChange={
+      setAudioMonitoringMode
+    }
+    onClose={() => setModal(null)}
+  />
+)}
+
     </div>
   )
 }
