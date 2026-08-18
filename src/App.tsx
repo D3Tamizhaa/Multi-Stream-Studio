@@ -550,7 +550,10 @@ function removePlatform() {
                         platform.id === selectedPlatform
                           ? {
                               ...platform,
-                              name: stream.service,
+                              name:
+                                stream.service === 'Custom'
+                                  ? (stream.customServiceName.trim() || 'Custom')
+                                  : stream.service,
                               server: stream.server,
                               streamKey: stream.streamKey,
                             }
@@ -561,7 +564,10 @@ function removePlatform() {
                     // Adding a new platform
                     const newPlatform: Platform = {
                       id: `platform-${Date.now()}`,
-                      name: stream.service,
+                      name: 
+                        stream.service === 'Custom'
+                        ? (stream.customServiceName.trim() || 'Custom')
+                        : stream.service,
                       enabled: true,
                       server: stream.server,
                       streamKey: stream.streamKey,
