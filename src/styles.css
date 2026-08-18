@@ -1014,28 +1014,6 @@ p {
   overflow: hidden;
 }
 
-.mixer-source {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  padding: 5px 0;
-  margin-bottom: 5px;
-}
-
-.mixer-icon {
-  width: 28px;
-  height: 28px;
-
-  display: grid;
-  place-items: center;
-
-  border-radius: 6px;
-
-  color: var(--accent);
-  background: var(--accent-soft);
-}
-
 .volume-label {
   display: flex;
   justify-content: space-between;
