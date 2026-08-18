@@ -562,10 +562,10 @@ function editPlatform(platform: Platform) {
                         platform.id === selectedPlatform
                           ? {
                               ...platform,
-                              name:
-                                stream.service === 'Custom'
-                                  ? (stream.customServiceName.trim() || 'Custom')
-                                  : stream.service,
+name:
+  stream.service === 'Custom'
+    ? 'Custom'
+    : stream.service,
                               server: stream.server,
                               streamKey: stream.streamKey,
                             }
@@ -573,17 +573,16 @@ function editPlatform(platform: Platform) {
                       )
                     }
 
-                    // Adding a new platform
-                    const newPlatform: Platform = {
-                      id: `platform-${Date.now()}`,
-                      name: 
-                        stream.service === 'Custom'
-                        ? (stream.customServiceName.trim() || 'Custom')
-                        : stream.service,
-                      enabled: true,
-                      server: stream.server,
-                      streamKey: stream.streamKey,
-                    }
+const newPlatform: Platform = {
+  id: `platform-${Date.now()}`,
+  name:
+    stream.service === 'Custom'
+      ? 'Custom'
+      : stream.service,
+  enabled: true,
+  server: stream.server,
+  streamKey: stream.streamKey,
+}
 
                     setSelectedPlatform(newPlatform.id)
 
