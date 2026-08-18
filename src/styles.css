@@ -781,7 +781,10 @@ p {
   flex: 1 1 auto;
 
   display: grid;
-  grid-template-columns: 1fr 1.55fr 1fr;
+  grid-template-columns:
+  minmax(220px, 1fr)
+  minmax(280px, 1.55fr)
+  minmax(220px, 1fr);
 
   border-top: 1px solid var(--border);
 }
@@ -1202,7 +1205,7 @@ p {
   flex: 0 0 143px;
 
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 
   border-top: 1px solid var(--border);
 }
@@ -1402,7 +1405,7 @@ p {
 
   display: grid;
 
-  grid-template-columns: repeat(5, 1fr) 1.25fr;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
 
   border-top: 1px solid var(--border);
 
@@ -1992,7 +1995,7 @@ textarea {
 
 @media (max-width: 1050px) {
   .workspace-grid {
-    grid-template-columns: 1fr 1.4fr;
+    grid-template-columns: 1fr;
   }
 
   .audio-panel {
