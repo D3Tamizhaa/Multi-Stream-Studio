@@ -473,7 +473,10 @@ function removeSource() {
               <div className="stream-grid">
                 <PlatformsPanel
                   platforms={platforms}
-                  onAdd={() => setModal('platform')}
+                  onAdd={() => {
+                    setPage('settings')
+                    setSettingsSection('Stream')
+                  }}
                   onRemove={removePlatform}
                   onToggle={togglePlatform}
                   onEdit={(platform) => {
