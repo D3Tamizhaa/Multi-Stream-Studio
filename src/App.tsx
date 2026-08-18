@@ -386,14 +386,14 @@ function removePlatform() {
   setSelectedPlatform(id)
 }
 
-  function editPlatform(platform: Platform) {
+function editPlatform(platform: Platform) {
   setSelectedPlatform(platform.id)
 
-  setSettings((current) => ({
+  setSettings((current): StudioSettings => ({
     ...current,
     stream: {
       ...current.stream,
-      service: platform.name,
+      service: platform.name as StudioSettings['stream']['service'],
       server: platform.server,
       streamKey: platform.streamKey,
     },
