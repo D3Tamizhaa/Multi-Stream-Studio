@@ -1102,6 +1102,118 @@ p {
   color: var(--red) !important;
 }
 
+/* =========================================
+   AUDIO PROPERTIES
+   ========================================= */
+
+.audio-properties-modal {
+  width: min(520px, calc(100vw - 32px));
+}
+
+.audio-properties-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.audio-property-label {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.audio-monitoring-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.audio-monitoring-option {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  text-align: left;
+  color: var(--muted);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.audio-monitoring-option:hover {
+  color: var(--text);
+  border-color: rgba(124, 92, 255, 0.45);
+  background: var(--panel-3);
+}
+
+.audio-monitoring-option.active {
+  color: var(--text);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.audio-monitoring-radio {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  margin-top: 1px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--muted-2);
+  border-radius: 50%;
+}
+
+.audio-monitoring-option.active
+  .audio-monitoring-radio {
+  border-color: var(--accent);
+}
+
+.audio-monitoring-option.active
+  .audio-monitoring-radio
+  span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.audio-monitoring-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.audio-monitoring-text strong {
+  color: inherit;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.audio-monitoring-text small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.audio-monitoring-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-soft);
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.audio-monitoring-summary strong {
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 500;
+}
+
 
 /* =========================================
    STREAM / PLATFORM CONTROLS
