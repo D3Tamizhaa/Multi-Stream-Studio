@@ -48,7 +48,7 @@ export function AddPlatformModal({
             <span>Platform</span>
             <select
               value={name}
-              onChange={(event) => setName(event.target.value)}
+              onChange={(event) => setName(event.target.value as PlatformName)}
             >
               <option>YouTube</option>
               <option>Facebook</option>
