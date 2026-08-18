@@ -22,11 +22,12 @@ export const defaultSettings: StudioSettings = {
     password: '',
   },
 
-  stream: {
-    service: 'YouTube',
-    server: '',
-    streamKey: '',
-  },
+stream: {
+  service: 'YouTube',
+  customServiceName: '',
+  server: 'rtmp://a.rtmp.youtube.com/live2',
+  streamKey: '',
+},
 
   output: {
     encoder: 'H.264',
