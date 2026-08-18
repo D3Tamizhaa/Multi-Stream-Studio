@@ -1298,6 +1298,18 @@ p {
   color: white;
 }
 
+.input-readonly {
+  opacity: 0.65;
+  cursor: not-allowed;
+  background: #080b12;
+}
+
+.field-hint {
+  display: block;
+  margin-top: 6px;
+  color: #69738a;
+  font-size: 11px;
+}
 
 /* =========================================
    STREAM CONTROLS
