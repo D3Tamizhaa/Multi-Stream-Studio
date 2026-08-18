@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { AddPlatformModal } from './components/AddPlatformModal'
 import { AddSceneModal } from './components/AddSceneModal'
 import { AddSourceModal } from './components/AddSourceModal'
 import { AudioMixer } from './components/AudioMixer'
@@ -129,7 +130,9 @@ export default function App() {
   const [modal, setModal] = useState<
     | 'scene'
     | 'source'
+    | 'platform'
     | 'source-properties'
+    | 'platform-edit'
     | 'audio-properties'
     | null
   >(null)
@@ -336,6 +339,21 @@ function removeSource() {
     setSources(next)
   }
 
+  function addOrUpdatePlatform(platform: Platform) {
+    setPlatforms((current) => {
+      const exists = current.some(
+        (item) => item.id === platform.id,
+      )
+
+      return exists
+        ? current.map((item) =>
+            item.id === platform.id ? platform : item,
+          )
+        : [...current, platform]
+    })
+
+    setModal(null)
+  }
 
   function removePlatform() {
     if (platforms.length === 0) return
@@ -461,6 +479,10 @@ function removeSource() {
                   }}
                   onRemove={removePlatform}
                   onToggle={togglePlatform}
+                  onEdit={(platform) => {
+                    setSelectedSource(platform.id)
+                    setModal('platform-edit')
+                  }}
                 />
 
                 <ControlsPanel
@@ -471,46 +493,11 @@ function removeSource() {
               </div>
             </>
           ) : (
-<SettingsPanel
-  section={settingsSection}
-  settings={settings}
-  onSave={(nextSettings) => {
-    setSettings(nextSettings)
-
-    if (settingsSection === 'Stream') {
-      const stream = nextSettings.stream
-
-      setPlatforms((current) => {
-        const existing = current.find(
-          (platform) => platform.name === stream.service,
-        )
-
-        if (existing) {
-          return current.map((platform) =>
-            platform.id === existing.id
-              ? {
-                  ...platform,
-                  server: stream.server,
-                  streamKey: stream.streamKey,
-                }
-              : platform,
-          )
-        }
-
-        return [
-          ...current,
-          {
-            id: `platform-${Date.now()}`,
-            name: stream.service,
-            enabled: true,
-            server: stream.server,
-            streamKey: stream.streamKey,
-          },
-        ]
-      })
-    }
-  }}
-/>
+            <SettingsPanel
+              section={settingsSection}
+              settings={settings}
+              onSave={setSettings}
+            />
           )}
 
           <UsageBar
@@ -548,6 +535,23 @@ function removeSource() {
           )}
           onClose={() => setModal(null)}
           onAdd={addOrUpdateSource}
+        />
+      )}
+
+      {modal === 'platform' && (
+        <AddPlatformModal
+          onClose={() => setModal(null)}
+          onAdd={addOrUpdatePlatform}
+        />
+      )}
+
+      {modal === 'platform-edit' && (
+        <AddPlatformModal
+          existing={platforms.find(
+            (platform) => platform.id === selectedSource,
+          )}
+          onClose={() => setModal(null)}
+          onAdd={addOrUpdatePlatform}
         />
       )}
 
