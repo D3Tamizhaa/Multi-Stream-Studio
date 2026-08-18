@@ -95,6 +95,9 @@ export default function App() {
   const [platforms, setPlatforms] =
     useState<Platform[]>(defaultPlatforms)
 
+const [selectedPlatform, setSelectedPlatform] =
+  useState<string | null>(null)
+  
   const [settings, setSettings] =
   useState<StudioSettings>(() => loadSavedSettings())
 
@@ -355,11 +358,17 @@ function removeSource() {
     setModal(null)
   }
 
-  function removePlatform() {
-    if (platforms.length === 0) return
+function removePlatform() {
+  if (!selectedPlatform) return
 
-    setPlatforms((current) => current.slice(0, -1))
-  }
+  setPlatforms((current) =>
+    current.filter(
+      (platform) => platform.id !== selectedPlatform,
+    ),
+  )
+
+  setSelectedPlatform(null)
+}
 
   function togglePlatform(id: string) {
     setPlatforms((current) =>
@@ -371,6 +380,27 @@ function removeSource() {
     )
   }
 
+  function selectPlatform(id: string) {
+  setSelectedPlatform(id)
+}
+
+  function editPlatform(platform: Platform) {
+  setSelectedPlatform(platform.id)
+
+  setSettings((current) => ({
+    ...current,
+    stream: {
+      ...current.stream,
+      service: platform.name,
+      server: platform.server,
+      streamKey: platform.streamKey,
+    },
+  }))
+
+  setPage('settings')
+  setSettingsSection('Stream')
+}
+  
   function startStreaming() {
     setStreaming(true)
     setUptime(0)
@@ -472,18 +502,29 @@ function removeSource() {
 
               <div className="stream-grid">
                 <PlatformsPanel
-                  platforms={platforms}
-                  onAdd={() => {
-                    setPage('settings')
-                    setSettingsSection('Stream')
-                  }}
-                  onRemove={removePlatform}
-                  onToggle={togglePlatform}
-                  onEdit={(platform) => {
-                    setSelectedSource(platform.id)
-                    setModal('platform-edit')
-                  }}
-                />
+  platforms={platforms}
+  selectedPlatform={selectedPlatform}
+  onSelect={selectPlatform}
+  onAdd={() => {
+    setSelectedPlatform(null)
+
+    setSettings((current) => ({
+      ...current,
+      stream: {
+        ...current.stream,
+        service: 'YouTube',
+        server: '',
+        streamKey: '',
+      },
+    }))
+
+    setPage('settings')
+    setSettingsSection('Stream')
+  }}
+  onRemove={removePlatform}
+  onToggle={togglePlatform}
+  onEdit={editPlatform}
+/>
 
                 <ControlsPanel
                   streaming={streaming}
@@ -494,11 +535,47 @@ function removeSource() {
             </>
           ) : (
             <SettingsPanel
-              section={settingsSection}
-              settings={settings}
-              onSave={setSettings}
-            />
-          )}
+  section={settingsSection}
+  settings={settings}
+  onSave={(nextSettings) => {
+    setSettings(nextSettings)
+
+    if (settingsSection === 'Stream') {
+      const stream = nextSettings.stream
+
+      setPlatforms((current) => {
+        // Editing an existing platform
+        if (selectedPlatform) {
+          return current.map((platform) =>
+            platform.id === selectedPlatform
+              ? {
+                  ...platform,
+                  name: stream.service,
+                  server: stream.server,
+                  streamKey: stream.streamKey,
+                }
+              : platform,
+          )
+        }
+
+        // Adding a new platform
+        const newPlatform: Platform = {
+          id: `platform-${Date.now()}`,
+          name: stream.service,
+          enabled: true,
+          server: stream.server,
+          streamKey: stream.streamKey,
+        }
+
+        setSelectedPlatform(newPlatform.id)
+
+        return [...current, newPlatform]
+      })
+    }
+
+    setPage('editor')
+  }}
+/>
 
           <UsageBar
   streaming={streaming}
