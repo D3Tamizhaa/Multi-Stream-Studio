@@ -31,6 +31,19 @@ const fpsOptions = [
   '60',
 ]
 
+const STREAM_SERVERS = {
+  YouTube: 'rtmp://a.rtmp.youtube.com/live2',
+  Facebook: 'rtmps://live-api-s.facebook.com:443/rtmp/',
+  Twitch: 'rtmp://live.twitch.tv/app',
+  Kick: 'rtmps://fa723fc1.kick.com/app/',
+} as const
+
+function isBuiltInService(
+  service: StudioSettings['stream']['service'],
+): service is keyof typeof STREAM_SERVERS {
+  return service in STREAM_SERVERS
+}
+
 export function SettingsPanel({
   section,
   settings,
@@ -144,53 +157,91 @@ export function SettingsPanel({
           </div>
         )}
 
-        {section === 'Stream' && (
-          <div className="settings-form">
-            <Field label="Service">
-              <select
-                value={draft.stream.service}
-                onChange={(event) =>
-                  update('stream', {
-                    ...draft.stream,
-                    service: event.target.value as typeof draft.stream.service,
-                  })
-                }
-              >
-                <option>YouTube</option>
-                <option>Facebook</option>
-                <option>Twitch</option>
-                <option>Kick</option>
-                <option>Custom</option>
-              </select>
-            </Field>
+{section === 'Stream' && (
+  <div className="settings-form">
+    <Field label="Service">
+      <select
+        value={draft.stream.service}
+        onChange={(event) => {
+          const service =
+            event.target.value as StudioSettings['stream']['service']
 
-            <Field label="Server">
-              <input
-                value={draft.stream.server}
-                placeholder="rtmp://..."
-                onChange={(event) =>
-                  update('stream', {
-                    ...draft.stream,
-                    server: event.target.value,
-                  })
-                }
-              />
-            </Field>
+          update('stream', {
+            ...draft.stream,
+            service,
+            server: isBuiltInService(service)
+              ? STREAM_SERVERS[service]
+              : '',
+            customServiceName:
+              service === 'Custom'
+                ? draft.stream.customServiceName
+                : '',
+          })
+        }}
+      >
+        <option value="YouTube">YouTube</option>
+        <option value="Facebook">Facebook</option>
+        <option value="Twitch">Twitch</option>
+        <option value="Kick">Kick</option>
+        <option value="Custom">Custom</option>
+      </select>
+    </Field>
 
-            <Field label="Stream Key">
-              <input
-                type="password"
-                value={draft.stream.streamKey}
-                onChange={(event) =>
-                  update('stream', {
-                    ...draft.stream,
-                    streamKey: event.target.value,
-                  })
-                }
-              />
-            </Field>
-          </div>
-        )}
+    {draft.stream.service === 'Custom' && (
+      <Field label="Service Name">
+        <input
+          value={draft.stream.customServiceName}
+          placeholder="Example: My RTMP Server"
+          onChange={(event) =>
+            update('stream', {
+              ...draft.stream,
+              customServiceName: event.target.value,
+            })
+          }
+        />
+      </Field>
+    )}
+
+    <Field label="Server">
+      <input
+        value={draft.stream.server}
+        placeholder="rtmp://..."
+        readOnly={draft.stream.service !== 'Custom'}
+        className={
+          draft.stream.service !== 'Custom'
+            ? 'input-readonly'
+            : ''
+        }
+        onChange={(event) =>
+          update('stream', {
+            ...draft.stream,
+            server: event.target.value,
+          })
+        }
+      />
+
+      {draft.stream.service !== 'Custom' && (
+        <small className="field-hint">
+          Server is automatically configured for {draft.stream.service}.
+        </small>
+      )}
+    </Field>
+
+    <Field label="Stream Key">
+      <input
+        type="password"
+        value={draft.stream.streamKey}
+        placeholder="Enter stream key"
+        onChange={(event) =>
+          update('stream', {
+            ...draft.stream,
+            streamKey: event.target.value,
+          })
+        }
+      />
+    </Field>
+  </div>
+)}
 
         {section === 'Output' && (
           <div className="settings-grid">
