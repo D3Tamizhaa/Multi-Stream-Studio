@@ -24,6 +24,12 @@ export type PlatformName =
   | 'Kick'
   | 'Custom'
 
+export type BuiltInPlatformName =
+  | 'YouTube'
+  | 'Facebook'
+  | 'Twitch'
+  | 'Kick'
+
 export interface Scene {
   id: string
   name: string
@@ -72,11 +78,12 @@ export interface StudioSettings {
     username: string
     password: string
   }
-  stream: {
-    service: PlatformName
-    server: string
-    streamKey: string
-  }
+stream: {
+  service: PlatformName
+  customServiceName: string
+  server: string
+  streamKey: string
+}
   output: {
     encoder: string
     rateControl: string
