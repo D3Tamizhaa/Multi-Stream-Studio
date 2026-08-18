@@ -152,21 +152,26 @@ function renderSource(
           playsInline
           preload="auto"
           controls={false}
-          onLoadedData={(event) => {
-            const video = event.currentTarget
+  onLoadedData={(event) => {
+  const video = event.currentTarget
 
-            video.volume = Math.max(
-              0,
-              Math.min(1, volume / 100),
-            )
+  video.volume = Math.max(
+    0,
+    Math.min(1, volume / 100),
+  )
 
-            video.play().catch((error) => {
-              console.warn(
-                'Video autoplay was blocked:',
-                error,
-              )
-            })
-          }}
+  video.muted =
+    muted ||
+    monitoringMode === 'off'
+
+  video.play().catch((error) => {
+    console.warn(
+      'Video autoplay was blocked:',
+      error,
+    )
+  })
+}}
+
           onError={(event) => {
             console.error(
               'Video preview failed:',
@@ -239,6 +244,29 @@ export function PreviewCanvas({
     useRef<Interaction>(null)
 
   const [, forceUpdate] = useState(0)
+
+    useEffect(() => {
+    const videos =
+      canvasRef.current?.querySelectorAll('video')
+
+    if (!videos) return
+
+    videos.forEach((video) => {
+      video.volume = Math.max(
+        0,
+        Math.min(1, volume / 100),
+      )
+
+      video.muted =
+        muted ||
+        monitoringMode === 'off'
+    })
+  }, [
+    volume,
+    muted,
+    monitoringMode,
+    sources,
+  ])
 
   const { width: canvasWidth, height: canvasHeight } =
     parseResolution('1920x1080')
