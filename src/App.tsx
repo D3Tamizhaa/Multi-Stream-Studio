@@ -21,7 +21,6 @@ import {
 } from './data/defaults'
 import type {
   AudioMonitoringMode,
-  Platform,
   Scene,
   SettingsSection,
   Source,
@@ -130,7 +129,6 @@ export default function App() {
     | 'scene'
     | 'source'
     | 'source-properties'
-    | 'platform-edit'
     | 'audio-properties'
     | null
   >(null)
@@ -337,21 +335,6 @@ function removeSource() {
     setSources(next)
   }
 
-  function addOrUpdatePlatform(platform: Platform) {
-    setPlatforms((current) => {
-      const exists = current.some(
-        (item) => item.id === platform.id,
-      )
-
-      return exists
-        ? current.map((item) =>
-            item.id === platform.id ? platform : item,
-          )
-        : [...current, platform]
-    })
-
-    setModal(null)
-  }
 
   function removePlatform() {
     if (platforms.length === 0) return
@@ -477,9 +460,6 @@ function removeSource() {
                   }}
                   onRemove={removePlatform}
                   onToggle={togglePlatform}
-                  onEdit={(platform) => {
-                    setSelectedSource(platform.id)
-                    setModal('platform-edit')
                   }}
                 />
 
@@ -568,16 +548,6 @@ function removeSource() {
           )}
           onClose={() => setModal(null)}
           onAdd={addOrUpdateSource}
-        />
-      )}
-
-      {modal === 'platform-edit' && (
-        <AddPlatformModal
-          existing={platforms.find(
-            (platform) => platform.id === selectedSource,
-          )}
-          onClose={() => setModal(null)}
-          onAdd={addOrUpdatePlatform}
         />
       )}
 
