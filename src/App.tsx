@@ -53,6 +53,8 @@ function loadSavedSettings(): StudioSettings {
       stream: {
         ...defaultSettings.stream,
         ...parsed.stream,
+        customServiceName:
+          parsed.stream?.customServiceName ?? '',
       },
       output: {
         ...defaultSettings.output,
