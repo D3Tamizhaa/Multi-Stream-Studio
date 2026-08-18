@@ -3,6 +3,7 @@ import { AddPlatformModal } from './components/AddPlatformModal'
 import { AddSceneModal } from './components/AddSceneModal'
 import { AddSourceModal } from './components/AddSourceModal'
 import { AudioMixer } from './components/AudioMixer'
+import { AudioPropertiesModal } from './components/AudioPropertiesModal'
 import { ControlsPanel } from './components/ControlsPanel'
 import { Header } from './components/Header'
 import { LoginScreen } from './components/LoginScreen'
@@ -20,6 +21,7 @@ import {
   defaultSources,
 } from './data/defaults'
 import type {
+  AudioMonitoringMode,
   Platform,
   Scene,
   SettingsSection,
@@ -115,7 +117,9 @@ export default function App() {
 
   const [audioMuted, setAudioMuted] =
     useState(false)
-
+  const [audioMonitoringMode, setAudioMonitoringMode] =
+    useState<AudioMonitoringMode>('off')
+  
   const [streaming, setStreaming] =
     useState(false)
 
@@ -129,6 +133,7 @@ export default function App() {
     | 'platform'
     | 'source-properties'
     | 'platform-edit'
+    | 'audio-properties'
     | null
   >(null)
 
@@ -449,13 +454,16 @@ function removeSource() {
   onMove={moveSource}
 />
 
-
-                <AudioMixer
+ <AudioMixer
   volume={audioVolume}
   muted={audioMuted}
+  monitoringMode={audioMonitoringMode}
   onVolumeChange={setAudioVolume}
   onMuteToggle={() =>
     setAudioMuted((value) => !value)
+  }
+  onProperties={() =>
+    setModal('audio-properties')
   }
 />
 
