@@ -8,7 +8,7 @@
   "type": "module",
   "description": "Multi Stream Studio - browser-based live production studio UI",
   "scripts": {
-    "dev": "concurrently -k \"vite --host 127.0.0.1\" \"electron electron/main.cjs\"",
+    "dev": "concurrently -k \"vite --host 127.0.0.1\" \"node server.mjs\" \"electron electron/main.cjs\"",
     "build": "tsc -b && vite build",
     "desktop": "electron electron/main.cjs",
     "start": "node server.mjs",
