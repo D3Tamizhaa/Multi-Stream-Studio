@@ -16,6 +16,10 @@ import type {
 interface PreviewCanvasProps {
   sources: Source[]
   enabled: boolean
+  fps: number
+  baseResolution: string
+  outputResolution: string
+  onStreamReady: (stream: MediaStream | null) => void
   onToggle: () => void
   selectedSource: string | null
   onSelectSource: (id: string) => void
@@ -239,7 +243,8 @@ export function PreviewCanvas({
   muted = false,
   monitoringMode = 'off',
 }: PreviewCanvasProps) {
-  const canvasRef = useRef<HTMLDivElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const editorRef = useRef<HTMLDivElement>(null)
   const interactionRef =
     useRef<Interaction>(null)
 
