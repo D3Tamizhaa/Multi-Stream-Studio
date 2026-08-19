@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AddPlatformModal } from './components/AddPlatformModal'
 import { AddSceneModal } from './components/AddSceneModal'
 import { AddSourceModal } from './components/AddSourceModal'
@@ -127,6 +127,8 @@ const [selectedPlatform, setSelectedPlatform] =
   
   const [streaming, setStreaming] =
     useState(false)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const streamUploadRef = useRef<Promise<Response> | null>(null)
 
   const [uptime, setUptime] = useState(0)
   const [cpu, setCpu] = useState(0)
@@ -413,14 +415,145 @@ function editPlatform(platform: Platform) {
   setSettingsSection('Stream')
 }
   
-  function startStreaming() {
-    setStreaming(true)
-    setUptime(0)
+async function startStreaming() {
+  const enabledPlatforms = platforms.filter(
+    (platform) =>
+      platform.enabled &&
+      platform.server.trim() &&
+      platform.streamKey.trim(),
+  )
+
+  if (enabledPlatforms.length === 0) {
+    console.error('No enabled platform with server and stream key.')
+    return
   }
 
-  function stopStreaming() {
+  if (!previewEnabled) {
+    console.error('Preview must be enabled before streaming.')
+    return
+  }
+
+  try {
+    const startResponse = await fetch('/api/stream/start', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        platforms: enabledPlatforms,
+        output: settings.output,
+        audio: settings.audio,
+        video: settings.video,
+        advanced: settings.advanced,
+      }),
+    })
+
+    if (!startResponse.ok) {
+      const message = await startResponse.text()
+      throw new Error(message || 'Failed to start FFmpeg')
+    }
+
+    const preview = document.querySelector(
+      '[data-stream-preview]',
+    ) as HTMLCanvasElement | null
+
+    if (!preview) {
+      throw new Error(
+        'Streaming preview canvas was not found.',
+      )
+    }
+
+    const canvasStream = preview.captureStream(
+      Number.parseInt(settings.video.fps, 10) || 30,
+    )
+
+    const mimeType =
+      MediaRecorder.isTypeSupported(
+        'video/webm;codecs=vp9,opus',
+      )
+        ? 'video/webm;codecs=vp9,opus'
+        : 'video/webm;codecs=vp8,opus'
+
+    const recorder = new MediaRecorder(canvasStream, {
+      mimeType,
+    })
+
+    mediaRecorderRef.current = recorder
+
+    const uploadPromise = fetch('/api/stream/input', {
+      method: 'POST',
+      headers: {
+        'Content-Type': mimeType,
+      },
+      body: new ReadableStream({
+        start(controller) {
+          recorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+              event.data.arrayBuffer().then((buffer) => {
+                controller.enqueue(new Uint8Array(buffer))
+              })
+            }
+          }
+
+          recorder.onerror = () => {
+            controller.error(
+              new Error('Preview recording failed.'),
+            )
+          }
+
+          recorder.onstop = () => {
+            controller.close()
+          }
+
+          recorder.start(1000)
+        },
+      }),
+      // Required by Chromium for streaming request bodies.
+      duplex: 'half',
+    } as RequestInit)
+
+    streamUploadRef.current = uploadPromise
+
+    setStreaming(true)
+    setUptime(0)
+
+    uploadPromise
+      .then(async (response) => {
+        if (!response.ok) {
+          console.error(
+            'FFmpeg input failed:',
+            await response.text(),
+          )
+          setStreaming(false)
+        }
+      })
+      .catch((error) => {
+        console.error(
+          'Streaming upload failed:',
+          error,
+        )
+        setStreaming(false)
+      })
+  } catch (error) {
+    console.error('Start streaming failed:', error)
     setStreaming(false)
   }
+}
+
+async function stopStreaming() {
+  try {
+    mediaRecorderRef.current?.stop()
+    mediaRecorderRef.current = null
+
+    await fetch('/api/stream/stop', {
+      method: 'POST',
+    })
+  } catch (error) {
+    console.error('Stop streaming failed:', error)
+  } finally {
+    setStreaming(false)
+  }
+}
 
   if (!loggedIn) {
     return <LoginScreen onLogin={login} />
