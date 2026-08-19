@@ -565,25 +565,25 @@ async function startStreaming() {
   }
 
   try {
-    const canvas =
-      document.querySelector(
-        'canvas[data-stream-preview]',
-      ) as HTMLCanvasElement | null
+const canvas =
+  document.querySelector<HTMLCanvasElement>(
+    'canvas[data-stream-preview]',
+  )
 
-    if (!canvas) {
-      throw new Error(
-        'Streaming canvas was not found.',
-      )
-    }
+if (canvas === null) {
+  throw new Error(
+    'Streaming canvas was not found.',
+  )
+}
 
-    if (
-      typeof canvas.captureStream !==
-      'function'
-    ) {
-      throw new Error(
-        'Canvas streaming is not supported by this browser.',
-      )
-    }
+const captureStream =
+  canvas.captureStream.bind(canvas)
+
+if (typeof captureStream !== 'function') {
+  throw new Error(
+    'Canvas streaming is not supported by this browser.',
+  )
+}
 
     const fps =
       Number.parseInt(
@@ -618,25 +618,15 @@ async function startStreaming() {
       )
     }
 
-    const canvasStream =
-      canvas.captureStream(fps)
+const canvasStream =
+  captureStream(fps)
 
-    const videos =
-      Array.from(
-        document.querySelectorAll(
-          'canvas[data-stream-preview]'
-            .parentElement
-            ?.querySelectorAll('video') ??
-            [],
-        ),
-      )
-
-    const mediaElements =
-      Array.from(
-        document.querySelectorAll(
-          '.preview-stage video',
-        ),
-      )
+const mediaElements =
+  Array.from(
+    document.querySelectorAll<HTMLVideoElement>(
+      '.preview-stage video',
+    ),
+  )
 
     const audioTracks =
       new Map<string, MediaStreamTrack>()
