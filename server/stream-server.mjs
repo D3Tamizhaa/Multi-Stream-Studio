@@ -34,8 +34,8 @@ function readJson(req) {
 }
 
 function buildOutputUrl(platform) {
-  const server = platform.server.trim()
-  const key = platform.streamKey.trim()
+  const server = String(platform.server || '').trim()
+  const key = String(platform.streamKey || '').trim()
 
   if (!server || !key) {
     throw new Error(
@@ -43,7 +43,7 @@ function buildOutputUrl(platform) {
     )
   }
 
-  return `${server.replace(/\/+$/, '')}/${key}`
+  return `${server.replace(/\/+$/, '')}/${encodeURIComponent(key)}`
 }
 
 function parseResolution(value, fallback) {
@@ -114,86 +114,76 @@ const outputs = config.platforms
     )
   }
 
-  return [
-    '-hide_banner',
-    '-loglevel',
-    'warning',
+return [
+  '-hide_banner',
+  '-loglevel',
+  'warning',
 
-    '-fflags',
-    '+genpts',
+  '-f',
+  'webm',
+  '-i',
+  'pipe:0',
 
-'-f',
-'webm',
-'-i',
-'pipe:0',
+  '-map',
+  '0:v:0',
 
-    '-map',
-    '0:v:0',
-    '-map',
-    '0:a:0?',
+  '-map',
+  '0:a:0?',
 
-    '-c:v',
-    'libx264',
-    '-preset',
-    config.output.preset || 'veryfast',
-    '-tune',
-    config.output.tune === 'None'
-      ? 'zerolatency'
-      : config.output.tune || 'zerolatency',
+  '-c:v',
+  'libx264',
+  '-preset',
+  config.output.preset || 'veryfast',
 
-    '-profile:v',
-    String(config.output.profile || 'High').toLowerCase(),
+  '-tune',
+  config.output.tune === 'None'
+    ? 'zerolatency'
+    : config.output.tune || 'zerolatency',
 
-    '-pix_fmt',
-    'yuv420p',
+  '-profile:v',
+  String(config.output.profile || 'High').toLowerCase(),
 
-    '-vf',
-    `scale=${videoResolution.width}:${videoResolution.height}`,
+  '-pix_fmt',
+  'yuv420p',
 
-    '-r',
-    String(fps),
+  '-vf',
+  `scale=${videoResolution.width}:${videoResolution.height}`,
 
-    '-g',
-    String(gop),
+  '-r',
+  String(fps),
 
-    '-keyint_min',
-    String(gop),
+  '-g',
+  String(gop),
+  '-keyint_min',
+  String(gop),
+  '-sc_threshold',
+  '0',
 
-    '-sc_threshold',
-    '0',
+  '-b:v',
+  `${bitrate}k`,
+  '-minrate',
+  `${bitrate}k`,
+  '-maxrate',
+  `${bitrate}k`,
+  '-bufsize',
+  `${bitrate * 2}k`,
 
-    '-b:v',
-    `${bitrate}k`,
+  '-c:a',
+  'aac',
+  '-b:a',
+  `${audioBitrate}k`,
+  '-ar',
+  '48000',
+  '-ac',
+  '2',
 
-    '-minrate',
-    `${bitrate}k`,
+  '-flvflags',
+  'no_duration_filesize',
 
-    '-maxrate',
-    `${bitrate}k`,
-
-    '-bufsize',
-    `${bitrate * 2}k`,
-
-    '-c:a',
-    'aac',
-
-    '-b:a',
-    `${audioBitrate}k`,
-
-    '-ar',
-    '48000',
-
-    '-ac',
-    '2',
-
-    '-flvflags',
-    'no_duration_filesize',
-
-    '-f',
-    'tee',
-
-    outputs.join('|'),
-  ]
+  '-f',
+  'tee',
+  outputs.join('|'),
+]
 }
 
 export async function startStream(config) {
