@@ -541,7 +541,7 @@ return (
   data-stream-preview
   width={canvasWidth}
   height={canvasHeight}
-  className="stream-preview-canvas"
+  style={{ display: 'none' }}
 />
       
       <div
