@@ -311,9 +311,12 @@ export function SettingsPanel({
                   })
                 }
               >
-                <option>Quality</option>
-                <option>Performance</option>
-                <option>Balanced</option>
+<option>ultrafast</option>
+<option>superfast</option>
+<option>veryfast</option>
+<option>faster</option>
+<option>fast</option>
+<option>medium</option>
               </select>
             </Field>
 
@@ -343,10 +346,11 @@ export function SettingsPanel({
                   })
                 }
               >
-                <option>None</option>
-                <option>Film</option>
-                <option>Animation</option>
-                <option>Grain</option>
+<option>zerolatency</option>
+<option>film</option>
+<option>animation</option>
+<option>grain</option>
+<option>None</option>
               </select>
             </Field>
           </div>
