@@ -1,4 +1,8 @@
-import { useEffect, useState } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import { AddPlatformModal } from './components/AddPlatformModal'
 import { AddSceneModal } from './components/AddSceneModal'
 import { AddSourceModal } from './components/AddSourceModal'
@@ -127,6 +131,15 @@ const [selectedPlatform, setSelectedPlatform] =
   
   const [streaming, setStreaming] =
     useState(false)
+  
+const streamSocketRef =
+  useRef<WebSocket | null>(null)
+
+const mediaRecorderRef =
+  useRef<MediaRecorder | null>(null)
+
+const captureStreamRef =
+  useRef<MediaStream | null>(null)
 
   const [uptime, setUptime] = useState(0)
   const [cpu, setCpu] = useState(0)
@@ -414,74 +427,238 @@ function editPlatform(platform: Platform) {
 }
   
 async function startStreaming() {
-  const enabledPlatforms = platforms.filter(
-    (platform) =>
-      platform.enabled &&
-      platform.server.trim() &&
-      platform.streamKey.trim(),
-  )
-
-  if (enabledPlatforms.length === 0) {
-    alert(
-      'Enable at least one platform and configure its server and stream key.',
-    )
-    return
-  }
-
   try {
-    const response = await fetch('/api/stream/start', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        platforms: enabledPlatforms,
-        settings,
-      }),
-    })
+    const enabledPlatforms =
+      platforms.filter(
+        (platform) =>
+          platform.enabled &&
+          platform.server.trim() &&
+          platform.streamKey.trim(),
+      )
 
-    const result = await response.json()
-
-    if (!response.ok) {
-      throw new Error(result.error || 'Failed to start streaming')
+    if (enabledPlatforms.length === 0) {
+      window.alert(
+        'Enable at least one platform and enter its server and stream key.',
+      )
+      return
     }
 
-    setStreaming(true)
-    setUptime(0)
-  } catch (error) {
-    console.error('START STREAMING FAILED:', error)
+    if (!navigator.mediaDevices?.getDisplayMedia) {
+      window.alert(
+        'Screen capture is not supported in this browser.',
+      )
+      return
+    }
 
-    alert(
+    const captureStream =
+      await navigator.mediaDevices.getDisplayMedia({
+        video: {
+          frameRate: 30,
+        },
+        audio: true,
+      })
+
+    captureStreamRef.current =
+      captureStream
+
+    const protocol =
+      window.location.protocol === 'https:'
+        ? 'wss'
+        : 'ws'
+
+    const host =
+      window.location.port === '5173'
+        ? `${window.location.hostname}:3001`
+        : window.location.host
+
+    const socket =
+      new WebSocket(
+        `${protocol}://${host}/api/stream`,
+      )
+
+    streamSocketRef.current = socket
+
+    socket.binaryType = 'arraybuffer'
+
+    socket.onopen = () => {
+      socket.send(
+        JSON.stringify({
+          type: 'start',
+          platforms: enabledPlatforms,
+          settings,
+        }),
+      )
+
+      const mimeTypes = [
+        'video/webm;codecs=vp8,opus',
+        'video/webm;codecs=vp9,opus',
+        'video/webm',
+      ]
+
+      const mimeType =
+        mimeTypes.find((type) =>
+          MediaRecorder.isTypeSupported(type),
+        ) || ''
+
+      if (!mimeType) {
+        window.alert(
+          'This browser cannot create a WebM stream.',
+        )
+
+        captureStream
+          .getTracks()
+          .forEach((track) => track.stop())
+
+        socket.close()
+        return
+      }
+
+      const recorder =
+        new MediaRecorder(
+          captureStream,
+          {
+            mimeType,
+            videoBitsPerSecond:
+              8_000_000,
+          },
+        )
+
+      mediaRecorderRef.current =
+        recorder
+
+      recorder.ondataavailable = (
+        event,
+      ) => {
+        if (
+          event.data.size > 0 &&
+          socket.readyState === WebSocket.OPEN
+        ) {
+          socket.send(event.data)
+        }
+      }
+
+      recorder.onerror = (event) => {
+        console.error(
+          'MediaRecorder error:',
+          event,
+        )
+      }
+
+      recorder.start(250)
+
+      setStreaming(true)
+      setUptime(0)
+    }
+
+    socket.onmessage = (event) => {
+      try {
+        const message =
+          JSON.parse(event.data)
+
+        if (message.type === 'error') {
+          console.error(
+            'Streaming server error:',
+            message.message,
+          )
+
+          window.alert(
+            message.message ||
+              'Streaming failed.',
+          )
+
+          stopStreaming()
+        }
+      } catch {
+
+      }
+    }
+
+    socket.onerror = (event) => {
+      console.error(
+        'Streaming WebSocket error:',
+        event,
+      )
+
+      window.alert(
+        'Could not connect to the streaming server.',
+      )
+
+      setStreaming(false)
+    }
+
+    socket.onclose = () => {
+      setStreaming(false)
+    }
+
+    captureStream
+      .getVideoTracks()[0]
+      ?.addEventListener(
+        'ended',
+        () => {
+          stopStreaming()
+        },
+      )
+  } catch (error) {
+    console.error(
+      'Failed to start streaming:',
+      error,
+    )
+
+    window.alert(
       error instanceof Error
         ? error.message
-        : 'Failed to start streaming',
+        : 'Streaming was cancelled or failed.',
     )
+
+    setStreaming(false)
   }
 }
 
-async function stopStreaming() {
-  try {
-    const response = await fetch('/api/stream/stop', {
-      method: 'POST',
-    })
 
-    const result = await response.json()
+function stopStreaming() {
+  const recorder =
+    mediaRecorderRef.current
 
-    if (!response.ok) {
-      throw new Error(result.error || 'Failed to stop streaming')
+  if (recorder) {
+    if (
+      recorder.state !== 'inactive'
+    ) {
+      recorder.stop()
     }
 
-    setStreaming(false)
-    setUptime(0)
-  } catch (error) {
-    console.error('STOP STREAMING FAILED:', error)
-
-    alert(
-      error instanceof Error
-        ? error.message
-        : 'Failed to stop streaming',
-    )
+    mediaRecorderRef.current = null
   }
+
+  const socket =
+    streamSocketRef.current
+
+  if (
+    socket &&
+    socket.readyState === WebSocket.OPEN
+  ) {
+    socket.send(
+      JSON.stringify({
+        type: 'stop',
+      }),
+    )
+
+    socket.close()
+  }
+
+  streamSocketRef.current = null
+
+  const captureStream =
+    captureStreamRef.current
+
+  if (captureStream) {
+    captureStream
+      .getTracks()
+      .forEach((track) => track.stop())
+
+    captureStreamRef.current = null
+  }
+
+  setStreaming(false)
 }
 
   if (!loggedIn) {
