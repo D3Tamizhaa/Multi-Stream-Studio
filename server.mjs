@@ -1,4 +1,12 @@
 import http from 'node:http'
+import { WebSocketServer } from 'ws'
+
+import {
+  startStreaming,
+  writeStreamChunk,
+  stopStreaming,
+} from './server/streaming.mjs'
+
 import os from 'node:os'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -137,6 +145,93 @@ function serveStatic(req, res) {
   })
 }
 
+const webSocketServer = new WebSocketServer({
+  noServer: true,
+})
+
+webSocketServer.on('connection', (socket) => {
+  let configured = false
+
+  socket.on('message', (data, isBinary) => {
+    if (!isBinary) {
+      try {
+        const message = JSON.parse(data.toString())
+
+        if (message.type === 'start') {
+          startStreaming(
+            message.platforms,
+            message.settings,
+          )
+
+          configured = true
+
+          socket.send(
+            JSON.stringify({
+              type: 'started',
+            }),
+          )
+
+          return
+        }
+
+        if (message.type === 'stop') {
+          stopStreaming()
+
+          socket.send(
+            JSON.stringify({
+              type: 'stopped',
+            }),
+          )
+
+          socket.close()
+
+          return
+        }
+      } catch (error) {
+        console.error(
+          'Streaming command failed:',
+          error,
+        )
+
+        socket.send(
+          JSON.stringify({
+            type: 'error',
+            message:
+              error instanceof Error
+                ? error.message
+                : 'Streaming command failed',
+          }),
+        )
+      }
+
+      return
+    }
+
+    if (!configured) {
+      return
+    }
+
+    const buffer = Buffer.isBuffer(data)
+      ? data
+      : Buffer.from(data)
+
+    writeStreamChunk(buffer)
+  })
+
+  socket.on('close', () => {
+    stopStreaming()
+  })
+
+  socket.on('error', (error) => {
+    console.error(
+      'Streaming WebSocket error:',
+      error,
+    )
+
+    stopStreaming()
+  })
+})
+
 const server = http.createServer((req, res) => {
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
@@ -155,6 +250,58 @@ const server = http.createServer((req, res) => {
   }
 
   serveStatic(req, res)
+})
+
+server.on('upgrade', (request, socket, head) => {
+  const pathname =
+    new URL(
+      request.url,
+      `http://${request.headers.host}`,
+    ).pathname
+
+  if (pathname !== '/api/stream') {
+    socket.destroy()
+    return
+  }
+
+  webSocketServer.handleUpgrade(
+    request,
+    socket,
+    head,
+    (websocket) => {
+      webSocketServer.emit(
+        'connection',
+        websocket,
+        request,
+      )
+    },
+  )
+})
+
+server.on('upgrade', (request, socket, head) => {
+  const pathname =
+    new URL(
+      request.url,
+      `http://${request.headers.host}`,
+    ).pathname
+
+  if (pathname !== '/api/stream') {
+    socket.destroy()
+    return
+  }
+
+  webSocketServer.handleUpgrade(
+    request,
+    socket,
+    head,
+    (websocket) => {
+      webSocketServer.emit(
+        'connection',
+        websocket,
+        request,
+      )
+    },
+  )
 })
 
 server.listen(PORT, '0.0.0.0', () => {
