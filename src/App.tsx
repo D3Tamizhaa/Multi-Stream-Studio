@@ -633,8 +633,19 @@ const mediaElements =
 
     for (const video of mediaElements) {
       try {
-        const capture =
-          video.captureStream?.()
+
+const capture =
+  (
+    video as HTMLVideoElement & {
+      captureStream?: () => MediaStream
+      webkitCaptureStream?: () => MediaStream
+    }
+  ).captureStream?.() ??
+  (
+    video as HTMLVideoElement & {
+      webkitCaptureStream?: () => MediaStream
+    }
+  ).webkitCaptureStream?.()
 
         if (!capture) continue
 
