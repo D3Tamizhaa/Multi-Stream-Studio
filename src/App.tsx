@@ -132,15 +132,6 @@ const [selectedPlatform, setSelectedPlatform] =
   const [streaming, setStreaming] =
     useState(false)
   
-const streamSocketRef =
-  useRef<WebSocket | null>(null)
-
-const mediaRecorderRef =
-  useRef<MediaRecorder | null>(null)
-
-const captureStreamRef =
-  useRef<MediaStream | null>(null)
-
   const [uptime, setUptime] = useState(0)
   const [cpu, setCpu] = useState(0)
   const [ram, setRam] = useState(0)
@@ -442,21 +433,6 @@ async function startStreaming() {
       )
       return
     }
-
-    if (!navigator.mediaDevices?.getDisplayMedia) {
-      window.alert(
-        'Screen capture is not supported in this browser.',
-      )
-      return
-    }
-
-    const captureStream =
-      await navigator.mediaDevices.getDisplayMedia({
-        video: {
-          frameRate: 30,
-        },
-        audio: true,
-      })
 
     captureStreamRef.current =
       captureStream
