@@ -32,6 +32,29 @@ import type {
 type Page = 'editor' | 'settings'
 
 const SETTINGS_STORAGE_KEY = 'multi-stream-studio-settings'
+const STUDIO_STORAGE_KEY = 'multi-stream-studio-editor'
+
+interface SavedStudioState {
+  scenes: Scene[]
+  activeScene: string
+  sources: Source[]
+  platforms: Platform[]
+  selectedPlatform: string | null
+  audioVolume: number
+  audioMuted: boolean
+  audioMonitoringMode: AudioMonitoringMode
+}
+
+const defaultStudioState: SavedStudioState = {
+  scenes: defaultScenes,
+  activeScene: defaultScenes[0]?.id ?? '',
+  sources: defaultSources,
+  platforms: defaultPlatforms,
+  selectedPlatform: null,
+  audioVolume: 80,
+  audioMuted: false,
+  audioMonitoringMode: 'off',
+}
 
 function loadSavedSettings(): StudioSettings {
   try {
@@ -88,42 +111,81 @@ export default function App() {
   const [settingsSection, setSettingsSection] =
     useState<SettingsSection>('Authorization')
 
-  const [scenes, setScenes] = useState<Scene[]>(defaultScenes)
-  const [activeScene, setActiveScene] = useState(defaultScenes[0].id)
+const [savedStudioState] =
+  useState<SavedStudioState>(() =>
+    loadSavedStudioState(),
+  )
 
-  const [sources, setSources] = useState<Source[]>(defaultSources)
-  const [selectedSource, setSelectedSource] = useState<string | null>(null)
+const [scenes, setScenes] =
+  useState<Scene[]>(savedStudioState.scenes)
 
-  const [platforms, setPlatforms] =
-    useState<Platform[]>(defaultPlatforms)
+const [activeScene, setActiveScene] =
+  useState(savedStudioState.activeScene)
+
+const [sources, setSources] =
+  useState<Source[]>(savedStudioState.sources)
+
+const [selectedSource, setSelectedSource] =
+  useState<string | null>(null)
+
+const [platforms, setPlatforms] =
+  useState<Platform[]>(savedStudioState.platforms)
 
 const [selectedPlatform, setSelectedPlatform] =
-  useState<string | null>(null)
+  useState<string | null>(
+    savedStudioState.selectedPlatform,
+  )
   
   const [settings, setSettings] =
   useState<StudioSettings>(() => loadSavedSettings())
 
-  useEffect(() => {
+useEffect(() => {
   try {
+    const studioState: SavedStudioState = {
+      scenes,
+      activeScene,
+      sources,
+      platforms,
+      selectedPlatform,
+      audioVolume,
+      audioMuted,
+      audioMonitoringMode,
+    }
+
     localStorage.setItem(
-      SETTINGS_STORAGE_KEY,
-      JSON.stringify(settings),
+      STUDIO_STORAGE_KEY,
+      JSON.stringify(studioState),
     )
   } catch (error) {
-    console.error('Failed to save settings:', error)
+    console.error(
+      'Failed to save studio state:',
+      error,
+    )
   }
-}, [settings])
+}, [
+  scenes,
+  activeScene,
+  sources,
+  platforms,
+  selectedPlatform,
+  audioVolume,
+  audioMuted,
+  audioMonitoringMode,
+])
   
   const [previewEnabled, setPreviewEnabled] =
     useState(true)
 
-  const [audioVolume, setAudioVolume] =
-    useState(80)
+const [audioVolume, setAudioVolume] =
+  useState(savedStudioState.audioVolume)
 
-  const [audioMuted, setAudioMuted] =
-    useState(false)
-  const [audioMonitoringMode, setAudioMonitoringMode] =
-    useState<AudioMonitoringMode>('off')
+const [audioMuted, setAudioMuted] =
+  useState(savedStudioState.audioMuted)
+
+const [audioMonitoringMode, setAudioMonitoringMode] =
+  useState<AudioMonitoringMode>(
+    savedStudioState.audioMonitoringMode,
+  )
   
   const [streaming, setStreaming] =
     useState(false)
