@@ -240,6 +240,7 @@ export function PreviewCanvas({
   monitoringMode = 'off',
 }: PreviewCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null)
+  const streamCanvasRef = useRef<HTMLCanvasElement>(null)
   const interactionRef =
     useRef<Interaction>(null)
 
