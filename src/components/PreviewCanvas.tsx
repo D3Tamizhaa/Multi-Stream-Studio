@@ -276,37 +276,49 @@ export function PreviewCanvas({
     (source) => source.visible,
   )
 
-  useEffect(() => {
+useEffect(() => {
   const canvas = streamCanvasRef.current
 
-  if (!canvas) return
+  if (canvas === null) {
+    return
+  }
 
-  const context = canvas.getContext('2d')
+  const ctx = canvas.getContext('2d')
 
-  if (!context) return
+  if (ctx === null) {
+    return
+  }
 
   let animationFrame = 0
 
-  function drawText(
+  const drawText = (
     source: Source,
     x: number,
     y: number,
     width: number,
-    height: number,
-  ) {
-    const fontSize = source.properties.fontSize ?? 32
-    const fontFamily =
-      source.properties.fontFamily || 'Inter, sans-serif'
+  ) => {
+    const fontSize =
+      source.properties.fontSize ?? 32
 
-    context.font = `${fontSize}px ${fontFamily}`
-    context.fillStyle =
-      source.properties.color || '#ffffff'
-    context.textBaseline = 'top'
+    const fontFamily =
+      source.properties.fontFamily ||
+      'Inter, sans-serif'
+
+    ctx.font =
+      `${fontSize}px ${fontFamily}`
+
+    ctx.fillStyle =
+      source.properties.color ||
+      '#ffffff'
+
+    ctx.textBaseline = 'top'
 
     const text =
-      source.properties.text || source.name
+      source.properties.text ||
+      source.name
 
     const words = text.split(/\s+/)
+
     const lines: string[] = []
 
     let currentLine = ''
@@ -317,7 +329,7 @@ export function PreviewCanvas({
         : word
 
       if (
-        context.measureText(testLine).width >
+        ctx.measureText(testLine).width >
           width &&
         currentLine
       ) {
@@ -332,102 +344,143 @@ export function PreviewCanvas({
       lines.push(currentLine)
     }
 
-    const lineHeight = fontSize * 1.2
+    const lineHeight =
+      fontSize * 1.2
 
-    lines.forEach((line, index) => {
-      context.fillText(
-        line,
-        x,
-        y + index * lineHeight,
-      )
-    })
+    lines.forEach(
+      (line, index) => {
+        ctx.fillText(
+          line,
+          x,
+          y + index * lineHeight,
+        )
+      },
+    )
   }
 
-  function drawFrame() {
-    context.fillStyle = '#000000'
-    context.fillRect(
+  const drawFrame = () => {
+    /*
+     * Clear the streaming canvas.
+     */
+    ctx.fillStyle = '#000000'
+
+    ctx.fillRect(
       0,
       0,
       CANVAS_WIDTH,
       CANVAS_HEIGHT,
     )
 
-    for (const source of visibleSources) {
-      const bounds = getSourceBounds(source)
+    /*
+     * The visible preview is rendered inside
+     * canvasRef, not inside the hidden canvas.
+     */
+    const previewRoot =
+      canvasRef.current
 
-      const x = bounds.x
-      const y = bounds.y
-      const width = bounds.width
-      const height = bounds.height
+    if (previewRoot !== null) {
+      for (const source of visibleSources) {
+        const bounds =
+          getSourceBounds(source)
 
-      if (source.type === 'text') {
-        drawText(
-          source,
-          x,
-          y,
-          width,
-          height,
-        )
+        const x = bounds.x
+        const y = bounds.y
+        const width = bounds.width
+        const height = bounds.height
 
-        continue
-      }
-
-      const layer = canvas.parentElement
-        ?.querySelector(
-          `.canvas-layer[data-source-id="${source.id}"]`,
-        )
-
-      const media = layer?.querySelector(
-        'video',
-      ) as HTMLVideoElement | null
-
-      if (media && media.readyState >= 2) {
-        try {
-          context.drawImage(
-            media,
+        if (source.type === 'text') {
+          drawText(
+            source,
             x,
             y,
             width,
-            height,
           )
-        } catch (error) {
-          console.warn(
-            '[Preview] Could not draw video:',
-            source.name,
-            error,
-          )
+
+          continue
         }
 
-        continue
-      }
-
-      const image = layer?.querySelector(
-        'img',
-      ) as HTMLImageElement | null
-
-      if (
-        image &&
-        image.complete &&
-        image.naturalWidth > 0
-      ) {
-        try {
-          const imageUrl = new URL(
-            image.currentSrc || image.src,
-            window.location.href,
+        const layer =
+          previewRoot.querySelector<HTMLElement>(
+            `.canvas-layer[data-source-id="${source.id}"]`,
           )
 
-          if (
-            imageUrl.origin ===
-            window.location.origin
-          ) {
-            context.drawImage(
-              image,
+        if (layer === null) {
+          continue
+        }
+
+        /*
+         * Video source
+         */
+        const video =
+          layer.querySelector<HTMLVideoElement>(
+            'video',
+          )
+
+        if (
+          video !== null &&
+          video.readyState >= 2
+        ) {
+          try {
+            ctx.drawImage(
+              video,
               x,
               y,
               width,
               height,
             )
+          } catch (error) {
+            console.warn(
+              '[Preview] Could not draw video:',
+              source.name,
+              error,
+            )
           }
+
+          continue
+        }
+
+        /*
+         * Image source
+         */
+        const image =
+          layer.querySelector<HTMLImageElement>(
+            'img',
+          )
+
+        if (
+          image === null ||
+          !image.complete ||
+          image.naturalWidth <= 0
+        ) {
+          continue
+        }
+
+        try {
+          const imageUrl =
+            new URL(
+              image.currentSrc ||
+                image.src,
+              window.location.href,
+            )
+
+          /*
+           * Only same-origin images can safely
+           * be copied into the streaming canvas.
+           */
+          if (
+            imageUrl.origin !==
+            window.location.origin
+          ) {
+            continue
+          }
+
+          ctx.drawImage(
+            image,
+            x,
+            y,
+            width,
+            height,
+          )
         } catch (error) {
           console.warn(
             '[Preview] Could not draw image:',
@@ -445,10 +498,11 @@ export function PreviewCanvas({
   drawFrame()
 
   return () => {
-    cancelAnimationFrame(animationFrame)
+    cancelAnimationFrame(
+      animationFrame,
+    )
   }
 }, [visibleSources])
-
 
   function beginDrag(
   event: React.PointerEvent<HTMLDivElement>,
