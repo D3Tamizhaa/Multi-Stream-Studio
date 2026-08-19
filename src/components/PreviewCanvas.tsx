@@ -276,6 +276,180 @@ export function PreviewCanvas({
     (source) => source.visible,
   )
 
+  useEffect(() => {
+  const canvas = streamCanvasRef.current
+
+  if (!canvas) return
+
+  const context = canvas.getContext('2d')
+
+  if (!context) return
+
+  let animationFrame = 0
+
+  function drawText(
+    source: Source,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+  ) {
+    const fontSize = source.properties.fontSize ?? 32
+    const fontFamily =
+      source.properties.fontFamily || 'Inter, sans-serif'
+
+    context.font = `${fontSize}px ${fontFamily}`
+    context.fillStyle =
+      source.properties.color || '#ffffff'
+    context.textBaseline = 'top'
+
+    const text =
+      source.properties.text || source.name
+
+    const words = text.split(/\s+/)
+    const lines: string[] = []
+
+    let currentLine = ''
+
+    for (const word of words) {
+      const testLine = currentLine
+        ? `${currentLine} ${word}`
+        : word
+
+      if (
+        context.measureText(testLine).width >
+          width &&
+        currentLine
+      ) {
+        lines.push(currentLine)
+        currentLine = word
+      } else {
+        currentLine = testLine
+      }
+    }
+
+    if (currentLine) {
+      lines.push(currentLine)
+    }
+
+    const lineHeight = fontSize * 1.2
+
+    lines.forEach((line, index) => {
+      context.fillText(
+        line,
+        x,
+        y + index * lineHeight,
+      )
+    })
+  }
+
+  function drawFrame() {
+    context.fillStyle = '#000000'
+    context.fillRect(
+      0,
+      0,
+      CANVAS_WIDTH,
+      CANVAS_HEIGHT,
+    )
+
+    for (const source of visibleSources) {
+      const bounds = getSourceBounds(source)
+
+      const x = bounds.x
+      const y = bounds.y
+      const width = bounds.width
+      const height = bounds.height
+
+      if (source.type === 'text') {
+        drawText(
+          source,
+          x,
+          y,
+          width,
+          height,
+        )
+
+        continue
+      }
+
+      const layer = canvas.parentElement
+        ?.querySelector(
+          `.canvas-layer[data-source-id="${source.id}"]`,
+        )
+
+      const media = layer?.querySelector(
+        'video',
+      ) as HTMLVideoElement | null
+
+      if (media && media.readyState >= 2) {
+        try {
+          context.drawImage(
+            media,
+            x,
+            y,
+            width,
+            height,
+          )
+        } catch (error) {
+          console.warn(
+            '[Preview] Could not draw video:',
+            source.name,
+            error,
+          )
+        }
+
+        continue
+      }
+
+      const image = layer?.querySelector(
+        'img',
+      ) as HTMLImageElement | null
+
+      if (
+        image &&
+        image.complete &&
+        image.naturalWidth > 0
+      ) {
+        try {
+          const imageUrl = new URL(
+            image.currentSrc || image.src,
+            window.location.href,
+          )
+
+          if (
+            imageUrl.origin ===
+            window.location.origin
+          ) {
+            context.drawImage(
+              image,
+              x,
+              y,
+              width,
+              height,
+            )
+          }
+        } catch (error) {
+          console.warn(
+            '[Preview] Could not draw image:',
+            source.name,
+            error,
+          )
+        }
+      }
+    }
+
+    animationFrame =
+      requestAnimationFrame(drawFrame)
+  }
+
+  drawFrame()
+
+  return () => {
+    cancelAnimationFrame(animationFrame)
+  }
+}, [visibleSources])
+
+
   function beginDrag(
   event: React.PointerEvent<HTMLDivElement>,
   source: Source,
@@ -402,7 +576,6 @@ if (interaction.type === 'resize') {
   let width = startWidth
   let height = startHeight
 
-  // Calculate raw size based on the corner being dragged.
   switch (handle) {
     case 'se':
       width = startWidth + deltaX
@@ -428,7 +601,6 @@ if (interaction.type === 'resize') {
   width = Math.max(minWidth, width)
   height = Math.max(minHeight, height)
 
-  // Preserve aspect ratio.
   if (aspectRatio > 0) {
     if (Math.abs(deltaX) >= Math.abs(deltaY)) {
       height = Math.max(minHeight, width / aspectRatio)
@@ -437,7 +609,6 @@ if (interaction.type === 'resize') {
     }
   }
 
-  // Keep the opposite corner fixed.
   let x = startX
   let y = startY
 
@@ -449,7 +620,6 @@ if (interaction.type === 'resize') {
     y = startY + startHeight - height
   }
 
-  // Keep inside the canvas.
   if (x < 0) {
     width += x
     x = 0
@@ -580,6 +750,7 @@ return (
     return (
       <div
         key={source.id}
+        data-source-id={source.id}
         className={`canvas-layer ${
           isSelected ? 'selected' : ''
         } ${!enabled ? 'preview-source-hidden' : ''}`}
