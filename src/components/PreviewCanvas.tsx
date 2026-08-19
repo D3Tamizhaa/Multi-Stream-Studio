@@ -534,6 +534,15 @@ if (interaction.type === 'resize') {
 return (
   <section className="preview-section">
     <div className="preview-stage">
+
+      <canvas
+  ref={streamCanvasRef}
+  data-stream-preview
+  width={canvasWidth}
+  height={canvasHeight}
+  className="stream-preview-canvas"
+/>
+      
       <div
         ref={canvasRef}
         className={`canvas-content ${
