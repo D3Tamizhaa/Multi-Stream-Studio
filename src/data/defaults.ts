@@ -34,9 +34,9 @@ stream: {
     rateControl: 'CBR',
     bitrate: '6000',
     keyframeInterval: '2',
-    preset: 'Quality',
+    preset: 'veryfast',
     profile: 'High',
-    tune: 'None',
+    tune: 'zerolatency',
   },
 
   audio: {
@@ -46,11 +46,11 @@ stream: {
     channels: 'Stereo',
   },
 
-  video: {
-    baseResolution: '1920x1080',
-    outputResolution: '1920x1080',
-    fps: '60',
-  },
+video: {
+  baseResolution: '1920x1080',
+  outputResolution: '1920x1080',
+  fps: '30',
+},
 
   advanced: {
     automaticallyReconnect: true,
