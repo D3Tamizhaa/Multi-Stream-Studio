@@ -88,20 +88,25 @@ function buildFfmpegArgs(config) {
     Math.round(fps * keyframeInterval),
   )
 
-  const outputs = config.platforms
-    .filter(
-      (platform) =>
-        platform.enabled &&
-        platform.server &&
-        platform.streamKey,
-    )
-    .map((platform) => {
-      const url = buildOutputUrl(platform)
+const outputs = config.platforms
+  .filter(
+    (platform) =>
+      platform.enabled &&
+      platform.server?.trim() &&
+      platform.streamKey?.trim(),
+  )
+  .map((platform) => {
+    const url = buildOutputUrl(platform)
 
-      return (
-        `[f=flv:onfail=ignore]${url}`
-      )
-    })
+    console.log(
+      `[Stream] ${platform.name} -> ${url.replace(
+        platform.streamKey,
+        '********',
+      )}`,
+    )
+
+    return `[f=flv:onfail=ignore]${url}`
+  })
 
   if (outputs.length === 0) {
     throw new Error(
@@ -117,8 +122,10 @@ function buildFfmpegArgs(config) {
     '-fflags',
     '+genpts',
 
-    '-i',
-    'pipe:0',
+'-f',
+'webm',
+'-i',
+'pipe:0',
 
     '-map',
     '0:v:0',
@@ -212,12 +219,11 @@ export async function startStream(config) {
     )
   })
 
-  ffmpegProcess.stderr.on('data', (data) => {
-    console.log(
-      '[FFmpeg]',
-      data.toString(),
-    )
-  })
+ffmpegProcess.stderr.on('data', (data) => {
+  const message = data.toString()
+
+  console.log('[FFmpeg]', message)
+})
 
   ffmpegProcess.on('close', (code) => {
     console.log(
