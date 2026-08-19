@@ -102,6 +102,57 @@ function loadSavedSettings(): StudioSettings {
   }
 }
 
+
+function loadSavedStudioState(): SavedStudioState {
+  try {
+    const saved = localStorage.getItem(STUDIO_STORAGE_KEY)
+
+    if (!saved) {
+      return defaultStudioState
+    }
+
+    const parsed = JSON.parse(saved)
+
+    const loadedScenes =
+      Array.isArray(parsed.scenes) && parsed.scenes.length > 0
+        ? parsed.scenes
+        : defaultScenes
+
+    return {
+      ...defaultStudioState,
+      ...parsed,
+      scenes: loadedScenes,
+      activeScene: loadedScenes.some(
+        (scene: Scene) => scene.id === parsed.activeScene,
+      )
+        ? parsed.activeScene
+        : loadedScenes[0]?.id ?? '',
+      sources: Array.isArray(parsed.sources)
+        ? parsed.sources
+        : defaultSources,
+      platforms: Array.isArray(parsed.platforms)
+        ? parsed.platforms
+        : defaultPlatforms,
+      audioVolume:
+        typeof parsed.audioVolume === 'number'
+          ? Math.max(0, Math.min(100, parsed.audioVolume))
+          : 80,
+      audioMuted:
+        typeof parsed.audioMuted === 'boolean'
+          ? parsed.audioMuted
+          : false,
+      audioMonitoringMode:
+        parsed.audioMonitoringMode === 'monitor-only' ||
+        parsed.audioMonitoringMode === 'monitor-and-output'
+          ? parsed.audioMonitoringMode
+          : 'off',
+    }
+  } catch (error) {
+    console.error('Failed to load saved studio state:', error)
+    return defaultStudioState
+  }
+}
+
 export default function App() {
   const [loggedIn, setLoggedIn] = useState(false)
   const [username, setUsername] = useState('User')
@@ -111,25 +162,28 @@ export default function App() {
   const [settingsSection, setSettingsSection] =
     useState<SettingsSection>('Authorization')
 
-const [savedStudioState] =
-  useState<SavedStudioState>(() =>
-    loadSavedStudioState(),
-  )
+const [savedStudioState] = useState<SavedStudioState>(() =>
+  loadSavedStudioState(),
+)
 
-const [scenes, setScenes] =
-  useState<Scene[]>(savedStudioState.scenes)
+const [scenes, setScenes] = useState<Scene[]>(
+  savedStudioState.scenes,
+)
 
-const [activeScene, setActiveScene] =
-  useState(savedStudioState.activeScene)
+const [activeScene, setActiveScene] = useState(
+  savedStudioState.activeScene,
+)
 
-const [sources, setSources] =
-  useState<Source[]>(savedStudioState.sources)
+const [sources, setSources] = useState<Source[]>(
+  savedStudioState.sources,
+)
 
 const [selectedSource, setSelectedSource] =
   useState<string | null>(null)
 
-const [platforms, setPlatforms] =
-  useState<Platform[]>(savedStudioState.platforms)
+const [platforms, setPlatforms] = useState<Platform[]>(
+  savedStudioState.platforms,
+)
 
 const [selectedPlatform, setSelectedPlatform] =
   useState<string | null>(
@@ -138,8 +192,24 @@ const [selectedPlatform, setSelectedPlatform] =
   
   const [settings, setSettings] =
   useState<StudioSettings>(() => loadSavedSettings())
+  
+  const [previewEnabled, setPreviewEnabled] =
+    useState(true)
 
-useEffect(() => {
+const [audioVolume, setAudioVolume] = useState(
+  savedStudioState.audioVolume,
+)
+
+const [audioMuted, setAudioMuted] = useState(
+  savedStudioState.audioMuted,
+)
+
+const [audioMonitoringMode, setAudioMonitoringMode] =
+  useState<AudioMonitoringMode>(
+    savedStudioState.audioMonitoringMode,
+  )
+
+  useEffect(() => {
   try {
     const studioState: SavedStudioState = {
       scenes,
@@ -172,21 +242,7 @@ useEffect(() => {
   audioMuted,
   audioMonitoringMode,
 ])
-  
-  const [previewEnabled, setPreviewEnabled] =
-    useState(true)
 
-const [audioVolume, setAudioVolume] =
-  useState(savedStudioState.audioVolume)
-
-const [audioMuted, setAudioMuted] =
-  useState(savedStudioState.audioMuted)
-
-const [audioMonitoringMode, setAudioMonitoringMode] =
-  useState<AudioMonitoringMode>(
-    savedStudioState.audioMonitoringMode,
-  )
-  
   const [streaming, setStreaming] =
     useState(false)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
