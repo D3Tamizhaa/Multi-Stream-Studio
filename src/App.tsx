@@ -131,6 +131,10 @@ const [selectedPlatform, setSelectedPlatform] =
   
   const [streaming, setStreaming] =
     useState(false)
+const streamSocketRef = useRef<WebSocket | null>(null)
+const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+const captureStreamRef = useRef<MediaStream | null>(null)
+
   
   const [uptime, setUptime] = useState(0)
   const [cpu, setCpu] = useState(0)
@@ -419,13 +423,12 @@ function editPlatform(platform: Platform) {
   
 async function startStreaming() {
   try {
-    const enabledPlatforms =
-      platforms.filter(
-        (platform) =>
-          platform.enabled &&
-          platform.server.trim() &&
-          platform.streamKey.trim(),
-      )
+    const enabledPlatforms = platforms.filter(
+      (platform) =>
+        platform.enabled &&
+        platform.server.trim() &&
+        platform.streamKey.trim(),
+    )
 
     if (enabledPlatforms.length === 0) {
       window.alert(
@@ -434,8 +437,23 @@ async function startStreaming() {
       return
     }
 
-    captureStreamRef.current =
-      captureStream
+    const captureStream = captureStreamRef.current
+
+    if (!captureStream) {
+      window.alert(
+        'Preview stream is not ready. Make sure the Preview Canvas has loaded.',
+      )
+      return
+    }
+
+    const videoTrack = captureStream.getVideoTracks()[0]
+
+    if (!videoTrack) {
+      window.alert(
+        'Preview stream does not contain a video track.',
+      )
+      return
+    }
 
     const protocol =
       window.location.protocol === 'https:'
@@ -447,13 +465,11 @@ async function startStreaming() {
         ? `${window.location.hostname}:3001`
         : window.location.host
 
-    const socket =
-      new WebSocket(
-        `${protocol}://${host}/api/stream`,
-      )
+    const socket = new WebSocket(
+      `${protocol}://${host}/api/stream`,
+    )
 
     streamSocketRef.current = socket
-
     socket.binaryType = 'arraybuffer'
 
     socket.onopen = () => {
@@ -481,30 +497,25 @@ async function startStreaming() {
           'This browser cannot create a WebM stream.',
         )
 
-        captureStream
-          .getTracks()
-          .forEach((track) => track.stop())
-
         socket.close()
         return
       }
 
-      const recorder =
-        new MediaRecorder(
-          captureStream,
-          {
-            mimeType,
-            videoBitsPerSecond:
-              8_000_000,
-          },
-        )
+      const bitrate =
+        Number(settings.output?.bitrate || 6000) *
+        1000
 
-      mediaRecorderRef.current =
-        recorder
+      const recorder = new MediaRecorder(
+        captureStream,
+        {
+          mimeType,
+          videoBitsPerSecond: bitrate,
+        },
+      )
 
-      recorder.ondataavailable = (
-        event,
-      ) => {
+      mediaRecorderRef.current = recorder
+
+      recorder.ondataavailable = (event) => {
         if (
           event.data.size > 0 &&
           socket.readyState === WebSocket.OPEN
@@ -520,6 +531,10 @@ async function startStreaming() {
         )
       }
 
+      recorder.onstop = () => {
+        mediaRecorderRef.current = null
+      }
+
       recorder.start(250)
 
       setStreaming(true)
@@ -528,8 +543,7 @@ async function startStreaming() {
 
     socket.onmessage = (event) => {
       try {
-        const message =
-          JSON.parse(event.data)
+        const message = JSON.parse(event.data)
 
         if (message.type === 'error') {
           console.error(
@@ -545,7 +559,7 @@ async function startStreaming() {
           stopStreaming()
         }
       } catch {
-
+        // Ignore non-JSON server messages.
       }
     }
 
@@ -564,16 +578,18 @@ async function startStreaming() {
 
     socket.onclose = () => {
       setStreaming(false)
+      streamSocketRef.current = null
     }
 
-    captureStream
-      .getVideoTracks()[0]
-      ?.addEventListener(
-        'ended',
-        () => {
+    videoTrack.addEventListener(
+      'ended',
+      () => {
+        if (streaming) {
           stopStreaming()
-        },
-      )
+        }
+      },
+      { once: true },
+    )
   } catch (error) {
     console.error(
       'Failed to start streaming:',
@@ -583,7 +599,7 @@ async function startStreaming() {
     window.alert(
       error instanceof Error
         ? error.message
-        : 'Streaming was cancelled or failed.',
+        : 'Streaming failed.',
     )
 
     setStreaming(false)
@@ -592,47 +608,39 @@ async function startStreaming() {
 
 
 function stopStreaming() {
-  const recorder =
-    mediaRecorderRef.current
-
-  if (recorder) {
-    if (
-      recorder.state !== 'inactive'
-    ) {
-      recorder.stop()
-    }
-
-    mediaRecorderRef.current = null
-  }
-
-  const socket =
-    streamSocketRef.current
+  const recorder = mediaRecorderRef.current
 
   if (
-    socket &&
-    socket.readyState === WebSocket.OPEN
+    recorder &&
+    recorder.state !== 'inactive'
   ) {
-    socket.send(
-      JSON.stringify({
-        type: 'stop',
-      }),
-    )
+    recorder.stop()
+  }
 
-    socket.close()
+  mediaRecorderRef.current = null
+
+  const socket = streamSocketRef.current
+
+  if (socket) {
+    if (
+      socket.readyState === WebSocket.OPEN
+    ) {
+      socket.send(
+        JSON.stringify({
+          type: 'stop',
+        }),
+      )
+    }
+
+    if (
+      socket.readyState === WebSocket.OPEN ||
+      socket.readyState === WebSocket.CONNECTING
+    ) {
+      socket.close()
+    }
   }
 
   streamSocketRef.current = null
-
-  const captureStream =
-    captureStreamRef.current
-
-  if (captureStream) {
-    captureStream
-      .getTracks()
-      .forEach((track) => track.stop())
-
-    captureStreamRef.current = null
-  }
 
   setStreaming(false)
 }
