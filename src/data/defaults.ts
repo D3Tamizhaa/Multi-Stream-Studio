@@ -25,7 +25,7 @@ export const defaultSettings: StudioSettings = {
 stream: {
   service: 'YouTube' as const,
   customServiceName: '',
-  server: 'rtmp://a.rtmp.youtube.com/live2',
+  server: 'rtmps://a.rtmps.youtube.com:443/live2',
   streamKey: '',
 },
 
