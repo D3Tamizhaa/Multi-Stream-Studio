@@ -302,54 +302,6 @@ export function createStreamRoutes(req, res) {
 
   if (
     req.method === 'POST' &&
-    req.url === '/api/stream/input'
-  ) {
-    if (!ffmpegProcess) {
-      sendJson(res, 409, {
-        ok: false,
-        error: 'FFmpeg is not running.',
-      })
-
-      return true
-    }
-
-    req.on('data', (chunk) => {
-      try {
-        writeStreamChunk(chunk)
-      } catch (error) {
-        console.error(
-          'FFmpeg input error:',
-          error,
-        )
-      }
-    })
-
-    req.on('end', () => {
-      if (ffmpegProcess) {
-        try {
-          ffmpegProcess.stdin.end()
-        } catch {}
-      }
-
-      sendJson(res, 200, {
-        ok: true,
-      })
-    })
-
-    req.on('error', (error) => {
-      console.error(
-        'Stream input error:',
-        error,
-      )
-
-      stopStream()
-    })
-
-    return true
-  }
-
-  if (
-    req.method === 'POST' &&
     req.url === '/api/stream/stop'
   ) {
     stopStream()
@@ -360,6 +312,77 @@ export function createStreamRoutes(req, res) {
 
     return true
   }
+
+  if (
+  req.method === 'POST' &&
+  req.url === '/api/stream/input'
+) {
+  if (!ffmpegProcess) {
+    sendJson(res, 409, {
+      ok: false,
+      error: 'FFmpeg is not running.',
+    })
+
+    return true
+  }
+
+  console.log('[Stream] Browser media input connected.')
+
+  let inputError = false
+
+  req.on('data', (chunk) => {
+    if (!ffmpegProcess?.stdin?.writable) {
+      inputError = true
+      return
+    }
+
+    try {
+      const canContinue = ffmpegProcess.stdin.write(chunk)
+
+      if (!canContinue) {
+        req.pause()
+
+        ffmpegProcess.stdin.once('drain', () => {
+          if (!inputError) {
+            req.resume()
+          }
+        })
+      }
+    } catch (error) {
+      inputError = true
+
+      console.error(
+        '[Stream] FFmpeg input write failed:',
+        error,
+      )
+    }
+  })
+
+  req.on('end', () => {
+    console.log('[Stream] Browser media input ended.')
+
+    if (!res.writableEnded) {
+      sendJson(res, 200, {
+        ok: true,
+      })
+    }
+  })
+
+  req.on('aborted', () => {
+    console.warn('[Stream] Browser input request aborted.')
+  })
+
+  req.on('error', (error) => {
+    console.error(
+      '[Stream] Browser input request error:',
+      error,
+    )
+
+    stopStream()
+  })
+
+  return true
+}
 
   return false
 }
