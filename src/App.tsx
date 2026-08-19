@@ -1,8 +1,4 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-} from 'react'
+import { useEffect, useState } from 'react'
 import { AddPlatformModal } from './components/AddPlatformModal'
 import { AddSceneModal } from './components/AddSceneModal'
 import { AddSourceModal } from './components/AddSourceModal'
@@ -131,11 +127,7 @@ const [selectedPlatform, setSelectedPlatform] =
   
   const [streaming, setStreaming] =
     useState(false)
-const streamSocketRef = useRef<WebSocket | null>(null)
-const mediaRecorderRef = useRef<MediaRecorder | null>(null)
-const captureStreamRef = useRef<MediaStream | null>(null)
 
-  
   const [uptime, setUptime] = useState(0)
   const [cpu, setCpu] = useState(0)
   const [ram, setRam] = useState(0)
@@ -421,229 +413,14 @@ function editPlatform(platform: Platform) {
   setSettingsSection('Stream')
 }
   
-async function startStreaming() {
-  try {
-    const enabledPlatforms = platforms.filter(
-      (platform) =>
-        platform.enabled &&
-        platform.server.trim() &&
-        platform.streamKey.trim(),
-    )
+  function startStreaming() {
+    setStreaming(true)
+    setUptime(0)
+  }
 
-    if (enabledPlatforms.length === 0) {
-      window.alert(
-        'Enable at least one platform and enter its server and stream key.',
-      )
-      return
-    }
-
-    const captureStream = captureStreamRef.current
-
-    if (!captureStream) {
-      window.alert(
-        'Preview stream is not ready. Make sure the Preview Canvas has loaded.',
-      )
-      return
-    }
-
-    const videoTrack = captureStream.getVideoTracks()[0]
-
-    if (!videoTrack) {
-      window.alert(
-        'Preview stream does not contain a video track.',
-      )
-      return
-    }
-
-    const protocol =
-      window.location.protocol === 'https:'
-        ? 'wss'
-        : 'ws'
-
-    const host =
-      window.location.port === '5173'
-        ? `${window.location.hostname}:3001`
-        : window.location.host
-
-    const socket = new WebSocket(
-      `${protocol}://${host}/api/stream`,
-    )
-
-    streamSocketRef.current = socket
-    socket.binaryType = 'arraybuffer'
-
-    socket.onopen = () => {
-      socket.send(
-        JSON.stringify({
-          type: 'start',
-          platforms: enabledPlatforms,
-          settings,
-        }),
-      )
-
-      const mimeTypes = [
-        'video/webm;codecs=vp8,opus',
-        'video/webm;codecs=vp9,opus',
-        'video/webm',
-      ]
-
-      const mimeType =
-        mimeTypes.find((type) =>
-          MediaRecorder.isTypeSupported(type),
-        ) || ''
-
-      if (!mimeType) {
-        window.alert(
-          'This browser cannot create a WebM stream.',
-        )
-
-        socket.close()
-        return
-      }
-
-      const bitrate =
-        Number(settings.output?.bitrate || 6000) *
-        1000
-
-      const recorder = new MediaRecorder(
-        captureStream,
-        {
-          mimeType,
-          videoBitsPerSecond: bitrate,
-        },
-      )
-
-      mediaRecorderRef.current = recorder
-
-      recorder.ondataavailable = (event) => {
-        if (
-          event.data.size > 0 &&
-          socket.readyState === WebSocket.OPEN
-        ) {
-          socket.send(event.data)
-        }
-      }
-
-      recorder.onerror = (event) => {
-        console.error(
-          'MediaRecorder error:',
-          event,
-        )
-      }
-
-      recorder.onstop = () => {
-        mediaRecorderRef.current = null
-      }
-
-      recorder.start(250)
-
-      setStreaming(true)
-      setUptime(0)
-    }
-
-    socket.onmessage = (event) => {
-      try {
-        const message = JSON.parse(event.data)
-
-        if (message.type === 'error') {
-          console.error(
-            'Streaming server error:',
-            message.message,
-          )
-
-          window.alert(
-            message.message ||
-              'Streaming failed.',
-          )
-
-          stopStreaming()
-        }
-      } catch {
-        // Ignore non-JSON server messages.
-      }
-    }
-
-    socket.onerror = (event) => {
-      console.error(
-        'Streaming WebSocket error:',
-        event,
-      )
-
-      window.alert(
-        'Could not connect to the streaming server.',
-      )
-
-      setStreaming(false)
-    }
-
-    socket.onclose = () => {
-      setStreaming(false)
-      streamSocketRef.current = null
-    }
-
-    videoTrack.addEventListener(
-      'ended',
-      () => {
-        if (streaming) {
-          stopStreaming()
-        }
-      },
-      { once: true },
-    )
-  } catch (error) {
-    console.error(
-      'Failed to start streaming:',
-      error,
-    )
-
-    window.alert(
-      error instanceof Error
-        ? error.message
-        : 'Streaming failed.',
-    )
-
+  function stopStreaming() {
     setStreaming(false)
   }
-}
-
-
-function stopStreaming() {
-  const recorder = mediaRecorderRef.current
-
-  if (
-    recorder &&
-    recorder.state !== 'inactive'
-  ) {
-    recorder.stop()
-  }
-
-  mediaRecorderRef.current = null
-
-  const socket = streamSocketRef.current
-
-  if (socket) {
-    if (
-      socket.readyState === WebSocket.OPEN
-    ) {
-      socket.send(
-        JSON.stringify({
-          type: 'stop',
-        }),
-      )
-    }
-
-    if (
-      socket.readyState === WebSocket.OPEN ||
-      socket.readyState === WebSocket.CONNECTING
-    ) {
-      socket.close()
-    }
-  }
-
-  streamSocketRef.current = null
-
-  setStreaming(false)
-}
 
   if (!loggedIn) {
     return <LoginScreen onLogin={login} />
