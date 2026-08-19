@@ -128,7 +128,6 @@ const [selectedPlatform, setSelectedPlatform] =
   const [streaming, setStreaming] =
     useState(false)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
-  const streamUploadRef = useRef<Promise<Response> | null>(null)
 
   const [uptime, setUptime] = useState(0)
   const [cpu, setCpu] = useState(0)
