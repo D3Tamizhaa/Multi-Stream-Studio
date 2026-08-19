@@ -1,4 +1,3 @@
-const http = require('node:http')
 const process = require('node:process')
 const os = require('node:os')
 
@@ -52,47 +51,6 @@ function getSystemStats() {
   }
 }
 
-const statsServer = http.createServer((req, res) => {
-  res.setHeader(
-    'Access-Control-Allow-Origin',
-    '*',
-  )
-
-  res.setHeader(
-    'Access-Control-Allow-Methods',
-    'GET, OPTIONS',
-  )
-
-  res.setHeader(
-    'Cache-Control',
-    'no-store',
-  )
-
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204)
-    res.end()
-    return
-  }
-
-  if (
-    req.method === 'GET' &&
-    req.url === '/api/system-stats'
-  ) {
-    const stats = getSystemStats()
-
-    console.log('Multi-Stream Studio stats:', stats)
-
-    res.writeHead(200, {
-      'Content-Type': 'application/json',
-    })
-
-    res.end(JSON.stringify(stats))
-    return
-  }
-
-  res.writeHead(404)
-  res.end('Not found')
-})
 
 statsServer.on('error', (error) => {
   console.error(
@@ -100,14 +58,3 @@ statsServer.on('error', (error) => {
     error,
   )
 })
-
-statsServer.listen(
-  3001,
-  '127.0.0.1',
-  () => {
-    console.log(
-      'System stats API running at:',
-      'http://127.0.0.1:3001/api/system-stats',
-    )
-  },
-)
