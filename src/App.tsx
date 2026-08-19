@@ -423,18 +423,17 @@ async function startStreaming() {
       platform.streamKey.trim(),
   )
 
-  if (enabledPlatforms.length === 0) {
-    console.error('No enabled platform with server and stream key.')
-    return
-  }
+  console.log('Enabled platforms:', enabledPlatforms)
 
-  if (!previewEnabled) {
-    console.error('Preview must be enabled before streaming.')
+  if (enabledPlatforms.length === 0) {
+    console.error(
+      'No enabled platform with server and stream key.',
+    )
     return
   }
 
   try {
-    const startResponse = await fetch('/api/stream/start', {
+    const response = await fetch('/api/stream/start', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -448,94 +447,24 @@ async function startStreaming() {
       }),
     })
 
-    if (!startResponse.ok) {
-      const message = await startResponse.text()
-      throw new Error(message || 'Failed to start FFmpeg')
-    }
+    const result = await response.json()
 
-    const preview = document.querySelector(
-      '[data-stream-preview]',
-    ) as HTMLCanvasElement | null
+    console.log('FFmpeg start response:', result)
 
-    if (!preview) {
+    if (!response.ok) {
       throw new Error(
-        'Streaming preview canvas was not found.',
+        result.error || 'FFmpeg failed to start',
       )
     }
-
-    const canvasStream = preview.captureStream(
-      Number.parseInt(settings.video.fps, 10) || 30,
-    )
-
-    const mimeType =
-      MediaRecorder.isTypeSupported(
-        'video/webm;codecs=vp9,opus',
-      )
-        ? 'video/webm;codecs=vp9,opus'
-        : 'video/webm;codecs=vp8,opus'
-
-    const recorder = new MediaRecorder(canvasStream, {
-      mimeType,
-    })
-
-    mediaRecorderRef.current = recorder
-
-    const uploadPromise = fetch('/api/stream/input', {
-      method: 'POST',
-      headers: {
-        'Content-Type': mimeType,
-      },
-      body: new ReadableStream({
-        start(controller) {
-          recorder.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-              event.data.arrayBuffer().then((buffer) => {
-                controller.enqueue(new Uint8Array(buffer))
-              })
-            }
-          }
-
-          recorder.onerror = () => {
-            controller.error(
-              new Error('Preview recording failed.'),
-            )
-          }
-
-          recorder.onstop = () => {
-            controller.close()
-          }
-
-          recorder.start(1000)
-        },
-      }),
-      // Required by Chromium for streaming request bodies.
-      duplex: 'half',
-    } as RequestInit)
-
-    streamUploadRef.current = uploadPromise
 
     setStreaming(true)
     setUptime(0)
-
-    uploadPromise
-      .then(async (response) => {
-        if (!response.ok) {
-          console.error(
-            'FFmpeg input failed:',
-            await response.text(),
-          )
-          setStreaming(false)
-        }
-      })
-      .catch((error) => {
-        console.error(
-          'Streaming upload failed:',
-          error,
-        )
-        setStreaming(false)
-      })
   } catch (error) {
-    console.error('Start streaming failed:', error)
+    console.error(
+      'START STREAMING ERROR:',
+      error,
+    )
+
     setStreaming(false)
   }
 }
