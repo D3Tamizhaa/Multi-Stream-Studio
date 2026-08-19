@@ -245,7 +245,19 @@ const [audioMonitoringMode, setAudioMonitoringMode] =
 
   const [streaming, setStreaming] =
     useState(false)
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const mediaRecorderRef =
+  useRef<MediaRecorder | null>(null)
+
+const streamUploadRef =
+  useRef<Promise<Response> | null>(null)
+
+const streamUploadControllerRef =
+  useRef<ReadableStreamDefaultController<Uint8Array> | null>(
+    null,
+  )
+
+const streamMediaStreamRef =
+  useRef<MediaStream | null>(null)
 
   const [uptime, setUptime] = useState(0)
   const [cpu, setCpu] = useState(0)
@@ -540,8 +552,6 @@ async function startStreaming() {
       platform.streamKey.trim(),
   )
 
-  console.log('Enabled platforms:', enabledPlatforms)
-
   if (enabledPlatforms.length === 0) {
     console.error(
       'No enabled platform with server and stream key.',
@@ -549,38 +559,310 @@ async function startStreaming() {
     return
   }
 
+  if (mediaRecorderRef.current) {
+    console.warn('Streaming is already running.')
+    return
+  }
+
   try {
-    const response = await fetch('/api/stream/start', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        platforms: enabledPlatforms,
-        output: settings.output,
-        audio: settings.audio,
-        video: settings.video,
-        advanced: settings.advanced,
-      }),
-    })
+    const canvas =
+      document.querySelector(
+        'canvas[data-stream-preview]',
+      ) as HTMLCanvasElement | null
 
-    const result = await response.json()
-
-    console.log('FFmpeg start response:', result)
-
-    if (!response.ok) {
+    if (!canvas) {
       throw new Error(
-        result.error || 'FFmpeg failed to start',
+        'Streaming canvas was not found.',
       )
     }
 
+    if (
+      typeof canvas.captureStream !==
+      'function'
+    ) {
+      throw new Error(
+        'Canvas streaming is not supported by this browser.',
+      )
+    }
+
+    const fps =
+      Number.parseInt(
+        settings.video.fps,
+        10,
+      ) || 30
+
+    const startResponse = await fetch(
+      '/api/stream/start',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          platforms: enabledPlatforms,
+          output: settings.output,
+          audio: settings.audio,
+          video: settings.video,
+          advanced: settings.advanced,
+        }),
+      },
+    )
+
+    const startResult =
+      await startResponse.json()
+
+    if (!startResponse.ok) {
+      throw new Error(
+        startResult.error ||
+          'FFmpeg failed to start.',
+      )
+    }
+
+    const canvasStream =
+      canvas.captureStream(fps)
+
+    const videos =
+      Array.from(
+        document.querySelectorAll(
+          'canvas[data-stream-preview]'
+            .parentElement
+            ?.querySelectorAll('video') ??
+            [],
+        ),
+      )
+
+    const mediaElements =
+      Array.from(
+        document.querySelectorAll(
+          '.preview-stage video',
+        ),
+      )
+
+    const audioTracks =
+      new Map<string, MediaStreamTrack>()
+
+    for (const video of mediaElements) {
+      try {
+        const capture =
+          video.captureStream?.()
+
+        if (!capture) continue
+
+        for (const track of capture.getAudioTracks()) {
+          audioTracks.set(
+            track.id,
+            track,
+          )
+        }
+      } catch (error) {
+        console.warn(
+          'Could not capture audio from video:',
+          error,
+        )
+      }
+    }
+
+    for (const track of audioTracks.values()) {
+      canvasStream.addTrack(track)
+    }
+
+    streamMediaStreamRef.current =
+      canvasStream
+
+    const mimeTypes = [
+      'video/webm;codecs=vp8,opus',
+      'video/webm;codecs=vp9,opus',
+      'video/webm',
+    ]
+
+    const mimeType =
+      mimeTypes.find((type) =>
+        MediaRecorder.isTypeSupported(type),
+      ) || ''
+
+    if (!mimeType) {
+      throw new Error(
+        'This browser cannot create a WebM stream for FFmpeg.',
+      )
+    }
+
+    const recorder =
+      new MediaRecorder(
+        canvasStream,
+        {
+          mimeType,
+          videoBitsPerSecond: 6_000_000,
+          audioBitsPerSecond: 128_000,
+        },
+      )
+
+    let uploadController:
+      | ReadableStreamDefaultController<Uint8Array>
+      | null = null
+
+    const uploadBody =
+      new ReadableStream<Uint8Array>({
+        start(controller) {
+          uploadController = controller
+
+          streamUploadControllerRef.current =
+            controller
+        },
+
+        cancel(reason) {
+          console.warn(
+            'Stream upload cancelled:',
+            reason,
+          )
+        },
+      })
+
+    const uploadPromise = fetch(
+      '/api/stream/input',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': mimeType,
+        },
+        body: uploadBody,
+        duplex: 'half',
+      } as RequestInit & {
+        duplex: 'half'
+      },
+    )
+
+    streamUploadRef.current =
+      uploadPromise
+
+    recorder.ondataavailable =
+      async (event) => {
+        if (
+          !event.data ||
+          event.data.size === 0 ||
+          !uploadController
+        ) {
+          return
+        }
+
+        try {
+          const buffer =
+            await event.data.arrayBuffer()
+
+          uploadController.enqueue(
+            new Uint8Array(buffer),
+          )
+        } catch (error) {
+          console.error(
+            'Failed to upload stream chunk:',
+            error,
+          )
+        }
+      }
+
+    recorder.onerror = (event) => {
+      console.error(
+        'MediaRecorder error:',
+        event,
+      )
+    }
+
+    recorder.onstop = () => {
+      try {
+        uploadController?.close()
+      } catch {}
+
+      streamUploadControllerRef.current =
+        null
+
+      streamUploadRef.current = null
+    }
+
+    mediaRecorderRef.current =
+      recorder
+
+    recorder.start(1000)
+
     setStreaming(true)
     setUptime(0)
+
+    console.log(
+      '[Stream] Browser media capture started.',
+    )
+
+    uploadPromise
+      .then(async (response) => {
+        if (!response.ok) {
+          const text =
+            await response.text()
+
+          throw new Error(
+            text ||
+              `Stream upload failed: ${response.status}`,
+          )
+        }
+
+        console.log(
+          '[Stream] Server accepted media input.',
+        )
+      })
+      .catch(async (error) => {
+        console.error(
+          '[Stream] Media upload failed:',
+          error,
+        )
+
+        if (
+          mediaRecorderRef.current
+        ) {
+          mediaRecorderRef.current.stop()
+          mediaRecorderRef.current =
+            null
+        }
+
+        streamMediaStreamRef.current
+          ?.getTracks()
+          .forEach((track) =>
+            track.stop(),
+          )
+
+        streamMediaStreamRef.current =
+          null
+
+        try {
+          await fetch(
+            '/api/stream/stop',
+            {
+              method: 'POST',
+            },
+          )
+        } catch {}
+
+        setStreaming(false)
+      })
   } catch (error) {
     console.error(
       'START STREAMING ERROR:',
       error,
     )
+
+    try {
+      await fetch(
+        '/api/stream/stop',
+        {
+          method: 'POST',
+        },
+      )
+    } catch {}
+
+    mediaRecorderRef.current = null
+
+    streamMediaStreamRef.current
+      ?.getTracks()
+      .forEach((track) =>
+        track.stop(),
+      )
+
+    streamMediaStreamRef.current = null
 
     setStreaming(false)
   }
@@ -588,14 +870,47 @@ async function startStreaming() {
 
 async function stopStreaming() {
   try {
-    mediaRecorderRef.current?.stop()
-    mediaRecorderRef.current = null
+    const recorder =
+      mediaRecorderRef.current
 
-    await fetch('/api/stream/stop', {
-      method: 'POST',
-    })
+    if (recorder) {
+      if (
+        recorder.state !== 'inactive'
+      ) {
+        recorder.stop()
+      }
+
+      mediaRecorderRef.current = null
+    }
+
+    try {
+      streamUploadControllerRef.current?.close()
+    } catch {}
+
+    streamUploadControllerRef.current =
+      null
+
+    await fetch(
+      '/api/stream/stop',
+      {
+        method: 'POST',
+      },
+    )
+
+    streamMediaStreamRef.current
+      ?.getTracks()
+      .forEach((track) =>
+        track.stop(),
+      )
+
+    streamMediaStreamRef.current = null
+
+    streamUploadRef.current = null
   } catch (error) {
-    console.error('Stop streaming failed:', error)
+    console.error(
+      'Stop streaming failed:',
+      error,
+    )
   } finally {
     setStreaming(false)
   }
