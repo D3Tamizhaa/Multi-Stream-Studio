@@ -413,14 +413,76 @@ function editPlatform(platform: Platform) {
   setSettingsSection('Stream')
 }
   
-  function startStreaming() {
-    setStreaming(true)
-    setUptime(0)
+async function startStreaming() {
+  const enabledPlatforms = platforms.filter(
+    (platform) =>
+      platform.enabled &&
+      platform.server.trim() &&
+      platform.streamKey.trim(),
+  )
+
+  if (enabledPlatforms.length === 0) {
+    alert(
+      'Enable at least one platform and configure its server and stream key.',
+    )
+    return
   }
 
-  function stopStreaming() {
-    setStreaming(false)
+  try {
+    const response = await fetch('/api/stream/start', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        platforms: enabledPlatforms,
+        settings,
+      }),
+    })
+
+    const result = await response.json()
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to start streaming')
+    }
+
+    setStreaming(true)
+    setUptime(0)
+  } catch (error) {
+    console.error('START STREAMING FAILED:', error)
+
+    alert(
+      error instanceof Error
+        ? error.message
+        : 'Failed to start streaming',
+    )
   }
+}
+
+async function stopStreaming() {
+  try {
+    const response = await fetch('/api/stream/stop', {
+      method: 'POST',
+    })
+
+    const result = await response.json()
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to stop streaming')
+    }
+
+    setStreaming(false)
+    setUptime(0)
+  } catch (error) {
+    console.error('STOP STREAMING FAILED:', error)
+
+    alert(
+      error instanceof Error
+        ? error.message
+        : 'Failed to stop streaming',
+    )
+  }
+}
 
   if (!loggedIn) {
     return <LoginScreen onLogin={login} />
