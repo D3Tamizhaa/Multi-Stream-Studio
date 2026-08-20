@@ -13,25 +13,36 @@ export function AddPlatformModal({
   onAdd,
   existing,
 }: AddPlatformModalProps) {
- const [name, setName] = useState<PlatformName>(
-  existing?.name ?? 'YouTube',
-)
-  const [server, setServer] = useState(existing?.server ?? '')
-  const [streamKey, setStreamKey] = useState(existing?.streamKey ?? '')
+  const [name, setName] = useState<PlatformName>(
+    existing?.name ?? 'YouTube',
+  )
+
+  const [server, setServer] = useState<string>(
+    existing?.server ?? '',
+  )
+
+  const [streamKey, setStreamKey] = useState<string>(
+    existing?.streamKey ?? '',
+  )
 
   function submit() {
-    onAdd({
+    const platform: Platform = {
       id: existing?.id ?? `platform-${Date.now()}`,
       name,
       server,
       streamKey,
       enabled: existing?.enabled ?? true,
-    })
+    }
+
+    onAdd(platform)
   }
 
   return (
     <div className="modal-backdrop" onMouseDown={onClose}>
-      <div className="modal" onMouseDown={(event) => event.stopPropagation()}>
+      <div
+        className="modal"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
         <div className="modal-header">
           <div>
             <span className="eyebrow">PLATFORM</span>
@@ -46,22 +57,24 @@ export function AddPlatformModal({
         <div className="settings-form">
           <label className="field">
             <span>Platform</span>
+
             <select
               value={name}
-              onChange={(event) =>
-  setName(event.target.value as PlatformName)
-}
+              onChange={(event) => {
+                setName(event.target.value as PlatformName)
+              }}
             >
-              <option>YouTube</option>
-              <option>Facebook</option>
-              <option>Twitch</option>
-              <option>Kick</option>
-              <option>Custom</option>
+              <option value="YouTube">YouTube</option>
+              <option value="Facebook">Facebook</option>
+              <option value="Twitch">Twitch</option>
+              <option value="Kick">Kick</option>
+              <option value="Custom">Custom</option>
             </select>
           </label>
 
           <label className="field">
             <span>Server</span>
+
             <input
               value={server}
               onChange={(event) => setServer(event.target.value)}
@@ -71,6 +84,7 @@ export function AddPlatformModal({
 
           <label className="field">
             <span>Stream Key</span>
+
             <input
               type="password"
               value={streamKey}
