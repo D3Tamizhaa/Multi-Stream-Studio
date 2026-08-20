@@ -551,31 +551,30 @@ async function startStreaming() {
     return
   }
 
-if (
-  !window.electronStream?.isAvailable
-) {
-  console.error(
-    '[MSS] electronStream bridge is unavailable.',
-  )
-
-  window.alert(
-    'Multi-Stream Studio is running in a normal browser window.\n\nClose this page and start the application with:\n\nnpm run dev\n\nThen use the Electron window that opens.',
-  )
-
-  return
-}
-
-  const enabledPlatforms =
-    platforms.filter(
-      (platform) =>
-        platform.enabled &&
-        platform.server.trim() &&
-        platform.streamKey.trim(),
+  /*
+   * Native streaming requires Electron.
+   * The normal Vite browser cannot access
+   * the FFmpeg process.
+   */
+  if (!window.electronStream?.isAvailable) {
+    window.alert(
+      'Multi-Stream Studio is running in a normal browser window.\n\n' +
+        'Close this browser tab and start the desktop application with:\n\n' +
+        'npm run dev\n\n' +
+        'Then use the Electron window that opens.',
     )
 
-  if (
-    enabledPlatforms.length === 0
-  ) {
+    return
+  }
+
+  const enabledPlatforms = platforms.filter(
+    (platform) =>
+      platform.enabled &&
+      platform.server.trim() &&
+      platform.streamKey.trim(),
+  )
+
+  if (enabledPlatforms.length === 0) {
     window.alert(
       'Enable at least one platform with a server and stream key.',
     )
@@ -603,21 +602,29 @@ if (
 
     const result =
       await window.electronStream.start({
-        platforms:
-          enabledPlatforms,
+        platforms: enabledPlatforms,
 
-        output:
-          settings.output,
+        output: settings.output,
 
-        audio:
-          settings.audio,
+        audio: settings.audio,
 
-        video:
-          settings.video,
+        video: settings.video,
 
-        advanced:
-          settings.advanced,
+        advanced: settings.advanced,
       })
+
+    if (!result?.ok) {
+      throw new Error(
+        result?.error ||
+          'Electron could not start FFmpeg.',
+      )
+    }
+
+    if (!result.sessionId) {
+      throw new Error(
+        'FFmpeg started without a stream session ID.',
+      )
+    }
 
     streamSessionRef.current =
       result.sessionId
@@ -636,144 +643,131 @@ if (
       })
 
     /*
-     * Send the FINAL PROGRAM CANVAS to
-     * native FFmpeg as raw RGBA frames.
-     *
-     * No MediaRecorder.
-     * No WebM.
-     * No HTTP upload.
+     * Send the final program canvas
+     * to native FFmpeg as RGBA frames.
      */
-    const fps =
-      Math.max(
-        1,
-        Number.parseInt(
-          settings.video.fps,
-          10,
-        ) || 30,
-      )
+    const fps = Math.max(
+      1,
+      Number.parseInt(
+        settings.video.fps,
+        10,
+      ) || 30,
+    )
 
     const frameInterval =
       1000 / fps
 
-    const sendFrame =
-      () => {
-        if (
-          !streamSessionRef.current ||
-          !programCanvas
-        ) {
-          return
-        }
+    const sendFrame = () => {
+      if (
+        !streamSessionRef.current ||
+        !programCanvas
+      ) {
+        return
+      }
 
-        /*
-         * Never queue multiple huge 1920x1080
-         * frames. If FFmpeg is busy, drop this
-         * frame and use the next one.
-         */
-        if (
-          streamFrameBusyRef.current
-        ) {
-          streamFrameTimerRef.current =
-            window.setTimeout(
-              sendFrame,
-              frameInterval,
-            )
-
-          return
-        }
-
-        const ctx =
-          programCanvas.getContext(
-            '2d',
-          )
-
-        if (!ctx) {
-          return
-        }
-
-        try {
-          const image =
-            ctx.getImageData(
-              0,
-              0,
-              programCanvas.width,
-              programCanvas.height,
-            )
-
-          const buffer =
-            image.data.buffer
-
-          streamFrameBusyRef.current =
-            true
-
-          const targetOrigin =
-            window.location.protocol ===
-            'file:'
-              ? '*'
-              : window.location.origin
-
-          window.postMessage(
-            {
-              __mssStream: true,
-              sessionId:
-                streamSessionRef.current,
-              type: 'video',
-              buffer,
-            },
-            targetOrigin,
-            [buffer],
-          )
-        } catch (error) {
-          console.error(
-            '[Stream] Program frame capture failed:',
-            error,
-          )
-        }
-
+      /*
+       * Do not queue multiple large frames.
+       */
+      if (streamFrameBusyRef.current) {
         streamFrameTimerRef.current =
           window.setTimeout(
             sendFrame,
             frameInterval,
           )
+
+        return
       }
 
-    const handleAck =
-      (
-        event: Event,
-      ) => {
-        const customEvent =
-          event as CustomEvent<{
-            kind?: string
-          }>
+      const ctx =
+        programCanvas.getContext('2d')
 
-        if (
-          customEvent.detail?.kind ===
-          'video'
-        ) {
-          streamFrameBusyRef.current =
-            false
-        }
+      if (!ctx) {
+        console.error(
+          '[Stream] Could not get canvas 2D context.',
+        )
+
+        return
       }
+
+      try {
+        const image =
+          ctx.getImageData(
+            0,
+            0,
+            programCanvas.width,
+            programCanvas.height,
+          )
+
+        const buffer =
+          image.data.buffer
+
+        streamFrameBusyRef.current =
+          true
+
+        /*
+         * Electron preload listens for this message
+         * and forwards the frame to FFmpeg.
+         */
+        window.postMessage(
+          {
+            __mssStream: true,
+            sessionId:
+              streamSessionRef.current,
+            type: 'video',
+            buffer,
+          },
+          '*',
+          [buffer],
+        )
+      } catch (error) {
+        streamFrameBusyRef.current =
+          false
+
+        console.error(
+          '[Stream] Program frame capture failed:',
+          error,
+        )
+      }
+
+      streamFrameTimerRef.current =
+        window.setTimeout(
+          sendFrame,
+          frameInterval,
+        )
+    }
+
+    const handleAck = (
+      event: Event,
+    ) => {
+      const customEvent =
+        event as CustomEvent<{
+          kind?: string
+        }>
+
+      if (
+        customEvent.detail?.kind ===
+        'video'
+      ) {
+        streamFrameBusyRef.current =
+          false
+      }
+    }
 
     window.addEventListener(
       'mss-stream-ack',
       handleAck,
     )
 
-    /*
-     * Store cleanup on the window so
-     * stopStreaming can remove the listener.
-     */
     ;(
       window as Window & {
         __mssStreamCleanup?: () => void
       }
-    ).__mssStreamCleanup =
-      () => {
-        window.removeEventListener(
-          'mss-stream-ack',
-          handleAck,
-        )
-      }
+    ).__mssStreamCleanup = () => {
+      window.removeEventListener(
+        'mss-stream-ack',
+        handleAck,
+      )
+    }
 
     streamFrameBusyRef.current =
       false
@@ -793,6 +787,7 @@ if (
     )
 
     streamAudioRef.current?.stop()
+
     streamAudioRef.current =
       null
 
