@@ -420,6 +420,15 @@ function createFfmpeg(config) {
       },
     )
 
+  ffmpegProcess.once(
+  'spawn',
+  () => {
+    console.log(
+      '[MSS] FFmpeg process started successfully.',
+    )
+  },
+)
+
   streamStartedAt =
     Date.now()
 
@@ -595,7 +604,73 @@ ipcMain.handle(
 
       createFfmpeg(config)
 
+      /*
+       * Give FFmpeg a short moment to spawn.
+       * If the executable cannot start,
+       * the error handler will reject startup.
+       */
+      await new Promise(
+        (resolve, reject) => {
+          if (!ffmpegProcess) {
+            reject(
+              new Error(
+                'FFmpeg process was not created.',
+              ),
+            )
+            return
+          }
+
+          let settled = false
+
+          const cleanup = () => {
+            ffmpegProcess?.removeListener(
+              'spawn',
+              onSpawn,
+            )
+
+            ffmpegProcess?.removeListener(
+              'error',
+              onError,
+            )
+          }
+
+          const onSpawn = () => {
+            if (settled) return
+
+            settled = true
+            cleanup()
+            resolve()
+          }
+
+          const onError = (
+            error,
+          ) => {
+            if (settled) return
+
+            settled = true
+            cleanup()
+
+            reject(error)
+          }
+
+          ffmpegProcess.once(
+            'spawn',
+            onSpawn,
+          )
+
+          ffmpegProcess.once(
+            'error',
+            onError,
+          )
+        },
+      )
+
       createStreamPort()
+
+      console.log(
+        '[MSS] Native streaming session created:',
+        streamSessionId,
+      )
 
       return {
         ok: true,
@@ -603,14 +678,21 @@ ipcMain.handle(
           streamSessionId,
       }
     } catch (error) {
+      console.error(
+        '[MSS] Failed to start streaming:',
+        error,
+      )
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : String(error)
+
       stopFfmpeg()
 
       return {
         ok: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : String(error),
+        error: message,
       }
     }
   },
