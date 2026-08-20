@@ -155,7 +155,6 @@ function loadSavedStudioState(): SavedStudioState {
 
 export default function App() {
     const [streaming, setStreaming] = useState(false)
-  const [uptime] = useState(0)
 
   const startStreaming = () => {
     setStreaming(true)
@@ -647,7 +646,6 @@ function editPlatform(platform: Platform) {
 
                 <ControlsPanel
                   streaming={streaming}
-                  uptime={uptime}
                   onStart={startStreaming}
                   onStop={stopStreaming}
                 />
