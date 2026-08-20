@@ -562,21 +562,23 @@ setSettingsDraft((current) => ({
           {page === 'editor' ? (
             <>
               <div className="editor-main">
-  <PreviewCanvas
-    sources={sources.filter(
-      (source) => source.sceneId === activeScene,
-    )}
-    enabled={previewEnabled}
-    onToggle={() =>
-      setPreviewEnabled((value) => !value)
-    }
-    selectedSource={selectedSource}
-    onSelectSource={setSelectedSource}
-    onUpdateSource={updateSource}
-    volume={audioVolume}
-    muted={audioMuted}
-    monitoringMode={audioMonitoringMode}
-  />
+<PreviewCanvas
+  sources={sources.filter(
+    (source) => source.sceneId === activeScene,
+  )}
+  enabled={previewEnabled}
+  onToggle={() =>
+    setPreviewEnabled((value) => !value)
+  }
+  selectedSource={selectedSource}
+  onSelectSource={setSelectedSource}
+  onUpdateSource={updateSource}
+  baseResolution={settings.video.baseResolution}
+  outputResolution={settings.video.outputResolution}
+  volume={audioVolume}
+  muted={audioMuted}
+  monitoringMode={audioMonitoringMode}
+/>
 </div>
 
               <div className="workspace-grid">
