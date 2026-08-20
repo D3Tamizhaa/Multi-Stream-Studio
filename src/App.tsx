@@ -703,7 +703,6 @@ const newPlatform: Platform = {
 
           <UsageBar
             streaming={streaming}
-            uptime={uptime}
             cpu={cpu}
             ram={ram}
           />
