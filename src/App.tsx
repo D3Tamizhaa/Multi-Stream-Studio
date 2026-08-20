@@ -551,15 +551,19 @@ async function startStreaming() {
     return
   }
 
-  if (
-    !window.electronStream?.isAvailable
-  ) {
-    window.alert(
-      'Native streaming is only available in the Electron desktop application.',
-    )
+if (
+  !window.electronStream?.isAvailable
+) {
+  console.error(
+    '[MSS] electronStream bridge is unavailable.',
+  )
 
-    return
-  }
+  window.alert(
+    'Multi-Stream Studio is running in a normal browser window.\n\nClose this page and start the application with:\n\nnpm run dev\n\nThen use the Electron window that opens.',
+  )
+
+  return
+}
 
   const enabledPlatforms =
     platforms.filter(
