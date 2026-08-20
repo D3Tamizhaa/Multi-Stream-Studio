@@ -313,8 +313,8 @@ useEffect(() => {
     y: number,
     width: number,
   ) => {
-    const fontSize =
-  (source.properties.fontSize ?? 32) * scaleY
+const fontSize =
+  source.properties.fontSize ?? 32
 
     const fontFamily =
       source.properties.fontFamily ||
@@ -376,9 +376,8 @@ useEffect(() => {
       (line, index) => {
 ctx.fillText(
   line,
-  x * scaleX,
-  y * scaleY +
-    index * lineHeight,
+  x,
+  y + index * lineHeight,
 )
       },
     )
@@ -468,10 +467,10 @@ const bounds =
           try {
 ctx.drawImage(
   video,
-  x * scaleX,
-  y * scaleY,
-  width * scaleX,
-  height * scaleY,
+  x,
+  y,
+  width,
+  height,
 )
           } catch (
             error
@@ -502,10 +501,10 @@ ctx.drawImage(
           try {
 ctx.drawImage(
   image,
-  x * scaleX,
-  y * scaleY,
-  width * scaleX,
-  height * scaleY,
+  x,
+  y,
+  width,
+  height,
 )
           } catch (
             error
@@ -527,7 +526,7 @@ ctx.drawImage(
          */
       }
     }
-
+ctx.restore()
     animationFrame =
       requestAnimationFrame(
         drawFrame,
