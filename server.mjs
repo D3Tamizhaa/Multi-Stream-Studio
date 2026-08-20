@@ -2,7 +2,7 @@ import http from 'node:http'
 import os from 'node:os'
 import fs from 'node:fs'
 import path from 'node:path'
-import { createStreamRoutes } from './server/stream-server.mjs'
+
 import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -139,9 +139,6 @@ function serveStatic(req, res) {
 }
 
 const server = http.createServer((req, res) => {
-  if (createStreamRoutes(req, res)) {
-    return
-  }
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
