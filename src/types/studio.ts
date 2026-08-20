@@ -67,7 +67,7 @@ export interface Source {
 
 export interface Platform {
   id: string
-  name: string
+  name: PlatformName
   enabled: boolean
   server: string
   streamKey: string
