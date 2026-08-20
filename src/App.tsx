@@ -647,6 +647,7 @@ function editPlatform(platform: Platform) {
 
                 <ControlsPanel
                   streaming={streaming}
+                  uptime={uptime}
                   onStart={startStreaming}
                   onStop={stopStreaming}
                 />
