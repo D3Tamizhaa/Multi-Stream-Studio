@@ -1,4 +1,4 @@
-import { Save, X } from 'lucide-react'
+import { Check, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type {
   SettingsSection,
@@ -8,7 +8,8 @@ import type {
 interface SettingsPanelProps {
   section: SettingsSection
   settings: StudioSettings
-  onSave: (settings: StudioSettings) => void
+  onApply: (settings: StudioSettings) => void
+  onCancel: () => void
 }
 
 const resolutionOptions = [
@@ -47,61 +48,59 @@ function isBuiltInService(
 export function SettingsPanel({
   section,
   settings,
-  onSave,
+  onApply,
+  onCancel,
 }: SettingsPanelProps) {
-  const [draft, setDraft] = useState<StudioSettings>(settings)
-  const [notification, setNotification] = useState<string | null>(null)
-  useEffect(() => {
-    setDraft(settings)
-  }, [settings, section])
+const [draft, setDraft] = useState<StudioSettings>(settings)
 
-  function save() {
-    onSave({
-      ...settings,
-      ...draft,
-      authorization: {
-        ...settings.authorization,
-        ...draft.authorization,
-      },
-      stream: {
-        ...settings.stream,
-        ...draft.stream,
-      },
-      output: {
-        ...settings.output,
-        ...draft.output,
-      },
-      audio: {
-        ...settings.audio,
-        ...draft.audio,
-      },
-      video: {
-        ...settings.video,
-        ...draft.video,
-      },
-      advanced: {
-        ...settings.advanced,
-        ...draft.advanced,
-      },
-    })
-    
-    setNotification('Settings saved successfully')
-
-  setTimeout(() => {
-    setNotification(null)
-  }, 2500)
-}
-
-  function cancel() {
+useEffect(() => {
   setDraft(settings)
+}, [settings])
 
-  setNotification('Changes cancelled')
+function apply() {
+  const nextSettings: StudioSettings = {
+    ...settings,
+    ...draft,
 
-  setTimeout(() => {
-    setNotification(null)
-  }, 2500)
+    authorization: {
+      ...settings.authorization,
+      ...draft.authorization,
+    },
+
+    stream: {
+      ...settings.stream,
+      ...draft.stream,
+    },
+
+    output: {
+      ...settings.output,
+      ...draft.output,
+    },
+
+    audio: {
+      ...settings.audio,
+      ...draft.audio,
+    },
+
+    video: {
+      ...settings.video,
+      ...draft.video,
+    },
+
+    advanced: {
+      ...settings.advanced,
+      ...draft.advanced,
+    },
+  }
+
+  onApply(nextSettings)
 }
 
+function cancel() {
+  setDraft(settings)
+  onCancel()
+}
+  
   function update<K extends keyof StudioSettings>(
     key: K,
     value: StudioSettings[K],
@@ -506,17 +505,25 @@ export function SettingsPanel({
           </div>
         )}
 
-        <div className="settings-actions">
-          <button className="secondary-button" onClick={cancel}>
-            <X size={15} />
-            Cancel
-          </button>
+<div className="settings-actions">
+  <button
+    type="button"
+    className="secondary-button"
+    onClick={cancel}
+  >
+    <X size={15} />
+    Cancel
+  </button>
 
-          <button className="primary-button" onClick={save}>
-            <Save size={15} />
-            Save
-          </button>
-        </div>
+  <button
+    type="button"
+    className="primary-button"
+    onClick={apply}
+  >
+    <Check size={15} />
+    Apply
+  </button>
+</div>
       </div>
     </main>
   )
