@@ -138,27 +138,6 @@ function serveStatic(req, res) {
   })
 }
 
-const server = http.createServer((req, res) => {
-
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204, {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    })
-
-    res.end()
-    return
-  }
-
-  if (req.method === 'GET' && req.url.startsWith('/api/system-stats')) {
-    sendJson(res, 200, getSystemStats())
-    return
-  }
-
-  serveStatic(req, res)
-})
-
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Multi Stream Studio server running on port ${PORT}`)
 })
