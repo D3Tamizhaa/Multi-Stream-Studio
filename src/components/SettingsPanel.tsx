@@ -414,37 +414,45 @@ function cancel() {
 
         {section === 'Video' && (
           <div className="settings-grid">
-            <Field label="Base Resolution (Canvas)">
-              <select
-                value={draft.video.baseResolution}
-                onChange={(event) =>
-                  update('video', {
-                    ...draft.video,
-                    baseResolution: event.target.value,
-                  })
-                }
-              >
-                {resolutionOptions.map((value) => (
-                  <option key={value}>{value}</option>
-                ))}
-              </select>
-            </Field>
+<Field label="Base Resolution (Preview)">
+  <select
+    value={draft.video.baseResolution}
+    onChange={(event) =>
+      update('video', {
+        ...draft.video,
+        baseResolution: event.target.value,
+      })
+    }
+  >
+    {resolutionOptions.map((value) => (
+      <option key={value}>{value}</option>
+    ))}
+  </select>
 
-            <Field label="Output Resolution (Scaled)">
-              <select
-                value={draft.video.outputResolution}
-                onChange={(event) =>
-                  update('video', {
-                    ...draft.video,
-                    outputResolution: event.target.value,
-                  })
-                }
-              >
-                {resolutionOptions.map((value) => (
-                  <option key={value}>{value}</option>
-                ))}
-              </select>
-            </Field>
+  <small className="field-hint">
+    Sets the preview canvas resolution and editing coordinate space.
+  </small>
+</Field>
+
+<Field label="Output Resolution (Stream)">
+  <select
+    value={draft.video.outputResolution}
+    onChange={(event) =>
+      update('video', {
+        ...draft.video,
+        outputResolution: event.target.value,
+      })
+    }
+  >
+    {resolutionOptions.map((value) => (
+      <option key={value}>{value}</option>
+    ))}
+  </select>
+
+  <small className="field-hint">
+    Sets the resolution used for the stream output.
+  </small>
+</Field>
 
             <Field label="FPS Values">
               <select
