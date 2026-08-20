@@ -13,25 +13,21 @@ export function AddPlatformModal({
   onAdd,
   existing,
 }: AddPlatformModalProps) {
-  const [name, setName] = useState<PlatformName>(
-    existing?.name ?? 'YouTube',
-  )
+  const initialName: PlatformName = existing?.name ?? 'YouTube'
+  const initialServer: string = existing?.server ?? ''
+  const initialStreamKey: string = existing?.streamKey ?? ''
 
-  const [server, setServer] = useState<string>(
-    existing?.server ?? '',
-  )
+  const [name, setName] = useState<PlatformName>(initialName)
+  const [server, setServer] = useState<string>(initialServer)
+  const [streamKey, setStreamKey] = useState<string>(initialStreamKey)
 
-  const [streamKey, setStreamKey] = useState<string>(
-    existing?.streamKey ?? '',
-  )
-
-  const submit = () => {
+  function submit() {
     const platform: Platform = {
       id: existing?.id ?? `platform-${Date.now()}`,
       name,
-      enabled: existing?.enabled ?? true,
       server,
       streamKey,
+      enabled: existing?.enabled ?? true,
     }
 
     onAdd(platform)
@@ -70,8 +66,17 @@ export function AddPlatformModal({
             <select
               value={name}
               onChange={(event) => {
-                const value = event.target.value as PlatformName
-                setName(value)
+                const value = event.target.value
+
+                if (
+                  value === 'YouTube' ||
+                  value === 'Facebook' ||
+                  value === 'Twitch' ||
+                  value === 'Kick' ||
+                  value === 'Custom'
+                ) {
+                  setName(value)
+                }
               }}
             >
               <option value="YouTube">YouTube</option>
