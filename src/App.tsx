@@ -154,6 +154,16 @@ function loadSavedStudioState(): SavedStudioState {
 }
 
 export default function App() {
+    const [streaming, setStreaming] = useState(false)
+  const [uptime] = useState(0)
+
+  const startStreaming = () => {
+    setStreaming(true)
+  }
+
+  const stopStreaming = () => {
+    setStreaming(false)
+  }
   const [loggedIn, setLoggedIn] = useState(false)
   const [username, setUsername] = useState('User')
 
