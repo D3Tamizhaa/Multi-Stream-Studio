@@ -201,6 +201,9 @@ const [selectedPlatform, setSelectedPlatform] =
   
   const [settings, setSettings] =
   useState<StudioSettings>(() => loadSavedSettings())
+
+  const [settingsDraft, setSettingsDraft] =
+  useState<StudioSettings>(() => loadSavedSettings())
   
   const [previewEnabled, setPreviewEnabled] =
     useState(true)
@@ -511,17 +514,17 @@ function editPlatform(platform: Platform) {
       ? platform.name
       : 'Custom'
 
-  setSettings((current) => ({
-    ...current,
-    stream: {
-      ...current.stream,
-      service,
-      customServiceName:
-        service === 'Custom' ? platform.name : '',
-      server: platform.server,
-      streamKey: platform.streamKey,
-    },
-  }))
+setSettingsDraft((current) => ({
+  ...current,
+  stream: {
+    ...current.stream,
+    service,
+    customServiceName:
+      service === 'Custom' ? platform.name : '',
+    server: platform.server,
+    streamKey: platform.streamKey,
+  },
+}))
 
   setPage('settings')
   setSettingsSection('Stream')
@@ -540,13 +543,19 @@ function editPlatform(platform: Platform) {
       />
 
       <div className="app-body">
-        <Navigation
-          collapsed={collapsed}
-          page={page}
-          settingsSection={settingsSection}
-          onPageChange={setPage}
-          onSettingsChange={setSettingsSection}
-        />
+<Navigation
+  collapsed={collapsed}
+  page={page}
+  settingsSection={settingsSection}
+  onPageChange={(nextPage) => {
+    if (nextPage === 'settings') {
+      setSettingsDraft(settings)
+    }
+
+    setPage(nextPage)
+  }}
+  onSettingsChange={setSettingsSection}
+/>
 
         <div className="main-area">
           {page === 'editor' ? (
@@ -623,22 +632,23 @@ function editPlatform(platform: Platform) {
   platforms={platforms}
   selectedPlatform={selectedPlatform}
   onSelect={selectPlatform}
-  onAdd={() => {
-    setSelectedPlatform(null)
+onAdd={() => {
+  setSelectedPlatform(null)
 
-    setSettings((current) => ({
-      ...current,
-      stream: {
-        ...current.stream,
-        service: 'YouTube',
-        server: '',
-        streamKey: '',
-      },
-    }))
+  setSettingsDraft((current) => ({
+    ...current,
+    stream: {
+      ...current.stream,
+      service: 'YouTube',
+      customServiceName: '',
+      server: '',
+      streamKey: '',
+    },
+  }))
 
-    setPage('settings')
-    setSettingsSection('Stream')
-  }}
+  setPage('settings')
+  setSettingsSection('Stream')
+}}
   onRemove={removePlatform}
   onToggle={togglePlatform}
   onEdit={editPlatform}
@@ -652,53 +662,75 @@ function editPlatform(platform: Platform) {
               </div>
             </>
           ) : (
-            <SettingsPanel
-              section={settingsSection}
-              settings={settings}
-              onSave={(nextSettings) => {
-                setSettings(nextSettings)
+<SettingsPanel
+  section={settingsSection}
+  settings={settingsDraft}
+  onApply={(nextSettings) => {
+    setSettings(nextSettings)
+    setSettingsDraft(nextSettings)
 
-                if (settingsSection === 'Stream') {
-                  const stream = nextSettings.stream
+    try {
+      localStorage.setItem(
+        SETTINGS_STORAGE_KEY,
+        JSON.stringify(nextSettings),
+      )
+    } catch (error) {
+      console.error(
+        'Failed to save settings:',
+        error,
+      )
+    }
 
-                  setPlatforms((current) => {
-                    // Editing an existing platform
-                    if (selectedPlatform) {
-                      return current.map((platform) =>
-                        platform.id === selectedPlatform
-                          ? {
-                              ...platform,
-name:
-  stream.service === 'Custom'
-    ? 'Custom'
-    : stream.service,
-                              server: stream.server,
-                              streamKey: stream.streamKey,
-                            }
-                          : platform,
-                      )
-                    }
+    if (settingsSection === 'Stream') {
+      const stream = nextSettings.stream
 
-const newPlatform: Platform = {
-  id: `platform-${Date.now()}`,
-  name:
-    stream.service === 'Custom'
-      ? 'Custom'
-      : stream.service,
-  enabled: true,
-  server: stream.server,
-  streamKey: stream.streamKey,
-}
-
-                    setSelectedPlatform(newPlatform.id)
-
-                    return [...current, newPlatform]
-                  })
+      setPlatforms((current) => {
+        // Existing platform edit
+        if (selectedPlatform) {
+          return current.map((platform) =>
+            platform.id === selectedPlatform
+              ? {
+                  ...platform,
+                  name:
+                    stream.service === 'Custom'
+                      ? stream.customServiceName || 'Custom'
+                      : stream.service,
+                  server: stream.server,
+                  streamKey: stream.streamKey,
                 }
+              : platform,
+          )
+        }
 
-                setPage('editor')
-              }}
-            />
+        // New platform
+        const newPlatform: Platform = {
+          id: `platform-${Date.now()}`,
+          name:
+            stream.service === 'Custom'
+              ? stream.customServiceName || 'Custom'
+              : stream.service,
+          enabled: true,
+          server: stream.server,
+          streamKey: stream.streamKey,
+        }
+
+        setSelectedPlatform(newPlatform.id)
+
+        return [...current, newPlatform]
+      })
+    }
+
+    // Apply = commit everything + return to editor
+    setPage('editor')
+  }}
+  onCancel={() => {
+    // Throw away entire settings session
+    setSettingsDraft(settings)
+
+    // Return to editor without changing saved settings
+    setPage('editor')
+  }}
+/>
           )}
 
           <UsageBar
