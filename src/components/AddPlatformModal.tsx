@@ -25,20 +25,23 @@ export function AddPlatformModal({
     existing?.streamKey ?? '',
   )
 
-  function submit() {
+  const submit = () => {
     const platform: Platform = {
       id: existing?.id ?? `platform-${Date.now()}`,
-      name: name,
-      server: server,
-      streamKey: streamKey,
+      name,
       enabled: existing?.enabled ?? true,
+      server,
+      streamKey,
     }
 
     onAdd(platform)
   }
 
   return (
-    <div className="modal-backdrop" onMouseDown={onClose}>
+    <div
+      className="modal-backdrop"
+      onMouseDown={onClose}
+    >
       <div
         className="modal"
         onMouseDown={(event) => event.stopPropagation()}
@@ -46,13 +49,15 @@ export function AddPlatformModal({
         <div className="modal-header">
           <div>
             <span className="eyebrow">PLATFORM</span>
-            <h2>{existing ? 'Edit Platform' : 'Add Platform'}</h2>
+            <h2>
+              {existing ? 'Edit Platform' : 'Add Platform'}
+            </h2>
           </div>
 
           <button
+            type="button"
             className="icon-button"
             onClick={onClose}
-            type="button"
           >
             <X size={18} />
           </button>
@@ -64,9 +69,10 @@ export function AddPlatformModal({
 
             <select
               value={name}
-              onChange={(event) =>
-                setName(event.target.value as PlatformName)
-              }
+              onChange={(event) => {
+                const value = event.target.value as PlatformName
+                setName(value)
+              }}
             >
               <option value="YouTube">YouTube</option>
               <option value="Facebook">Facebook</option>
@@ -80,8 +86,11 @@ export function AddPlatformModal({
             <span>Server</span>
 
             <input
+              type="text"
               value={server}
-              onChange={(event) => setServer(event.target.value)}
+              onChange={(event) => {
+                setServer(event.target.value)
+              }}
               placeholder="rtmp://..."
             />
           </label>
@@ -92,24 +101,26 @@ export function AddPlatformModal({
             <input
               type="password"
               value={streamKey}
-              onChange={(event) => setStreamKey(event.target.value)}
+              onChange={(event) => {
+                setStreamKey(event.target.value)
+              }}
             />
           </label>
         </div>
 
         <div className="modal-actions">
           <button
+            type="button"
             className="secondary-button"
             onClick={onClose}
-            type="button"
           >
             Close
           </button>
 
           <button
+            type="button"
             className="primary-button"
             onClick={submit}
-            type="button"
           >
             {existing ? 'Save' : 'Add Platform'}
           </button>
