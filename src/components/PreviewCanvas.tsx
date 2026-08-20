@@ -400,6 +400,8 @@ ctx.fillText(
   outputWidth,
   outputHeight,
     )
+    ctx.save()
+ctx.scale(scaleX, scaleY)
 
     const previewRoot =
       canvasRef.current
@@ -408,10 +410,12 @@ ctx.fillText(
       for (
         const source of visibleSources
       ) {
-        const bounds =
-          getSourceBounds(
-            source,
-          )
+const bounds =
+  getSourceBounds(
+    source,
+    canvasWidth,
+    canvasHeight,
+  )
 
         const {
           x,
@@ -555,7 +559,11 @@ ctx.drawImage(
   event.preventDefault()
   event.stopPropagation()
 
-  const bounds = getSourceBounds(source)
+  const bounds = getSourceBounds(
+  source,
+  canvasWidth,
+  canvasHeight,
+)
 
   event.currentTarget.setPointerCapture(event.pointerId)
 
@@ -586,7 +594,11 @@ function beginResize(
   event.preventDefault()
   event.stopPropagation()
 
-  const bounds = getSourceBounds(source)
+  const bounds = getSourceBounds(
+  source,
+  canvasWidth,
+  canvasHeight,
+)
 
   event.currentTarget.setPointerCapture(event.pointerId)
 
@@ -620,8 +632,8 @@ function beginResize(
 
     if (!rect.width || !rect.height) return
 
-    const scaleX = CANVAS_WIDTH / rect.width
-    const scaleY = CANVAS_HEIGHT / rect.height
+const scaleX = canvasWidth / rect.width
+const scaleY = canvasHeight / rect.height
 
     const deltaX =
       (event.clientX - interaction.startClientX) *
@@ -635,7 +647,7 @@ function beginResize(
       const x = Math.max(
         0,
         Math.min(
-          CANVAS_WIDTH - interaction.width,
+          canvasWidth - interaction.width,
           interaction.startX + deltaX,
         ),
       )
@@ -643,7 +655,7 @@ function beginResize(
       const y = Math.max(
         0,
         Math.min(
-          CANVAS_HEIGHT - interaction.height,
+          canvasHeight - interaction.height,
           interaction.startY + deltaY,
         ),
       )
@@ -834,12 +846,16 @@ return (
   ) : null
 ) : (
   visibleSources.map((source, index) => {
-    const bounds = getSourceBounds(source)
+    const bounds = getSourceBounds(
+  source,
+  canvasWidth,
+  canvasHeight,
+)
 
-    const left = (bounds.x / CANVAS_WIDTH) * 100
-    const top = (bounds.y / CANVAS_HEIGHT) * 100
-    const width = (bounds.width / CANVAS_WIDTH) * 100
-    const height = (bounds.height / CANVAS_HEIGHT) * 100
+const left = (bounds.x / canvasWidth) * 100
+const top = (bounds.y / canvasHeight) * 100
+const width = (bounds.width / canvasWidth) * 100
+const height = (bounds.height / canvasHeight) * 100
 
     const isSelected = selectedSource === source.id
 
