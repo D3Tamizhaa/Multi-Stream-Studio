@@ -23,6 +23,7 @@ import {
 import type {
   AudioMonitoringMode,
   Platform,
+  PlatformName,
   Scene,
   SettingsSection,
   Source,
@@ -681,44 +682,43 @@ onAdd={() => {
       )
     }
 
-    if (settingsSection === 'Stream') {
-      const stream = nextSettings.stream
+if (settingsSection === 'Stream') {
+  const stream = nextSettings.stream
 
-      setPlatforms((current) => {
-        // Existing platform edit
-        if (selectedPlatform) {
-          return current.map((platform) =>
-            platform.id === selectedPlatform
-              ? {
-                  ...platform,
-                  name:
-                    stream.service === 'Custom'
-                      ? stream.customServiceName || 'Custom'
-                      : stream.service,
-                  server: stream.server,
-                  streamKey: stream.streamKey,
-                }
-              : platform,
-          )
-        }
+  const platformName: PlatformName =
+    stream.service === 'Custom'
+      ? 'Custom'
+      : stream.service
 
-        // New platform
-        const newPlatform: Platform = {
-          id: `platform-${Date.now()}`,
-          name:
-            stream.service === 'Custom'
-              ? stream.customServiceName || 'Custom'
-              : stream.service,
-          enabled: true,
-          server: stream.server,
-          streamKey: stream.streamKey,
-        }
-
-        setSelectedPlatform(newPlatform.id)
-
-        return [...current, newPlatform]
-      })
+  setPlatforms((current) => {
+    // Existing platform edit
+    if (selectedPlatform) {
+      return current.map((platform): Platform =>
+        platform.id === selectedPlatform
+          ? {
+              ...platform,
+              name: platformName,
+              server: stream.server,
+              streamKey: stream.streamKey,
+            }
+          : platform,
+      )
     }
+
+    // New platform
+    const newPlatform: Platform = {
+      id: `platform-${Date.now()}`,
+      name: platformName,
+      enabled: true,
+      server: stream.server,
+      streamKey: stream.streamKey,
+    }
+
+    setSelectedPlatform(newPlatform.id)
+
+    return [...current, newPlatform]
+  })
+}
 
     // Apply = commit everything + return to editor
     setPage('editor')
