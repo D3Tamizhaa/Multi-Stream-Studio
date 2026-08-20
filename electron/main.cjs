@@ -1,16 +1,12 @@
 const {
   app,
   BrowserWindow,
-  ipcMain,
 } = require('electron')
 
 const path = require('node:path')
 const fs = require('node:fs')
 
 let mainWindow = null
-
-
-let lastFfmpegError = ''
 
 function getDevUrl() {
   return (
@@ -25,44 +21,6 @@ function getProductionHtml() {
     'dist',
     'index.html',
   )
-}
-
-function parseResolution(value) {
-  const match = String(value || '').match(
-    /^(\d+)x(\d+)$/,
-  )
-
-  if (!match) {
-    return {
-      width: 1920,
-      height: 1080,
-    }
-  }
-
-  return {
-    width: Number(match[1]),
-    height: Number(match[2]),
-  }
-}
-
-function getEncoder(encoder) {
-  const value = String(
-    encoder || '',
-  ).toLowerCase()
-
-  if (value.includes('nvenc')) {
-    return 'h264_nvenc'
-  }
-
-  if (value.includes('qsv')) {
-    return 'h264_qsv'
-  }
-
-  if (value.includes('amf')) {
-    return 'h264_amf'
-  }
-
-  return 'libx264'
 }
 
 async function createWindow() {
@@ -131,7 +89,6 @@ async function createWindow() {
   mainWindow.on(
     'closed',
     () => {
-      stopFfmpeg()
       mainWindow = null
     },
   )
@@ -158,8 +115,6 @@ app.whenReady().then(
 app.on(
   'window-all-closed',
   () => {
-    stopFfmpeg()
-
     if (
       process.platform !==
       'darwin'
