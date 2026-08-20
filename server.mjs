@@ -2,7 +2,6 @@ import http from 'node:http'
 import os from 'node:os'
 import fs from 'node:fs'
 import path from 'node:path'
-
 import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -45,7 +44,9 @@ function getCpuUsage() {
 
   previousCpu = current
 
-  if (totalDelta <= 0) return 0
+  if (totalDelta <= 0) {
+    return 0
+  }
 
   const usage = 100 - (idleDelta / totalDelta) * 100
 
@@ -77,7 +78,9 @@ function sendJson(res, status, data) {
 }
 
 function serveStatic(req, res) {
-  let requestPath = decodeURIComponent(req.url.split('?')[0])
+  let requestPath = decodeURIComponent(
+    req.url.split('?')[0]
+  )
 
   if (requestPath === '/') {
     requestPath = '/index.html'
@@ -95,19 +98,22 @@ function serveStatic(req, res) {
   fs.readFile(filePath, (error, data) => {
     if (error) {
       // SPA fallback
-      fs.readFile(path.join(DIST, 'index.html'), (fallbackError, html) => {
-        if (fallbackError) {
-          res.writeHead(404)
-          res.end('Not found')
-          return
+      fs.readFile(
+        path.join(DIST, 'index.html'),
+        (fallbackError, html) => {
+          if (fallbackError) {
+            res.writeHead(404)
+            res.end('Not found')
+            return
+          }
+
+          res.writeHead(200, {
+            'Content-Type': 'text/html; charset=utf-8',
+          })
+
+          res.end(html)
         }
-
-        res.writeHead(200, {
-          'Content-Type': 'text/html; charset=utf-8',
-        })
-
-        res.end(html)
-      })
+      )
 
       return
     }
@@ -138,6 +144,35 @@ function serveStatic(req, res) {
   })
 }
 
+/*
+ * IMPORTANT:
+ * The server must be declared BEFORE server.listen().
+ */
+const server = http.createServer((req, res) => {
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204, {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    })
+
+    res.end()
+    return
+  }
+
+  if (
+    req.method === 'GET' &&
+    req.url.startsWith('/api/system-stats')
+  ) {
+    sendJson(res, 200, getSystemStats())
+    return
+  }
+
+  serveStatic(req, res)
+})
+
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Multi Stream Studio server running on port ${PORT}`)
+  console.log(
+    `Multi Stream Studio server running on port ${PORT}`
+  )
 })
