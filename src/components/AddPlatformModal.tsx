@@ -28,9 +28,9 @@ export function AddPlatformModal({
   function submit() {
     const platform: Platform = {
       id: existing?.id ?? `platform-${Date.now()}`,
-      name,
-      server,
-      streamKey,
+      name: name,
+      server: server,
+      streamKey: streamKey,
       enabled: existing?.enabled ?? true,
     }
 
@@ -49,7 +49,11 @@ export function AddPlatformModal({
             <h2>{existing ? 'Edit Platform' : 'Add Platform'}</h2>
           </div>
 
-          <button className="icon-button" onClick={onClose}>
+          <button
+            className="icon-button"
+            onClick={onClose}
+            type="button"
+          >
             <X size={18} />
           </button>
         </div>
@@ -60,9 +64,9 @@ export function AddPlatformModal({
 
             <select
               value={name}
-              onChange={(event) => {
+              onChange={(event) =>
                 setName(event.target.value as PlatformName)
-              }}
+              }
             >
               <option value="YouTube">YouTube</option>
               <option value="Facebook">Facebook</option>
@@ -94,11 +98,19 @@ export function AddPlatformModal({
         </div>
 
         <div className="modal-actions">
-          <button className="secondary-button" onClick={onClose}>
+          <button
+            className="secondary-button"
+            onClick={onClose}
+            type="button"
+          >
             Close
           </button>
 
-          <button className="primary-button" onClick={submit}>
+          <button
+            className="primary-button"
+            onClick={submit}
+            type="button"
+          >
             {existing ? 'Save' : 'Add Platform'}
           </button>
         </div>
