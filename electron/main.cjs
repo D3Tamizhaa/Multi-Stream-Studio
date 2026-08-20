@@ -6,14 +6,16 @@ const {
 } = require('electron')
 
 const path = require('node:path')
+const fs = require('node:fs')
 const { spawn } = require('node:child_process')
-const os = require('node:os')
 
 let mainWindow = null
+
 let ffmpegProcess = null
 let streamPort = null
 let streamSessionId = null
-let streamStartedAt = null
+
+let streamStartedAt = 0
 
 let streamStats = {
   fps: 0,
@@ -23,9 +25,25 @@ let streamStats = {
 
 let lastFfmpegError = ''
 
+function getDevUrl() {
+  return (
+    process.env.VITE_DEV_SERVER_URL ||
+    'http://127.0.0.1:5173'
+  )
+}
+
+function getProductionHtml() {
+  return path.join(
+    app.getAppPath(),
+    'dist',
+    'index.html',
+  )
+}
+
 function parseResolution(value) {
-  const match = String(value || '')
-    .match(/^(\d+)x(\d+)$/)
+  const match = String(value || '').match(
+    /^(\d+)x(\d+)$/,
+  )
 
   if (!match) {
     return {
@@ -40,73 +58,51 @@ function parseResolution(value) {
   }
 }
 
-function getVideoEncoder(value) {
-  const encoder = String(value || '')
-    .toLowerCase()
-
-  if (
-    encoder.includes('nvenc') ||
-    encoder.includes('nvidia')
-  ) {
-    return 'h264_nvenc'
-  }
-
-  if (
-    encoder.includes('amf') ||
-    encoder.includes('amd')
-  ) {
-    return 'h264_amf'
-  }
-
-  if (
-    encoder.includes('qsv') ||
-    encoder.includes('intel')
-  ) {
-    return 'h264_qsv'
-  }
-
-  return 'libx264'
-}
-
-function getAudioEncoder(value) {
-  const encoder = String(value || '')
-    .toLowerCase()
-
-  if (
-    encoder === 'aac' ||
-    encoder.includes('aac')
-  ) {
-    return 'aac'
-  }
-
-  return 'aac'
-}
-
 function buildOutputUrl(platform) {
   const server = String(
     platform.server || '',
   ).trim()
 
-  const streamKey = String(
+  const key = String(
     platform.streamKey || '',
   ).trim()
 
   if (!server) {
     throw new Error(
-      `${platform.name}: RTMPS server is missing.`,
+      `${platform.name}: RTMP server is missing.`,
     )
   }
 
-  if (!streamKey) {
+  if (!key) {
     throw new Error(
-      `${platform.name}: stream key is missing.`,
+      `${platform.name}: Stream key is missing.`,
     )
   }
 
-  return (
-    `${server.replace(/\/+$/, '')}/` +
-    encodeURIComponent(streamKey)
-  )
+  return `${server.replace(
+    /\/+$/,
+    '',
+  )}/${key}`
+}
+
+function getEncoder(encoder) {
+  const value = String(
+    encoder || '',
+  ).toLowerCase()
+
+  if (value.includes('nvenc')) {
+    return 'h264_nvenc'
+  }
+
+  if (value.includes('qsv')) {
+    return 'h264_qsv'
+  }
+
+  if (value.includes('amf')) {
+    return 'h264_amf'
+  }
+
+  return 'libx264'
 }
 
 function buildFfmpegArgs(config) {
@@ -115,101 +111,72 @@ function buildFfmpegArgs(config) {
       config.video?.outputResolution,
     )
 
-  /*
-   * The program canvas is always 1920x1080.
-   * FFmpeg performs the final output scaling.
-   */
-  const inputWidth = 1920
-  const inputHeight = 1080
-
-  const fps = Math.max(
-    1,
+  const fps =
     Number.parseInt(
       config.video?.fps,
       10,
-    ) || 30,
-  )
+    ) || 30
 
-  const bitrate = Math.max(
-    500,
+  const bitrate =
     Number.parseInt(
       config.output?.bitrate,
       10,
-    ) || 6000,
-  )
+    ) || 6000
 
-  const audioBitrate = Math.max(
-    64,
+  const audioBitrate =
     Number.parseInt(
       config.audio?.bitrate,
       10,
-    ) || 160,
-  )
+    ) || 160
 
   const keyframeInterval =
-    Math.max(
-      1,
-      Number.parseInt(
-        config.output?.keyframeInterval,
-        10,
-      ) || 2,
-    )
+    Number.parseInt(
+      config.output?.keyframeInterval,
+      10,
+    ) || 2
 
   const gop =
-    Math.round(
-      fps * keyframeInterval,
-    )
+    fps * keyframeInterval
 
-  const videoEncoder =
-    getVideoEncoder(
+  const encoder =
+    getEncoder(
       config.output?.encoder,
     )
 
-  const audioEncoder =
-    getAudioEncoder(
-      config.audio?.encoder,
-    )
+  const enabledPlatforms =
+    Array.isArray(config.platforms)
+      ? config.platforms.filter(
+          (platform) =>
+            platform.enabled &&
+            platform.server?.trim() &&
+            platform.streamKey?.trim(),
+        )
+      : []
 
-  const platforms = Array.isArray(
-    config.platforms,
-  )
-    ? config.platforms.filter(
-        (platform) =>
-          platform?.enabled &&
-          String(
-            platform.server || '',
-          ).trim() &&
-          String(
-            platform.streamKey || '',
-          ).trim(),
-      )
-    : []
-
-  if (platforms.length === 0) {
+  if (
+    enabledPlatforms.length === 0
+  ) {
     throw new Error(
-      'No enabled streaming platform has a server and stream key.',
+      'No enabled platform has an RTMP server and stream key.',
     )
   }
 
-  const outputs = platforms.map(
-    (platform) => {
-      const url =
-        buildOutputUrl(platform)
+  const outputs =
+    enabledPlatforms.map(
+      (platform) => {
+        const url =
+          buildOutputUrl(
+            platform,
+          )
 
-      console.log(
-        `[Stream] ${platform.name} -> ${url.replace(
-          encodeURIComponent(
-            platform.streamKey,
-          ),
-          '********',
-        )}`,
-      )
+        return (
+          '[f=flv:onfail=ignore]' +
+          url
+        )
+      },
+    )
 
-      return `[f=flv:onfail=ignore]${url}`
-    },
-  )
-
-  const args = [
+  return [
     '-hide_banner',
 
     '-loglevel',
@@ -218,16 +185,15 @@ function buildFfmpegArgs(config) {
     '-nostats',
 
     /*
-     * FFmpeg progress is sent to stdout.
+     * Progress information.
      */
     '-progress',
     'pipe:1',
 
     /*
-     * PROGRAM VIDEO
+     * VIDEO
      *
-     * Renderer sends raw RGBA frames through
-     * Electron MessagePort -> native pipe 3.
+     * Electron -> pipe:3
      */
     '-thread_queue_size',
     '512',
@@ -239,7 +205,7 @@ function buildFfmpegArgs(config) {
     'rgba',
 
     '-video_size',
-    `${inputWidth}x${inputHeight}`,
+    '1920x1080',
 
     '-framerate',
     String(fps),
@@ -248,10 +214,9 @@ function buildFfmpegArgs(config) {
     'pipe:3',
 
     /*
-     * PROGRAM AUDIO
+     * AUDIO
      *
-     * Renderer sends raw signed 16-bit stereo
-     * PCM through native pipe 4.
+     * Electron -> pipe:4
      */
     '-thread_queue_size',
     '512',
@@ -269,35 +234,23 @@ function buildFfmpegArgs(config) {
     'pipe:4',
 
     /*
-     * Stream selection.
+     * VIDEO
      */
     '-map',
     '0:v:0',
 
-    '-map',
-    '1:a:0',
-
-    /*
-     * VIDEO ENCODING
-     */
     '-c:v',
-    videoEncoder,
+    encoder,
 
     '-preset',
     config.output?.preset ||
       'veryfast',
 
     '-tune',
-    config.output?.tune &&
-    config.output.tune !== 'None'
-      ? config.output.tune
-      : 'zerolatency',
+    'zerolatency',
 
     '-profile:v',
-    String(
-      config.output?.profile ||
-        'high',
-    ).toLowerCase(),
+    'high',
 
     '-pix_fmt',
     'yuv420p',
@@ -317,9 +270,6 @@ function buildFfmpegArgs(config) {
     '-sc_threshold',
     '0',
 
-    /*
-     * CBR.
-     */
     '-b:v',
     `${bitrate}k`,
 
@@ -333,10 +283,13 @@ function buildFfmpegArgs(config) {
     `${bitrate * 2}k`,
 
     /*
-     * AUDIO ENCODING
+     * AUDIO
      */
+    '-map',
+    '1:a:0',
+
     '-c:a',
-    audioEncoder,
+    'aac',
 
     '-b:a',
     `${audioBitrate}k`,
@@ -348,21 +301,16 @@ function buildFfmpegArgs(config) {
     '2',
 
     /*
-     * RTMP/FLV output.
+     * OUTPUT
      */
-    '-flvflags',
-    'no_duration_filesize',
-
     '-f',
     'tee',
 
     outputs.join('|'),
   ]
-
-  return args
 }
 
-function resetStreamState() {
+function stopFfmpeg() {
   if (streamPort) {
     try {
       streamPort.close()
@@ -371,65 +319,54 @@ function resetStreamState() {
 
   streamPort = null
   streamSessionId = null
-  streamStartedAt = null
 
-  streamStats = {
-    fps: 0,
-    bitrate: '0 kbits/s',
-    speed: '0x',
-  }
-
-  lastFfmpegError = ''
-}
-
-function stopFfmpeg() {
-  const processRef =
-    ffmpegProcess
-
-  ffmpegProcess = null
-
-  if (!processRef) {
-    resetStreamState()
+  if (!ffmpegProcess) {
     return
   }
 
   try {
-    processRef.stdio[3]?.destroy()
+    ffmpegProcess.stdio[3]?.destroy()
   } catch {}
 
   try {
-    processRef.stdio[4]?.destroy()
+    ffmpegProcess.stdio[4]?.destroy()
   } catch {}
 
   try {
-    processRef.kill(
+    ffmpegProcess.kill(
       process.platform === 'win32'
         ? undefined
         : 'SIGTERM',
     )
   } catch {}
 
-  resetStreamState()
+  ffmpegProcess = null
+  streamStartedAt = 0
+
+  streamStats = {
+    fps: 0,
+    bitrate: '0 kbits/s',
+    speed: '0x',
+  }
 }
 
 function parseProgress(text) {
   const lines =
-    String(text)
-      .split(/\r?\n/)
+    String(text).split(/\r?\n/)
 
   for (const line of lines) {
-    const separator =
+    const index =
       line.indexOf('=')
 
-    if (separator < 0) {
+    if (index < 0) {
       continue
     }
 
     const key =
-      line.slice(0, separator)
+      line.slice(0, index)
 
     const value =
-      line.slice(separator + 1)
+      line.slice(index + 1)
 
     if (key === 'fps') {
       streamStats.fps =
@@ -459,22 +396,16 @@ function createFfmpeg(config) {
     buildFfmpegArgs(config)
 
   console.log(
-    '[Stream] Starting native FFmpeg:',
+    '[MSS] Starting FFmpeg',
   )
 
-  console.log(
-    ['ffmpeg', ...args]
-      .join(' ')
-      .replace(
-        /([?&]?(?:key|stream_key)=)[^&\s]+/gi,
-        '$1********',
-      ),
-  )
+  const executable =
+    process.env.FFMPEG_PATH ||
+    'ffmpeg'
 
-  const processRef =
+  ffmpegProcess =
     spawn(
-      process.env.FFMPEG_PATH ||
-        'ffmpeg',
+      executable,
       args,
       {
         stdio: [
@@ -484,17 +415,15 @@ function createFfmpeg(config) {
           'pipe',
           'pipe',
         ],
+
         windowsHide: true,
       },
     )
 
-  ffmpegProcess =
-    processRef
-
   streamStartedAt =
     Date.now()
 
-  processRef.stdout.on(
+  ffmpegProcess.stdout.on(
     'data',
     (data) => {
       parseProgress(
@@ -503,26 +432,29 @@ function createFfmpeg(config) {
     },
   )
 
-  processRef.stderr.on(
+  ffmpegProcess.stderr.on(
     'data',
     (data) => {
       const text =
-        data.toString()
+        data.toString().trim()
 
-      lastFfmpegError =
-        text.trim()
+      if (!text) {
+        return
+      }
+
+      lastFfmpegError = text
 
       console.log(
-        `[FFmpeg] ${text.trim()}`,
+        `[FFmpeg] ${text}`,
       )
     },
   )
 
-  processRef.on(
+  ffmpegProcess.on(
     'error',
     (error) => {
       console.error(
-        '[FFmpeg] Process error:',
+        '[MSS] FFmpeg error:',
         error,
       )
 
@@ -533,42 +465,40 @@ function createFfmpeg(config) {
     },
   )
 
-  processRef.on(
+  ffmpegProcess.on(
     'close',
-    (code, signal) => {
+    (code) => {
       console.log(
-        `[FFmpeg] exited code=${code} signal=${signal || 'none'}`,
+        `[MSS] FFmpeg exited: ${code}`,
       )
 
-      if (
-        code !== 0 &&
-        code !== null
-      ) {
-        console.error(
-          '[FFmpeg] Streaming stopped:',
-          lastFfmpegError,
-        )
+      ffmpegProcess =
+        null
+
+      if (streamPort) {
+        try {
+          streamPort.close()
+        } catch {}
       }
 
-      ffmpegProcess = null
-      resetStreamState()
+      streamPort = null
+      streamSessionId = null
     },
   )
-
-  return processRef
 }
 
 function createStreamPort() {
   if (!mainWindow) {
     throw new Error(
-      'Electron main window is not available.',
+      'Electron window does not exist.',
     )
   }
 
   const {
     port1,
     port2,
-  } = new MessageChannelMain()
+  } =
+    new MessageChannelMain()
 
   streamPort =
     port1
@@ -581,92 +511,89 @@ function createStreamPort() {
       const data =
         event.data
 
-      if (!ffmpegProcess) {
-        return
-      }
-
       if (
-        data?.type !== 'video' &&
-        data?.type !== 'audio'
+        !data ||
+        !ffmpegProcess
       ) {
         return
       }
 
-      const buffer =
-        data.buffer
-
-      if (!(buffer instanceof ArrayBuffer)) {
+      if (
+        data.type !== 'video' &&
+        data.type !== 'audio'
+      ) {
         return
       }
 
-      const pipe =
+      if (
+        !data.buffer
+      ) {
+        return
+      }
+
+      const targetPipe =
         data.type === 'video'
           ? ffmpegProcess.stdio[3]
           : ffmpegProcess.stdio[4]
 
-      if (!pipe?.writable) {
+      if (
+        !targetPipe ||
+        targetPipe.destroyed
+      ) {
         return
       }
 
       try {
-        const nodeBuffer =
-          Buffer.from(buffer)
-
-        const canContinue =
-          pipe.write(
-            nodeBuffer,
+        const buffer =
+          Buffer.from(
+            data.buffer,
           )
 
-        /*
-         * Tell renderer that FFmpeg accepted
-         * the binary block.
-         */
+        targetPipe.write(
+          buffer,
+        )
+
         streamPort?.postMessage({
           type: 'ack',
           kind: data.type,
-          accepted: canContinue,
         })
       } catch (error) {
         console.error(
-          `[Stream] Failed writing ${data.type} to FFmpeg:`,
+          '[MSS] Pipe write failed:',
           error,
         )
       }
     },
   )
 
-  streamPort.on(
-    'close',
-    () => {
-      console.log(
-        '[Stream] Renderer stream port closed.',
-      )
-    },
-  )
-
+  /*
+   * Send MessagePort to renderer.
+   */
   mainWindow.webContents.postMessage(
     'stream-port',
-    streamSessionId,
+    null,
     [port2],
   )
 }
 
 ipcMain.handle(
   'stream:start',
-  async (event, config) => {
-    if (ffmpegProcess) {
-      throw new Error(
-        'Streaming is already running.',
-      )
-    }
-
+  async (_event, config) => {
     try {
-      createFfmpeg(config)
+      if (ffmpegProcess) {
+        throw new Error(
+          'Streaming is already running.',
+        )
+      }
+
+      lastFfmpegError = ''
 
       streamSessionId =
         `${Date.now()}-${Math.random()
           .toString(36)
           .slice(2)}`
+
+      createFfmpeg(config)
 
       createStreamPort()
 
@@ -731,11 +658,12 @@ ipcMain.handle(
   },
 )
 
-function createWindow() {
+async function createWindow() {
   mainWindow =
     new BrowserWindow({
       width: 1440,
       height: 900,
+
       minWidth: 1100,
       minHeight: 700,
 
@@ -749,72 +677,49 @@ function createWindow() {
         ),
 
         contextIsolation: true,
+
         nodeIntegration: false,
+
         sandbox: false,
       },
     })
 
-  const devUrl =
-    'http://127.0.0.1:5173'
+  const devMode =
+    !app.isPackaged
 
-  const productionFile =
-    path.join(
-      app.getAppPath(),
-      'dist',
-      'index.html',
+  if (devMode) {
+    const url =
+      getDevUrl()
+
+    console.log(
+      `[MSS] Loading ${url}`,
     )
 
-  const loadApplication =
-    async () => {
-      if (
-        process.env.NODE_ENV ===
-          'production' ||
-        require('node:fs').existsSync(
-          productionFile,
-        )
-      ) {
-        await mainWindow.loadFile(
-          productionFile,
-        )
+    await mainWindow.loadURL(
+      url,
+    )
+  } else {
+    const html =
+      getProductionHtml()
 
-        return
-      }
-
-      for (
-        let attempt = 0;
-        attempt < 30;
-        attempt++
-      ) {
-        try {
-          await mainWindow.loadURL(
-            devUrl,
-          )
-
-          return
-        } catch {
-          await new Promise(
-            (resolve) =>
-              setTimeout(
-                resolve,
-                250,
-              ),
-          )
-        }
-      }
-
+    if (!fs.existsSync(html)) {
       throw new Error(
-        'Could not connect to Vite at http://127.0.0.1:5173',
+        `Production UI not found: ${html}`,
       )
     }
 
-  loadApplication().catch(
-    (error) => {
-      console.error(
-        '[Electron] Failed to load application:',
-        error,
-      )
-    },
-  )
+    await mainWindow.loadFile(
+      html,
+    )
+  }
+
+  /*
+   * Open DevTools automatically during
+   * development so errors are visible.
+   */
+  if (devMode) {
+    mainWindow.webContents.openDevTools()
+  }
 
   mainWindow.on(
     'closed',
@@ -825,21 +730,23 @@ function createWindow() {
   )
 }
 
-app.whenReady().then(() => {
-  createWindow()
+app.whenReady().then(
+  async () => {
+    await createWindow()
 
-  app.on(
-    'activate',
-    () => {
-      if (
-        BrowserWindow.getAllWindows()
-          .length === 0
-      ) {
-        createWindow()
-      }
-    },
-  )
-})
+    app.on(
+      'activate',
+      () => {
+        if (
+          BrowserWindow.getAllWindows()
+            .length === 0
+        ) {
+          createWindow()
+        }
+      },
+    )
+  },
+)
 
 app.on(
   'window-all-closed',
