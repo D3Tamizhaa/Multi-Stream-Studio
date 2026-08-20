@@ -1,6 +1,5 @@
 interface UsageBarProps {
   streaming: boolean
-  uptime: number
   cpu: number
   ram: number
 }
@@ -17,7 +16,6 @@ function formatTime(totalSeconds: number) {
 
 export function UsageBar({
   streaming,
-  uptime,
   cpu,
   ram,
 }: UsageBarProps) {
@@ -25,7 +23,6 @@ export function UsageBar({
     <footer className="usage-bar">
       <div className="metric">
         <span>Uptime</span>
-        <strong>{formatTime(uptime)}</strong>
       </div>
 
       <div className="metric">
