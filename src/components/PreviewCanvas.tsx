@@ -23,6 +23,8 @@ interface PreviewCanvasProps {
     id: string,
     properties: Partial<Source['properties']>,
   ) => void
+  baseResolution: string
+  outputResolution: string
   volume?: number
   muted?: boolean
   monitoringMode?: AudioMonitoringMode
@@ -43,9 +45,6 @@ function parseResolution(value: string) {
     height: Number(match[2]),
   }
 }
-
-const CANVAS_WIDTH = 1920
-const CANVAS_HEIGHT = 1080
 
 type Interaction =
   | {
@@ -73,17 +72,21 @@ type Interaction =
   }
   | null
   
-function getSourceBounds(source: Source) {
+function getSourceBounds(
+  source: Source,
+  canvasWidth: number,
+  canvasHeight: number,
+) {
   const width = source.properties.width ?? 640
   const height = source.properties.height ?? 360
 
   return {
     x:
       source.properties.x ??
-      (CANVAS_WIDTH - width) / 2,
+      (canvasWidth - width) / 2,
     y:
       source.properties.y ??
-      (CANVAS_HEIGHT - height) / 2,
+      (canvasHeight - height) / 2,
     width,
     height,
   }
@@ -235,6 +238,8 @@ export function PreviewCanvas({
   selectedSource,
   onSelectSource,
   onUpdateSource,
+  baseResolution,
+  outputResolution,
   volume = 80,
   muted = false,
   monitoringMode = 'off',
@@ -245,6 +250,16 @@ export function PreviewCanvas({
     useRef<Interaction>(null)
 
   const [, forceUpdate] = useState(0)
+
+  const {
+  width: canvasWidth,
+  height: canvasHeight,
+} = parseResolution(baseResolution)
+
+const {
+  width: outputWidth,
+  height: outputHeight,
+} = parseResolution(outputResolution)
 
     useEffect(() => {
     const videos =
@@ -268,9 +283,6 @@ export function PreviewCanvas({
     monitoringMode,
     sources,
   ])
-
-  const { width: canvasWidth, height: canvasHeight } =
-    parseResolution('1920x1080')
 
   const visibleSources = sources.filter(
     (source) => source.visible,
@@ -302,8 +314,7 @@ useEffect(() => {
     width: number,
   ) => {
     const fontSize =
-      source.properties.fontSize ??
-      32
+  (source.properties.fontSize ?? 32) * scaleY
 
     const fontFamily =
       source.properties.fontFamily ||
@@ -363,18 +374,20 @@ useEffect(() => {
 
     lines.forEach(
       (line, index) => {
-        ctx.fillText(
-          line,
-          x,
-          y +
-            index *
-              lineHeight,
-        )
+ctx.fillText(
+  line,
+  x * scaleX,
+  y * scaleY +
+    index * lineHeight,
+)
       },
     )
   }
 
   const drawFrame = () => {
+
+    const scaleX = outputWidth / canvasWidth
+    const scaleY = outputHeight / canvasHeight
     /*
      * Clear Program Output.
      */
@@ -384,8 +397,8 @@ useEffect(() => {
     ctx.fillRect(
       0,
       0,
-      CANVAS_WIDTH,
-      CANVAS_HEIGHT,
+  outputWidth,
+  outputHeight,
     )
 
     const previewRoot =
@@ -449,13 +462,13 @@ useEffect(() => {
             HTMLMediaElement.HAVE_CURRENT_DATA
         ) {
           try {
-            ctx.drawImage(
-              video,
-              x,
-              y,
-              width,
-              height,
-            )
+ctx.drawImage(
+  video,
+  x * scaleX,
+  y * scaleY,
+  width * scaleX,
+  height * scaleY,
+)
           } catch (
             error
           ) {
@@ -483,13 +496,13 @@ useEffect(() => {
           image.naturalWidth > 0
         ) {
           try {
-            ctx.drawImage(
-              image,
-              x,
-              y,
-              width,
-              height,
-            )
+ctx.drawImage(
+  image,
+  x * scaleX,
+  y * scaleY,
+  width * scaleX,
+  height * scaleY,
+)
           } catch (
             error
           ) {
@@ -527,6 +540,10 @@ useEffect(() => {
 }, [
   visibleSources,
   sources,
+  canvasWidth,
+  canvasHeight,
+  outputWidth,
+  outputHeight,
 ])
 
   function beginDrag(
@@ -709,13 +726,13 @@ if (interaction.type === 'resize') {
     y = 0
   }
 
-  if (x + width > CANVAS_WIDTH) {
-    width = CANVAS_WIDTH - x
-  }
+if (x + width > canvasWidth) {
+  width = canvasWidth - x
+}
 
-  if (y + height > CANVAS_HEIGHT) {
-    height = CANVAS_HEIGHT - y
-  }
+if (y + height > canvasHeight) {
+  height = canvasHeight - y
+}
 
   width = Math.max(minWidth, width)
   height = Math.max(minHeight, height)
@@ -785,11 +802,11 @@ return (
   <section className="preview-section">
     <div className="preview-stage">
 
-      <canvas
+<canvas
   ref={streamCanvasRef}
   data-program-output
-  width={canvasWidth}
-  height={canvasHeight}
+  width={outputWidth}
+  height={outputHeight}
   style={{ display: 'none' }}
 />
       
