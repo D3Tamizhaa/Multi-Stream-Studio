@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AddPlatformModal } from './components/AddPlatformModal'
 import { AddSceneModal } from './components/AddSceneModal'
 import { AddSourceModal } from './components/AddSourceModal'
@@ -20,7 +20,6 @@ import {
   defaultSettings,
   defaultSources,
 } from './data/defaults'
-import { startAudioBridge } from './streaming/audio-bridge'
 import type {
   AudioMonitoringMode,
   Platform,
