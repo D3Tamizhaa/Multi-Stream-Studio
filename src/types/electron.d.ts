@@ -1,6 +1,7 @@
 interface ElectronStreamStartResult {
   ok: boolean
   sessionId: string
+  error?: string
 }
 
 interface ElectronStreamStatus {
