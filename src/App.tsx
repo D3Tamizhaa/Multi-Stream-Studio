@@ -20,6 +20,7 @@ import {
   defaultSettings,
   defaultSources,
 } from './data/defaults'
+import { startAudioBridge } from './streaming/audio-bridge'
 import type {
   AudioMonitoringMode,
   Platform,
@@ -242,22 +243,23 @@ const [audioMonitoringMode, setAudioMonitoringMode] =
   audioMuted,
   audioMonitoringMode,
 ])
+  
+const [streaming, setStreaming] =
+  useState(false)
 
-  const [streaming, setStreaming] =
-    useState(false)
-  const mediaRecorderRef =
-  useRef<MediaRecorder | null>(null)
+const streamSessionRef =
+  useRef<string | null>(null)
 
-const streamUploadRef =
-  useRef<Promise<Response> | null>(null)
+const streamFrameTimerRef =
+  useRef<number | null>(null)
 
-const streamUploadControllerRef =
-  useRef<ReadableStreamDefaultController<Uint8Array> | null>(
-    null,
-  )
+const streamFrameBusyRef =
+  useRef(false)
 
-const streamMediaStreamRef =
-  useRef<MediaStream | null>(null)
+const streamAudioRef =
+  useRef<{
+    stop: () => void
+  } | null>(null)
 
   const [uptime, setUptime] = useState(0)
   const [cpu, setCpu] = useState(0)
@@ -545,376 +547,330 @@ function editPlatform(platform: Platform) {
 }
   
 async function startStreaming() {
-  const enabledPlatforms = platforms.filter(
-    (platform) =>
-      platform.enabled &&
-      platform.server.trim() &&
-      platform.streamKey.trim(),
-  )
-
-  if (enabledPlatforms.length === 0) {
-    console.error(
-      'No enabled platform with server and stream key.',
-    )
+  if (streaming) {
     return
   }
 
-  if (mediaRecorderRef.current) {
-    console.warn('Streaming is already running.')
+  if (
+    !window.electronStream?.isAvailable
+  ) {
+    window.alert(
+      'Native streaming is only available in the Electron desktop application.',
+    )
+
+    return
+  }
+
+  const enabledPlatforms =
+    platforms.filter(
+      (platform) =>
+        platform.enabled &&
+        platform.server.trim() &&
+        platform.streamKey.trim(),
+    )
+
+  if (
+    enabledPlatforms.length === 0
+  ) {
+    window.alert(
+      'Enable at least one platform with a server and stream key.',
+    )
+
+    return
+  }
+
+  const programCanvas =
+    document.querySelector<HTMLCanvasElement>(
+      'canvas[data-program-output]',
+    )
+
+  if (!programCanvas) {
+    window.alert(
+      'Program output canvas was not found.',
+    )
+
     return
   }
 
   try {
-const canvas =
-  document.querySelector<HTMLCanvasElement>(
-    'canvas[data-stream-preview]',
-  )
-
-if (canvas === null) {
-  throw new Error(
-    'Streaming canvas was not found.',
-  )
-}
-
-const captureStream =
-  canvas.captureStream.bind(canvas)
-
-if (typeof captureStream !== 'function') {
-  throw new Error(
-    'Canvas streaming is not supported by this browser.',
-  )
-}
-
-    const fps =
-      Number.parseInt(
-        settings.video.fps,
-        10,
-      ) || 30
-
-    const startResponse = await fetch(
-      '/api/stream/start',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          platforms: enabledPlatforms,
-          output: settings.output,
-          audio: settings.audio,
-          video: settings.video,
-          advanced: settings.advanced,
-        }),
-      },
+    console.log(
+      '[Stream] Starting native FFmpeg engine...',
     )
 
-    const startResult =
-      await startResponse.json()
+    const result =
+      await window.electronStream.start({
+        platforms:
+          enabledPlatforms,
 
-    if (!startResponse.ok) {
-      throw new Error(
-        startResult.error ||
-          'FFmpeg failed to start.',
-      )
-    }
+        output:
+          settings.output,
 
-const canvasStream =
-  captureStream(fps)
+        audio:
+          settings.audio,
 
-const mediaElements =
-  Array.from(
-    document.querySelectorAll<HTMLVideoElement>(
-      '.preview-stage video',
-    ),
-  )
+        video:
+          settings.video,
 
-    const audioTracks =
-      new Map<string, MediaStreamTrack>()
-
-    for (const video of mediaElements) {
-      try {
-
-const capture =
-  (
-    video as HTMLVideoElement & {
-      captureStream?: () => MediaStream
-      webkitCaptureStream?: () => MediaStream
-    }
-  ).captureStream?.() ??
-  (
-    video as HTMLVideoElement & {
-      webkitCaptureStream?: () => MediaStream
-    }
-  ).webkitCaptureStream?.()
-
-        if (!capture) continue
-
-        for (const track of capture.getAudioTracks()) {
-          audioTracks.set(
-            track.id,
-            track,
-          )
-        }
-      } catch (error) {
-        console.warn(
-          'Could not capture audio from video:',
-          error,
-        )
-      }
-    }
-
-    for (const track of audioTracks.values()) {
-      canvasStream.addTrack(track)
-    }
-
-    streamMediaStreamRef.current =
-      canvasStream
-
-    const mimeTypes = [
-      'video/webm;codecs=vp8,opus',
-      'video/webm;codecs=vp9,opus',
-      'video/webm',
-    ]
-
-    const mimeType =
-      mimeTypes.find((type) =>
-        MediaRecorder.isTypeSupported(type),
-      ) || ''
-
-    if (!mimeType) {
-      throw new Error(
-        'This browser cannot create a WebM stream for FFmpeg.',
-      )
-    }
-
-    const recorder =
-      new MediaRecorder(
-        canvasStream,
-        {
-          mimeType,
-          videoBitsPerSecond: 6_000_000,
-          audioBitsPerSecond: 128_000,
-        },
-      )
-
-    let uploadController:
-      | ReadableStreamDefaultController<Uint8Array>
-      | null = null
-
-    const uploadBody =
-      new ReadableStream<Uint8Array>({
-        start(controller) {
-          uploadController = controller
-
-          streamUploadControllerRef.current =
-            controller
-        },
-
-        cancel(reason) {
-          console.warn(
-            'Stream upload cancelled:',
-            reason,
-          )
-        },
+        advanced:
+          settings.advanced,
       })
 
-    const uploadPromise = fetch(
-      '/api/stream/input',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': mimeType,
-        },
-        body: uploadBody,
-        duplex: 'half',
-      } as RequestInit & {
-        duplex: 'half'
-      },
-    )
+    streamSessionRef.current =
+      result.sessionId
 
-    streamUploadRef.current =
-      uploadPromise
+    /*
+     * Start the real program audio mixer.
+     */
+    streamAudioRef.current =
+      await startAudioBridge({
+        volume: audioVolume,
+        muted: audioMuted,
+        monitoringMode:
+          audioMonitoringMode,
+        sessionId:
+          result.sessionId,
+      })
 
-    recorder.ondataavailable =
-      async (event) => {
+    /*
+     * Send the FINAL PROGRAM CANVAS to
+     * native FFmpeg as raw RGBA frames.
+     *
+     * No MediaRecorder.
+     * No WebM.
+     * No HTTP upload.
+     */
+    const fps =
+      Math.max(
+        1,
+        Number.parseInt(
+          settings.video.fps,
+          10,
+        ) || 30,
+      )
+
+    const frameInterval =
+      1000 / fps
+
+    const sendFrame =
+      () => {
         if (
-          !event.data ||
-          event.data.size === 0 ||
-          !uploadController
+          !streamSessionRef.current ||
+          !programCanvas
         ) {
           return
         }
 
-        try {
-          const buffer =
-            await event.data.arrayBuffer()
+        /*
+         * Never queue multiple huge 1920x1080
+         * frames. If FFmpeg is busy, drop this
+         * frame and use the next one.
+         */
+        if (
+          streamFrameBusyRef.current
+        ) {
+          streamFrameTimerRef.current =
+            window.setTimeout(
+              sendFrame,
+              frameInterval,
+            )
 
-          uploadController.enqueue(
-            new Uint8Array(buffer),
+          return
+        }
+
+        const ctx =
+          programCanvas.getContext(
+            '2d',
+          )
+
+        if (!ctx) {
+          return
+        }
+
+        try {
+          const image =
+            ctx.getImageData(
+              0,
+              0,
+              programCanvas.width,
+              programCanvas.height,
+            )
+
+          const buffer =
+            image.data.buffer
+
+          streamFrameBusyRef.current =
+            true
+
+          const targetOrigin =
+            window.location.protocol ===
+            'file:'
+              ? '*'
+              : window.location.origin
+
+          window.postMessage(
+            {
+              __mssStream: true,
+              sessionId:
+                streamSessionRef.current,
+              type: 'video',
+              buffer,
+            },
+            targetOrigin,
+            [buffer],
           )
         } catch (error) {
           console.error(
-            'Failed to upload stream chunk:',
+            '[Stream] Program frame capture failed:',
             error,
           )
         }
+
+        streamFrameTimerRef.current =
+          window.setTimeout(
+            sendFrame,
+            frameInterval,
+          )
       }
 
-    recorder.onerror = (event) => {
-      console.error(
-        'MediaRecorder error:',
-        event,
-      )
-    }
+    const handleAck =
+      (
+        event: Event,
+      ) => {
+        const customEvent =
+          event as CustomEvent<{
+            kind?: string
+          }>
 
-    recorder.onstop = () => {
-      try {
-        uploadController?.close()
-      } catch {}
+        if (
+          customEvent.detail?.kind ===
+          'video'
+        ) {
+          streamFrameBusyRef.current =
+            false
+        }
+      }
 
-      streamUploadControllerRef.current =
-        null
+    window.addEventListener(
+      'mss-stream-ack',
+      handleAck,
+    )
 
-      streamUploadRef.current = null
-    }
+    /*
+     * Store cleanup on the window so
+     * stopStreaming can remove the listener.
+     */
+    ;(
+      window as Window & {
+        __mssStreamCleanup?: () => void
+      }
+    ).__mssStreamCleanup =
+      () => {
+        window.removeEventListener(
+          'mss-stream-ack',
+          handleAck,
+        )
+      }
 
-    mediaRecorderRef.current =
-      recorder
-
-    recorder.start(1000)
+    streamFrameBusyRef.current =
+      false
 
     setStreaming(true)
     setUptime(0)
 
+    sendFrame()
+
     console.log(
-      '[Stream] Browser media capture started.',
+      '[Stream] Native FFmpeg streaming started.',
     )
-
-    uploadPromise
-      .then(async (response) => {
-        if (!response.ok) {
-          const text =
-            await response.text()
-
-          throw new Error(
-            text ||
-              `Stream upload failed: ${response.status}`,
-          )
-        }
-
-        console.log(
-          '[Stream] Server accepted media input.',
-        )
-      })
-      .catch(async (error) => {
-        console.error(
-          '[Stream] Media upload failed:',
-          error,
-        )
-
-        if (
-          mediaRecorderRef.current
-        ) {
-          mediaRecorderRef.current.stop()
-          mediaRecorderRef.current =
-            null
-        }
-
-        streamMediaStreamRef.current
-          ?.getTracks()
-          .forEach((track) =>
-            track.stop(),
-          )
-
-        streamMediaStreamRef.current =
-          null
-
-        try {
-          await fetch(
-            '/api/stream/stop',
-            {
-              method: 'POST',
-            },
-          )
-        } catch {}
-
-        setStreaming(false)
-      })
   } catch (error) {
     console.error(
-      'START STREAMING ERROR:',
+      '[Stream] START ERROR:',
       error,
     )
 
-    try {
-      await fetch(
-        '/api/stream/stop',
-        {
-          method: 'POST',
-        },
-      )
-    } catch {}
+    streamAudioRef.current?.stop()
+    streamAudioRef.current =
+      null
 
-    mediaRecorderRef.current = null
+    if (
+      window.electronStream
+    ) {
+      try {
+        await window.electronStream.stop()
+      } catch {}
+    }
 
-    streamMediaStreamRef.current
-      ?.getTracks()
-      .forEach((track) =>
-        track.stop(),
-      )
-
-    streamMediaStreamRef.current = null
+    streamSessionRef.current =
+      null
 
     setStreaming(false)
+
+    window.alert(
+      `Unable to start streaming:\n\n${
+        error instanceof Error
+          ? error.message
+          : String(error)
+      }`,
+    )
   }
 }
 
 async function stopStreaming() {
-  try {
-    const recorder =
-      mediaRecorderRef.current
+  console.log(
+    '[Stream] Stopping native stream...',
+  )
 
-    if (recorder) {
-      if (
-        recorder.state !== 'inactive'
-      ) {
-        recorder.stop()
-      }
-
-      mediaRecorderRef.current = null
-    }
-
-    try {
-      streamUploadControllerRef.current?.close()
-    } catch {}
-
-    streamUploadControllerRef.current =
-      null
-
-    await fetch(
-      '/api/stream/stop',
-      {
-        method: 'POST',
-      },
+  if (
+    streamFrameTimerRef.current !==
+    null
+  ) {
+    window.clearTimeout(
+      streamFrameTimerRef.current,
     )
 
-    streamMediaStreamRef.current
-      ?.getTracks()
-      .forEach((track) =>
-        track.stop(),
-      )
+    streamFrameTimerRef.current =
+      null
+  }
 
-    streamMediaStreamRef.current = null
+  streamFrameBusyRef.current =
+    false
 
-    streamUploadRef.current = null
+  ;(
+    window as Window & {
+      __mssStreamCleanup?: () => void
+    }
+  ).__mssStreamCleanup?.()
+
+  ;(
+    window as Window & {
+      __mssStreamCleanup?: () => void
+    }
+  ).__mssStreamCleanup =
+    undefined
+
+  streamAudioRef.current?.stop()
+
+  streamAudioRef.current =
+    null
+
+  try {
+    await window.electronStream?.stop()
   } catch (error) {
     console.error(
-      'Stop streaming failed:',
+      '[Stream] Native stop failed:',
       error,
     )
-  } finally {
-    setStreaming(false)
   }
+
+  streamSessionRef.current =
+    null
+
+  setStreaming(false)
+  setUptime(0)
+
+  console.log(
+    '[Stream] Native stream stopped.',
+  )
 }
 
   if (!loggedIn) {
