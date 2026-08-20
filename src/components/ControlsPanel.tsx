@@ -2,12 +2,14 @@ import { CircleStop, Play, Radio } from 'lucide-react'
 
 interface ControlsPanelProps {
   streaming: boolean
+  uptime: number
   onStart: () => void
   onStop: () => void
 }
 
 export function ControlsPanel({
   streaming,
+  uptime,
   onStart,
   onStop,
 }: ControlsPanelProps) {
