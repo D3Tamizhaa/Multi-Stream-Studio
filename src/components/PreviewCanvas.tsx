@@ -277,15 +277,19 @@ export function PreviewCanvas({
   )
 
 useEffect(() => {
-  const canvas = streamCanvasRef.current
+  const canvas =
+    streamCanvasRef.current
 
-  if (canvas === null) {
+  if (!canvas) {
     return
   }
 
-  const ctx = canvas.getContext('2d')
+  const ctx =
+    canvas.getContext('2d', {
+      willReadFrequently: true,
+    })
 
-  if (ctx === null) {
+  if (!ctx) {
     return
   }
 
@@ -298,7 +302,8 @@ useEffect(() => {
     width: number,
   ) => {
     const fontSize =
-      source.properties.fontSize ?? 32
+      source.properties.fontSize ??
+      32
 
     const fontFamily =
       source.properties.fontFamily ||
@@ -317,31 +322,40 @@ useEffect(() => {
       source.properties.text ||
       source.name
 
-    const words = text.split(/\s+/)
+    const words =
+      text.split(/\s+/)
 
     const lines: string[] = []
 
     let currentLine = ''
 
     for (const word of words) {
-      const testLine = currentLine
-        ? `${currentLine} ${word}`
-        : word
+      const testLine =
+        currentLine
+          ? `${currentLine} ${word}`
+          : word
 
       if (
-        ctx.measureText(testLine).width >
-          width &&
+        ctx.measureText(
+          testLine,
+        ).width > width &&
         currentLine
       ) {
-        lines.push(currentLine)
+        lines.push(
+          currentLine,
+        )
+
         currentLine = word
       } else {
-        currentLine = testLine
+        currentLine =
+          testLine
       }
     }
 
     if (currentLine) {
-      lines.push(currentLine)
+      lines.push(
+        currentLine,
+      )
     }
 
     const lineHeight =
@@ -352,7 +366,9 @@ useEffect(() => {
         ctx.fillText(
           line,
           x,
-          y + index * lineHeight,
+          y +
+            index *
+              lineHeight,
         )
       },
     )
@@ -360,9 +376,10 @@ useEffect(() => {
 
   const drawFrame = () => {
     /*
-     * Clear the streaming canvas.
+     * Clear Program Output.
      */
-    ctx.fillStyle = '#000000'
+    ctx.fillStyle =
+      '#000000'
 
     ctx.fillRect(
       0,
@@ -371,24 +388,32 @@ useEffect(() => {
       CANVAS_HEIGHT,
     )
 
-    /*
-     * The visible preview is rendered inside
-     * canvasRef, not inside the hidden canvas.
-     */
     const previewRoot =
       canvasRef.current
 
-    if (previewRoot !== null) {
-      for (const source of visibleSources) {
+    if (previewRoot) {
+      for (
+        const source of visibleSources
+      ) {
         const bounds =
-          getSourceBounds(source)
+          getSourceBounds(
+            source,
+          )
 
-        const x = bounds.x
-        const y = bounds.y
-        const width = bounds.width
-        const height = bounds.height
+        const {
+          x,
+          y,
+          width,
+          height,
+        } = bounds
 
-        if (source.type === 'text') {
+        /*
+         * TEXT
+         */
+        if (
+          source.type ===
+          'text'
+        ) {
           drawText(
             source,
             x,
@@ -401,15 +426,17 @@ useEffect(() => {
 
         const layer =
           previewRoot.querySelector<HTMLElement>(
-            `.canvas-layer[data-source-id="${source.id}"]`,
+            `.canvas-layer[data-source-id="${CSS.escape(
+              source.id,
+            )}"]`,
           )
 
-        if (layer === null) {
+        if (!layer) {
           continue
         }
 
         /*
-         * Video source
+         * VIDEO / MEDIA
          */
         const video =
           layer.querySelector<HTMLVideoElement>(
@@ -417,8 +444,9 @@ useEffect(() => {
           )
 
         if (
-          video !== null &&
-          video.readyState >= 2
+          video &&
+          video.readyState >=
+            HTMLMediaElement.HAVE_CURRENT_DATA
         ) {
           try {
             ctx.drawImage(
@@ -428,9 +456,11 @@ useEffect(() => {
               width,
               height,
             )
-          } catch (error) {
+          } catch (
+            error
+          ) {
             console.warn(
-              '[Preview] Could not draw video:',
+              '[Program Output] Video draw failed:',
               source.name,
               error,
             )
@@ -440,7 +470,7 @@ useEffect(() => {
         }
 
         /*
-         * Image source
+         * IMAGE
          */
         const image =
           layer.querySelector<HTMLImageElement>(
@@ -448,51 +478,43 @@ useEffect(() => {
           )
 
         if (
-          image === null ||
-          !image.complete ||
-          image.naturalWidth <= 0
+          image &&
+          image.complete &&
+          image.naturalWidth > 0
         ) {
-          continue
-        }
-
-        try {
-          const imageUrl =
-            new URL(
-              image.currentSrc ||
-                image.src,
-              window.location.href,
+          try {
+            ctx.drawImage(
+              image,
+              x,
+              y,
+              width,
+              height,
             )
-
-          /*
-           * Only same-origin images can safely
-           * be copied into the streaming canvas.
-           */
-          if (
-            imageUrl.origin !==
-            window.location.origin
+          } catch (
+            error
           ) {
-            continue
+            console.warn(
+              '[Program Output] Image draw failed:',
+              source.name,
+              error,
+            )
           }
-
-          ctx.drawImage(
-            image,
-            x,
-            y,
-            width,
-            height,
-          )
-        } catch (error) {
-          console.warn(
-            '[Preview] Could not draw image:',
-            source.name,
-            error,
-          )
         }
+
+        /*
+         * Browser iframe sources cannot be
+         * copied into a canvas when cross-origin.
+         * They will require a future native browser
+         * capture source if you want their pixels
+         * included in Program Output.
+         */
       }
     }
 
     animationFrame =
-      requestAnimationFrame(drawFrame)
+      requestAnimationFrame(
+        drawFrame,
+      )
   }
 
   drawFrame()
@@ -502,7 +524,10 @@ useEffect(() => {
       animationFrame,
     )
   }
-}, [visibleSources])
+}, [
+  visibleSources,
+  sources,
+])
 
   function beginDrag(
   event: React.PointerEvent<HTMLDivElement>,
@@ -762,7 +787,7 @@ return (
 
       <canvas
   ref={streamCanvasRef}
-  data-stream-preview
+  data-program-output
   width={canvasWidth}
   height={canvasHeight}
   style={{ display: 'none' }}
