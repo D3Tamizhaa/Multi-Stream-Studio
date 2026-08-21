@@ -155,15 +155,7 @@ function loadSavedStudioState(): SavedStudioState {
 }
 
 export default function App() {
-    const [streaming, setStreaming] = useState(false)
-
-  const startStreaming = () => {
-    setStreaming(true)
-  }
-
-  const stopStreaming = () => {
-    setStreaming(false)
-  }
+  
   const [loggedIn, setLoggedIn] = useState(false)
   const [username, setUsername] = useState('User')
 
@@ -256,9 +248,6 @@ const [audioMonitoringMode, setAudioMonitoringMode] =
   audioMonitoringMode,
 ])
   
-  const [cpu, setCpu] = useState(0)
-  const [ram, setRam] = useState(0)
-
   const [modal, setModal] = useState<
     | 'scene'
     | 'source'
@@ -268,49 +257,6 @@ const [audioMonitoringMode, setAudioMonitoringMode] =
     | 'audio-properties'
     | null
   >(null)
-
-
-  useEffect(() => {
-  let cancelled = false
-
-  async function updateSystemStats() {
-    try {
-      const response = await fetch(
-  '/api/system-stats',
-  {
-    cache: 'no-store',
-  },
-)
-
-      if (!response.ok) {
-        throw new Error('Failed to read system stats')
-      }
-
-      const data = await response.json()
-
-      console.log('SYSTEM STATS RECEIVED:', data)
-
-      if (!cancelled) {
-        setCpu(Number(data.cpu) || 0)
-        setRam(Number(data.ram) || 0)
-      }
-    } catch (error) {
-      console.error('SYSTEM STATS FETCH FAILED:', error)
-    }
-  }
-
-  updateSystemStats()
-
-  const interval = window.setInterval(
-    updateSystemStats,
-    1000,
-  )
-
-  return () => {
-    cancelled = true
-    window.clearInterval(interval)
-  }
-}, [])
   
   function login(name: string) {
     setUsername(name)
@@ -657,11 +603,7 @@ onAdd={() => {
   onEdit={editPlatform}
 />
 
-                <ControlsPanel
-                  streaming={streaming}
-                  onStart={startStreaming}
-                  onStop={stopStreaming}
-                />
+                <ControlsPanel />
               </div>
             </>
           ) : (
@@ -735,11 +677,7 @@ if (settingsSection === 'Stream') {
 />
           )}
 
-          <UsageBar
-            streaming={streaming}
-            cpu={cpu}
-            ram={ram}
-          />
+          <UsageBar />
 
         </div>
       </div>
