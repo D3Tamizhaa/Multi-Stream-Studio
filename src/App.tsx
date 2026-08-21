@@ -551,7 +551,8 @@ setSettingsDraft((current) => ({
     ...current.stream,
     service,
     customServiceName:
-      service === 'Custom' ? platform.name : '',
+      customServiceName:
+  service === 'Custom' ? platform.customName ?? '' : '',
     server: platform.server,
     streamKey: platform.streamKey,
   },
@@ -756,34 +757,43 @@ if (settingsSection === 'Stream') {
     return
   }
 
-  const platformName: PlatformName =
-    stream.service === 'Custom'
-      ? customServiceName
-      : stream.service
+const platformName: PlatformName =
+  stream.service === 'Custom'
+    ? 'Custom'
+    : stream.service
 
   setPlatforms((current) => {
     // Existing platform edit
     if (selectedPlatform) {
       return current.map((platform): Platform =>
         platform.id === selectedPlatform
-          ? {
-              ...platform,
-              name: platformName,
-              server,
-              streamKey,
-            }
+? {
+    ...platform,
+    name: platformName,
+    customName:
+      stream.service === 'Custom'
+        ? customServiceName
+        : undefined,
+    server,
+    streamKey,
+  }
+
           : platform,
       )
     }
 
     // New platform
-    const newPlatform: Platform = {
-      id: `platform-${Date.now()}`,
-      name: platformName,
-      enabled: true,
-      server,
-      streamKey,
-    }
+const newPlatform: Platform = {
+  id: `platform-${Date.now()}`,
+  name: platformName,
+  customName:
+    stream.service === 'Custom'
+      ? customServiceName
+      : undefined,
+  enabled: true,
+  server,
+  streamKey,
+}
 
     setSelectedPlatform(newPlatform.id)
 
