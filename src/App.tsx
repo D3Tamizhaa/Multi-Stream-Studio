@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { AddPlatformModal } from './components/AddPlatformModal'
 import { AddSceneModal } from './components/AddSceneModal'
 import { AddSourceModal } from './components/AddSourceModal'
 import { AudioMixer } from './components/AudioMixer'
@@ -251,9 +250,7 @@ const [audioMonitoringMode, setAudioMonitoringMode] =
   const [modal, setModal] = useState<
     | 'scene'
     | 'source'
-    | 'platform'
     | 'source-properties'
-    | 'platform-edit'
     | 'audio-properties'
     | null
   >(null)
@@ -408,21 +405,6 @@ function removeSource() {
     setSources(next)
   }
 
-  function addOrUpdatePlatform(platform: Platform) {
-    setPlatforms((current) => {
-      const exists = current.some(
-        (item) => item.id === platform.id,
-      )
-
-      return exists
-        ? current.map((item) =>
-            item.id === platform.id ? platform : item,
-          )
-        : [...current, platform]
-    })
-
-    setModal(null)
-  }
 
 function removePlatform() {
   if (!selectedPlatform) return
@@ -707,23 +689,6 @@ if (settingsSection === 'Stream') {
           )}
           onClose={() => setModal(null)}
           onAdd={addOrUpdateSource}
-        />
-      )}
-
-      {modal === 'platform' && (
-        <AddPlatformModal
-          onClose={() => setModal(null)}
-          onAdd={addOrUpdatePlatform}
-        />
-      )}
-
-      {modal === 'platform-edit' && (
-        <AddPlatformModal
-          existing={platforms.find(
-            (platform) => platform.id === selectedSource,
-          )}
-          onClose={() => setModal(null)}
-          onAdd={addOrUpdatePlatform}
         />
       )}
 
