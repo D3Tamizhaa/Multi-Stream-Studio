@@ -69,23 +69,6 @@ function loadAuthCredentials(): AuthCredentials {
         }
       }
     }
-
-    const savedSettings = localStorage.getItem(
-      SETTINGS_STORAGE_KEY,
-    )
-
-    if (savedSettings) {
-      const parsed = JSON.parse(savedSettings)
-      const username = parsed.authorization?.username ?? ''
-      const password = parsed.authorization?.password ?? ''
-
-      if (username || password) {
-        return {
-          username,
-          password,
-        }
-      }
-    }
   } catch (error) {
     console.error(
       'Failed to load authentication credentials:',
@@ -94,8 +77,8 @@ function loadAuthCredentials(): AuthCredentials {
   }
 
   return {
-    username: '',
-    password: '',
+    username: 'admin',
+    password: 'admin',
   }
 }
 
@@ -331,40 +314,24 @@ function login(
 ): boolean {
   const stored = loadAuthCredentials()
 
-  /*
-   * First-time setup:
-   * If no credentials have ever been configured,
-   * use the first successful login as the initial account.
-   */
-  if (!stored.username && !stored.password) {
-    const initialCredentials = {
-      username: name,
-      password,
-    }
-
-    saveAuthCredentials(initialCredentials)
-
-    setAuthCredentials(initialCredentials)
-    setUsername(name)
-    setLoggedIn(true)
-
-    localStorage.setItem(
-      AUTH_SESSION_KEY,
-      'true',
-    )
-
-    setSettings((current) => ({
-      ...current,
-      authorization: initialCredentials,
-    }))
-
-    setSettingsDraft((current) => ({
-      ...current,
-      authorization: initialCredentials,
-    }))
-
-    return true
+  if (
+    name !== stored.username ||
+    password !== stored.password
+  ) {
+    return false
   }
+
+  setAuthCredentials(stored)
+  setUsername(stored.username)
+  setLoggedIn(true)
+
+  localStorage.setItem(
+    AUTH_SESSION_KEY,
+    'true',
+  )
+
+  return true
+}
 
   if (
     name !== stored.username ||
