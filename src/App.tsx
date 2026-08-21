@@ -592,6 +592,7 @@ setSettingsDraft((current) => ({
   onSettingsChange={setSettingsSection}
 />
 
+<div className="main-area">
 <div className="studio-workspace">
   <div className="editor-view">
     <div className="editor-main">
@@ -816,6 +817,7 @@ setSettingsDraft((current) => ({
   )}
 </div>
 <UsageBar />
+        </div>
         </div>
 
       {modal === 'scene' && (
