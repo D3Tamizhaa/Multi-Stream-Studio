@@ -675,7 +675,7 @@ setSettingsDraft((current) => ({
     ...current,
     stream: {
       ...current.stream,
-      service: 'YouTube',
+      service: 'Custom',
       customServiceName: '',
       server: '',
       streamKey: '',
