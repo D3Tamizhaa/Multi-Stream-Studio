@@ -81,9 +81,11 @@ export function PlatformsPanel({
 
             <Radio size={15} />
 
-            <span className="platform-name">
-              {platform.name}
-            </span>
+<span className="platform-name">
+  {platform.name === 'Custom'
+    ? platform.customName || 'Custom'
+    : platform.name}
+</span>
 
             <button
               className="edit-platform"
