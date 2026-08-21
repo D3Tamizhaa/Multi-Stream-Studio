@@ -166,6 +166,88 @@ button:disabled {
   color: var(--text);
 }
 
+.user-menu-container {
+  position: relative;
+  margin-left: auto;
+}
+
+.user-menu-container .user-menu {
+  margin-left: 0;
+}
+
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 100;
+
+  width: 190px;
+
+  padding: 6px;
+
+  border: 1px solid var(--border);
+  border-radius: 8px;
+
+  background: #0d1119;
+
+  box-shadow:
+    0 18px 45px rgba(0, 0, 0, 0.45),
+    0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.user-dropdown-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 9px 10px;
+
+  color: var(--text);
+
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 5px;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  overflow: hidden;
+}
+
+.user-dropdown-name span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-dropdown-item {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 9px 10px;
+
+  color: var(--muted);
+
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+
+  text-align: left;
+
+  font-size: 11px;
+}
+
+.user-dropdown-item:hover {
+  color: var(--text);
+  background: var(--panel-2);
+}
+
+.user-dropdown-item.logout:hover {
+  color: var(--red);
+}
+
 .avatar {
   width: 27px;
   height: 27px;
@@ -1808,6 +1890,20 @@ textarea {
   margin-top: 4px;
 }
 
+.login-error {
+  padding: 9px 10px;
+
+  color: #ff8a91;
+
+  background: rgba(255, 95, 105, 0.08);
+
+  border: 1px solid rgba(255, 95, 105, 0.22);
+  border-radius: 6px;
+
+  font-size: 10px;
+  line-height: 1.4;
+}
+
 .login-card small {
   color: var(--muted-2);
 
@@ -1970,11 +2066,6 @@ textarea {
 
   border-top: 1px solid var(--border);
 }
-
-.current-user {
-  display: none;
-}
-
 
 /* =========================================
    FILE PICKER
