@@ -35,18 +35,12 @@ async function createWindow() {
       backgroundColor:
         '#080b12',
 
-      webPreferences: {
-        preload: path.join(
-          __dirname,
-          'preload.cjs',
-        ),
+webPreferences: {
+  contextIsolation: true,
+  nodeIntegration: false,
+  sandbox: false,
+},
 
-        contextIsolation: true,
-
-        nodeIntegration: false,
-
-        sandbox: false,
-      },
     })
 
   const devMode =
