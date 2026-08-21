@@ -33,6 +33,8 @@ type Page = 'editor' | 'settings'
 
 const SETTINGS_STORAGE_KEY = 'multi-stream-studio-settings'
 const STUDIO_STORAGE_KEY = 'multi-stream-studio-editor'
+const AUTH_STORAGE_KEY = 'multi-stream-studio-auth'
+const AUTH_SESSION_KEY = 'multi-stream-studio-session'
 
 interface SavedStudioState {
   scenes: Scene[]
@@ -43,6 +45,65 @@ interface SavedStudioState {
   audioVolume: number
   audioMuted: boolean
   audioMonitoringMode: AudioMonitoringMode
+}
+
+interface AuthCredentials {
+  username: string
+  password: string
+}
+
+function loadAuthCredentials(): AuthCredentials {
+  try {
+    const saved = localStorage.getItem(AUTH_STORAGE_KEY)
+
+    if (saved) {
+      const parsed = JSON.parse(saved)
+
+      if (
+        typeof parsed.username === 'string' &&
+        typeof parsed.password === 'string'
+      ) {
+        return {
+          username: parsed.username,
+          password: parsed.password,
+        }
+      }
+    }
+
+    const savedSettings = localStorage.getItem(
+      SETTINGS_STORAGE_KEY,
+    )
+
+    if (savedSettings) {
+      const parsed = JSON.parse(savedSettings)
+      const username = parsed.authorization?.username ?? ''
+      const password = parsed.authorization?.password ?? ''
+
+      if (username || password) {
+        return {
+          username,
+          password,
+        }
+      }
+    }
+  } catch (error) {
+    console.error(
+      'Failed to load authentication credentials:',
+      error,
+    )
+  }
+
+  return {
+    username: '',
+    password: '',
+  }
+}
+
+function saveAuthCredentials(credentials: AuthCredentials) {
+  localStorage.setItem(
+    AUTH_STORAGE_KEY,
+    JSON.stringify(credentials),
+  )
 }
 
 const defaultStudioState: SavedStudioState = {
@@ -155,8 +216,17 @@ function loadSavedStudioState(): SavedStudioState {
 
 export default function App() {
   
-  const [loggedIn, setLoggedIn] = useState(false)
-  const [username, setUsername] = useState('User')
+const [authCredentials, setAuthCredentials] =
+  useState<AuthCredentials>(() => loadAuthCredentials())
+
+const [loggedIn, setLoggedIn] = useState(() => {
+  return localStorage.getItem(AUTH_SESSION_KEY) === 'true'
+})
+
+const [username, setUsername] = useState(() => {
+  const credentials = loadAuthCredentials()
+  return credentials.username || 'User'
+})
 
   const [collapsed, setCollapsed] = useState(false)
   const [page, setPage] = useState<Page>('editor')
@@ -255,10 +325,73 @@ const [audioMonitoringMode, setAudioMonitoringMode] =
     | null
   >(null)
   
-  function login(name: string) {
+function login(
+  name: string,
+  password: string,
+): boolean {
+  const stored = loadAuthCredentials()
+
+  /*
+   * First-time setup:
+   * If no credentials have ever been configured,
+   * use the first successful login as the initial account.
+   */
+  if (!stored.username && !stored.password) {
+    const initialCredentials = {
+      username: name,
+      password,
+    }
+
+    saveAuthCredentials(initialCredentials)
+
+    setAuthCredentials(initialCredentials)
     setUsername(name)
     setLoggedIn(true)
+
+    localStorage.setItem(
+      AUTH_SESSION_KEY,
+      'true',
+    )
+
+    setSettings((current) => ({
+      ...current,
+      authorization: initialCredentials,
+    }))
+
+    setSettingsDraft((current) => ({
+      ...current,
+      authorization: initialCredentials,
+    }))
+
+    return true
   }
+
+  if (
+    name !== stored.username ||
+    password !== stored.password
+  ) {
+    return false
+  }
+
+  setAuthCredentials(stored)
+  setUsername(stored.username)
+  setLoggedIn(true)
+
+  localStorage.setItem(
+    AUTH_SESSION_KEY,
+    'true',
+  )
+
+  return true
+}
+  
+function logout() {
+  localStorage.removeItem(AUTH_SESSION_KEY)
+
+  setLoggedIn(false)
+  setPage('editor')
+  setSettingsSection('Authorization')
+}
 
   function addScene(name: string) {
     const scene: Scene = {
@@ -466,10 +599,12 @@ setSettingsDraft((current) => ({
 
   return (
     <div className="app-shell">
-      <Header
-        collapsed={collapsed}
-        onMenu={() => setCollapsed((value) => !value)}
-      />
+<Header
+  collapsed={collapsed}
+  username={username}
+  onMenu={() => setCollapsed((value) => !value)}
+  onLogout={logout}
+/>
 
       <div className="app-body">
 <Navigation
@@ -596,6 +731,27 @@ onAdd={() => {
     setSettings(nextSettings)
     setSettingsDraft(nextSettings)
 
+    if (settingsSection === 'Authorization') {
+  const nextCredentials = {
+    username: nextSettings.authorization.username.trim(),
+    password: nextSettings.authorization.password,
+  }
+
+  if (!nextCredentials.username) {
+    return
+  }
+
+  saveAuthCredentials(nextCredentials)
+
+  setAuthCredentials(nextCredentials)
+  setUsername(nextCredentials.username)
+
+  localStorage.setItem(
+    AUTH_SESSION_KEY,
+    'true',
+  )
+}
+
     try {
       localStorage.setItem(
         SETTINGS_STORAGE_KEY,
@@ -662,10 +818,6 @@ if (settingsSection === 'Stream') {
           <UsageBar />
 
         </div>
-      </div>
-
-      <div className="current-user" aria-hidden="true">
-        {username}
       </div>
 
       {modal === 'scene' && (
