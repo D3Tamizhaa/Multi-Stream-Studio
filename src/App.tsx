@@ -245,8 +245,6 @@ const [selectedPlatform, setSelectedPlatform] =
     savedStudioState.selectedPlatform,
   )
   
-  const [streamError, setStreamError] = useState('')
-
   const [settings, setSettings] =
   useState<StudioSettings>(() => loadSavedSettings())
 
@@ -744,21 +742,19 @@ if (settingsSection === 'Stream') {
   const customServiceName = stream.customServiceName.trim()
 
   if (!server) {
-    setStreamError('Server is required.')
+    console.error('Server is required.')
     return
   }
 
   if (!streamKey) {
-    setStreamError('Stream Key is required.')
+    console.error('Stream key is required.')
     return
   }
 
   if (stream.service === 'Custom' && !customServiceName) {
-    setStreamError('Service Name is required for Custom service.')
+    console.error('Service Name is required for Custom service.')
     return
   }
-
-  setStreamError('')
 
   const platformName: PlatformName =
     stream.service === 'Custom'
@@ -766,6 +762,7 @@ if (settingsSection === 'Stream') {
       : stream.service
 
   setPlatforms((current) => {
+    // Existing platform edit
     if (selectedPlatform) {
       return current.map((platform): Platform =>
         platform.id === selectedPlatform
@@ -779,6 +776,7 @@ if (settingsSection === 'Stream') {
       )
     }
 
+    // New platform
     const newPlatform: Platform = {
       id: `platform-${Date.now()}`,
       name: platformName,
