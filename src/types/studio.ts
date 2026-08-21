@@ -9,6 +9,34 @@ export type AudioMonitoringMode =
   | 'monitor-only'
   | 'monitor-and-output'
 
+export type StreamingStatus =
+  | 'idle'
+  | 'starting'
+  | 'streaming'
+  | 'stopping'
+  | 'error'
+
+export interface FfmpegInputConfig {
+  inputArgs: string[]
+  videoArgs: string[]
+  audioArgs: string[]
+  advancedArgs: string[]
+}
+
+export interface PlatformStreamStatus {
+  platformId: string
+  enabled: boolean
+  connected: boolean
+  error?: string
+}
+
+export interface StreamingState {
+  status: StreamingStatus
+  startedAt: number | null
+  platforms: PlatformStreamStatus[]
+  error: string | null
+}
+
 export type SettingsSection =
   | 'Authorization'
   | 'Stream'
@@ -86,14 +114,15 @@ stream: {
   streamKey: string
 }
   output: {
-    encoder: string
-    rateControl: string
-    bitrate: string
-    keyframeInterval: string
-    preset: string
-    profile: string
-    tune: string
-  }
+    encoder: 'H.264',
+    rateControl: 'CBR',
+    bitrate: '2500',
+    keyframeInterval: '2',
+    preset: 'veryfast',
+    profile: 'High',
+    tune: 'zerolatency',
+}
+
   audio: {
     encoder: string
     bitrate: string
@@ -106,7 +135,11 @@ stream: {
     fps: string
   }
   advanced: {
-    automaticallyReconnect: boolean
-    network: string
+    automaticallyReconnect: true,
+    network: 'Auto',
+    ffmpegInputArgs: '',
+    ffmpegOutputArgs: '',
+    ffmpegAudioArgs: '',
+    ffmpegVideoArgs: '',
   }
 }
