@@ -743,22 +743,22 @@ if (settingsSection === 'Stream') {
   const streamKey = stream.streamKey.trim()
   const customServiceName = stream.customServiceName.trim()
 
-if (!server) {
-  setStreamError('Server is required.')
-  return
-}
+  if (!server) {
+    setStreamError('Server is required.')
+    return
+  }
 
-if (!streamKey) {
-  setStreamError('Stream Key is required.')
-  return
-}
+  if (!streamKey) {
+    setStreamError('Stream Key is required.')
+    return
+  }
 
-if (stream.service === 'Custom' && !customServiceName) {
-  setStreamError('Service Name is required for Custom service.')
-  return
-}
+  if (stream.service === 'Custom' && !customServiceName) {
+    setStreamError('Service Name is required for Custom service.')
+    return
+  }
 
-setStreamError('')
+  setStreamError('')
 
   const platformName: PlatformName =
     stream.service === 'Custom'
@@ -766,7 +766,6 @@ setStreamError('')
       : stream.service
 
   setPlatforms((current) => {
-    // Existing platform edit
     if (selectedPlatform) {
       return current.map((platform): Platform =>
         platform.id === selectedPlatform
@@ -780,7 +779,6 @@ setStreamError('')
       )
     }
 
-    // New platform
     const newPlatform: Platform = {
       id: `platform-${Date.now()}`,
       name: platformName,
@@ -792,7 +790,7 @@ setStreamError('')
     setSelectedPlatform(newPlatform.id)
 
     return [...current, newPlatform]
-  }
+  })
 }
 
     setPage('editor')
