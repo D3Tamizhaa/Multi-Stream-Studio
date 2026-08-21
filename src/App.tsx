@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AddSceneModal } from './components/AddSceneModal'
+import { ScenePropertiesModal } from './components/ScenePropertiesModal'
 import { AddSourceModal } from './components/AddSourceModal'
 import { AudioMixer } from './components/AudioMixer'
 import { AudioPropertiesModal } from './components/AudioPropertiesModal'
@@ -300,13 +301,14 @@ const [audioMonitoringMode, setAudioMonitoringMode] =
   audioMonitoringMode,
 ])
   
-  const [modal, setModal] = useState<
-    | 'scene'
-    | 'source'
-    | 'source-properties'
-    | 'audio-properties'
-    | null
-  >(null)
+const [modal, setModal] = useState<
+  | 'scene'
+  | 'scene-properties'
+  | 'source'
+  | 'source-properties'
+  | 'audio-properties'
+  | null
+>(null)
   
 function login(
   name: string,
@@ -351,6 +353,25 @@ function logout() {
     setActiveScene(scene.id)
     setModal(null)
   }
+
+function updateSceneName(name: string) {
+  const trimmedName = name.trim()
+
+  if (!trimmedName) return
+
+  setScenes((current) =>
+    current.map((scene) =>
+      scene.id === activeScene
+        ? {
+            ...scene,
+            name: trimmedName,
+          }
+        : scene,
+    ),
+  )
+
+  setModal(null)
+}
 
 function removeScene() {
   if (scenes.length <= 1) return
@@ -607,6 +628,7 @@ setSettingsDraft((current) => ({
   }}
   onAdd={() => setModal('scene')}
   onRemove={removeScene}
+  onProperties={() => setModal('scene-properties')}
   onMove={moveScene}
 />
 
@@ -646,7 +668,7 @@ setSettingsDraft((current) => ({
   platforms={platforms}
   selectedPlatform={selectedPlatform}
   onSelect={selectPlatform}
-onAdd={() => {
+  onAdd={() => {
   setSelectedPlatform(null)
 
   setSettingsDraft((current) => ({
@@ -750,14 +772,11 @@ if (settingsSection === 'Stream') {
   })
 }
 
-    // Apply = commit everything + return to editor
     setPage('editor')
   }}
   onCancel={() => {
-    // Throw away entire settings session
     setSettingsDraft(settings)
 
-    // Return to editor without changing saved settings
     setPage('editor')
   }}
 />
@@ -774,6 +793,18 @@ if (settingsSection === 'Stream') {
           onAdd={addScene}
         />
       )}
+      
+      {modal === 'scene-properties' && (
+  <ScenePropertiesModal
+    sceneName={
+      scenes.find(
+        (scene) => scene.id === activeScene,
+      )?.name ?? ''
+    }
+    onClose={() => setModal(null)}
+    onSave={updateSceneName}
+  />
+)}
 
       {modal === 'source' && (
         <AddSourceModal
