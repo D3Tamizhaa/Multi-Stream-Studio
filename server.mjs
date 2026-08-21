@@ -1,5 +1,4 @@
 import http from 'node:http'
-import os from 'node:os'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -7,65 +6,6 @@ import { fileURLToPath } from 'node:url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PORT = Number(process.env.PORT) || 3001
 const DIST = path.join(__dirname, 'dist')
-
-let previousCpu = null
-
-function getCpuSnapshot() {
-  const cpus = os.cpus()
-
-  let idle = 0
-  let total = 0
-
-  for (const cpu of cpus) {
-    const times = cpu.times
-
-    idle += times.idle
-    total +=
-      times.user +
-      times.nice +
-      times.sys +
-      times.idle +
-      times.irq
-  }
-
-  return { idle, total }
-}
-
-function getCpuUsage() {
-  const current = getCpuSnapshot()
-
-  if (!previousCpu) {
-    previousCpu = current
-    return 0
-  }
-
-  const idleDelta = current.idle - previousCpu.idle
-  const totalDelta = current.total - previousCpu.total
-
-  previousCpu = current
-
-  if (totalDelta <= 0) {
-    return 0
-  }
-
-  const usage = 100 - (idleDelta / totalDelta) * 100
-
-  return Math.max(0, Math.min(100, usage))
-}
-
-function getSystemStats() {
-  const totalMemory = os.totalmem()
-  const freeMemory = os.freemem()
-  const usedMemory = totalMemory - freeMemory
-
-  return {
-    cpu: Number(getCpuUsage().toFixed(1)),
-    ram: Number(((usedMemory / totalMemory) * 100).toFixed(1)),
-    ramUsed: usedMemory,
-    ramTotal: totalMemory,
-    platform: process.platform,
-  }
-}
 
 function sendJson(res, status, data) {
   res.writeHead(status, {
