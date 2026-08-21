@@ -402,6 +402,7 @@ button:disabled {
 .studio-workspace {
   position: relative;
 
+  width: 100%;
   min-width: 0;
   min-height: 0;
 
@@ -1539,12 +1540,20 @@ p {
    ========================================= */
 
 .usage-bar {
+  width: 100%;
+  min-width: 0;
+
+  height: 55px;
   min-height: 55px;
+
   flex: 0 0 55px;
 
   display: grid;
 
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(
+    6,
+    minmax(0, 1fr)
+  );
 
   border-top: 1px solid var(--border);
 
