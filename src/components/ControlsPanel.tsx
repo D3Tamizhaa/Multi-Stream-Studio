@@ -1,4 +1,5 @@
 import { CircleStop, Play, Radio } from 'lucide-react'
+import type { StreamingStatus } from '../types/studio'
 
 interface ControlsPanelProps {
   streaming: boolean
