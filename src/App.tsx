@@ -823,4 +823,3 @@ if (settingsSection === 'Stream') {
 
     </div>
   )
-}
