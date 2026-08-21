@@ -815,11 +815,7 @@ setSettingsDraft((current) => ({
     </div>
   )}
 </div>
-
 <UsageBar />
-
-        </div>
-      </div>
 
       {modal === 'scene' && (
         <AddSceneModal
