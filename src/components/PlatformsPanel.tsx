@@ -1,9 +1,9 @@
 import {
   Check,
-  Minus,
   Pencil,
   Plus,
   Radio,
+  Trash2,
 } from 'lucide-react'
 import type { Platform } from '../types/studio'
 
@@ -48,7 +48,7 @@ export function PlatformsPanel({
             disabled={!selectedPlatform}
             title="Remove platform"
           >
-            <Minus size={15} />
+            <Trash2 size={15} />
           </button>
         </div>
       </div>
