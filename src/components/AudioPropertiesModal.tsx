@@ -18,19 +18,19 @@ const monitoringOptions: {
     value: 'off',
     title: 'Monitor Off',
     description:
-      'Audio is sent to the stream output only. You will not hear it locally.',
+      'Audio is sent to FFmpeg output only. No local monitor audio is played.',
   },
   {
     value: 'monitor-only',
     title: 'Monitor Only',
     description:
-      'Audio is played through your local monitor only. Stream output is muted.',
+      'Audio is played through the local monitor only. FFmpeg receives no audio.',
   },
   {
     value: 'monitor-and-output',
     title: 'Monitor and Output',
     description:
-      'Audio is played through your local monitor and sent to the stream output.',
+      'Audio is played through the local monitor and sent to FFmpeg output.',
   },
 ]
 
