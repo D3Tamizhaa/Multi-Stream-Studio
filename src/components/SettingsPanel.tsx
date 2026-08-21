@@ -519,14 +519,15 @@ function cancel() {
     Cancel
   </button>
 
-  <button
-    type="button"
-    className="primary-button"
-    onClick={apply}
-  >
-    <Check size={15} />
-    Apply
-  </button>
+<button
+  type="button"
+  className="primary-button"
+  onClick={apply}
+>
+  <Check size={15} />
+  {section === 'Authorization' ? 'Update' : 'Apply'}
+</button>
+
 </div>
       </div>
     </main>
