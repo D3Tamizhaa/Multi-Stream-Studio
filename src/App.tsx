@@ -333,25 +333,6 @@ function login(
   return true
 }
 
-  if (
-    name !== stored.username ||
-    password !== stored.password
-  ) {
-    return false
-  }
-
-  setAuthCredentials(stored)
-  setUsername(stored.username)
-  setLoggedIn(true)
-
-  localStorage.setItem(
-    AUTH_SESSION_KEY,
-    'true',
-  )
-
-  return true
-}
-  
 function logout() {
   localStorage.removeItem(AUTH_SESSION_KEY)
 
