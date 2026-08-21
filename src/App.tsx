@@ -245,6 +245,8 @@ const [selectedPlatform, setSelectedPlatform] =
     savedStudioState.selectedPlatform,
   )
   
+  const [streamError, setStreamError] = useState('')
+
   const [settings, setSettings] =
   useState<StudioSettings>(() => loadSavedSettings())
 
@@ -737,9 +739,30 @@ setSettingsDraft((current) => ({
 if (settingsSection === 'Stream') {
   const stream = nextSettings.stream
 
+  const server = stream.server.trim()
+  const streamKey = stream.streamKey.trim()
+  const customServiceName = stream.customServiceName.trim()
+
+if (!server) {
+  setStreamError('Server is required.')
+  return
+}
+
+if (!streamKey) {
+  setStreamError('Stream Key is required.')
+  return
+}
+
+if (stream.service === 'Custom' && !customServiceName) {
+  setStreamError('Service Name is required for Custom service.')
+  return
+}
+
+setStreamError('')
+
   const platformName: PlatformName =
     stream.service === 'Custom'
-      ? 'Custom'
+      ? customServiceName
       : stream.service
 
   setPlatforms((current) => {
@@ -750,8 +773,8 @@ if (settingsSection === 'Stream') {
           ? {
               ...platform,
               name: platformName,
-              server: stream.server,
-              streamKey: stream.streamKey,
+              server,
+              streamKey,
             }
           : platform,
       )
@@ -762,14 +785,14 @@ if (settingsSection === 'Stream') {
       id: `platform-${Date.now()}`,
       name: platformName,
       enabled: true,
-      server: stream.server,
-      streamKey: stream.streamKey,
+      server,
+      streamKey,
     }
 
     setSelectedPlatform(newPlatform.id)
 
     return [...current, newPlatform]
-  })
+  }
 }
 
     setPage('editor')
