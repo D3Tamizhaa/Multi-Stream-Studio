@@ -84,10 +84,6 @@ function serveStatic(req, res) {
   })
 }
 
-/*
- * IMPORTANT:
- * The server must be declared BEFORE server.listen().
- */
 const server = http.createServer((req, res) => {
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
@@ -97,14 +93,6 @@ const server = http.createServer((req, res) => {
     })
 
     res.end()
-    return
-  }
-
-  if (
-    req.method === 'GET' &&
-    req.url.startsWith('/api/system-stats')
-  ) {
-    sendJson(res, 200, getSystemStats())
     return
   }
 
