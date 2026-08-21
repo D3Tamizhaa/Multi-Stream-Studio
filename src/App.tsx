@@ -199,7 +199,7 @@ function loadSavedStudioState(): SavedStudioState {
 
 export default function App() {
   
-const [authCredentials, setAuthCredentials] =
+const [, setAuthCredentials] =
   useState<AuthCredentials>(() => loadAuthCredentials())
 
 const [loggedIn, setLoggedIn] = useState(() => {
