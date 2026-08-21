@@ -592,226 +592,231 @@ setSettingsDraft((current) => ({
   onSettingsChange={setSettingsSection}
 />
 
-        <div className="main-area">
-          {page === 'editor' ? (
-            <>
-              <div className="editor-main">
-<PreviewCanvas
-  sources={sources.filter(
-    (source) => source.sceneId === activeScene,
+<div className="studio-workspace">
+  <div className="editor-view">
+    <div className="editor-main">
+      <PreviewCanvas
+        sources={sources.filter(
+          (source) => source.sceneId === activeScene,
+        )}
+        enabled={previewEnabled}
+        onToggle={() =>
+          setPreviewEnabled((value) => !value)
+        }
+        selectedSource={selectedSource}
+        onSelectSource={setSelectedSource}
+        onUpdateSource={updateSource}
+        baseResolution={settings.video.baseResolution}
+        outputResolution={settings.video.outputResolution}
+        volume={audioVolume}
+        muted={audioMuted}
+        monitoringMode={audioMonitoringMode}
+      />
+    </div>
+
+    <div className="workspace-grid">
+      <ScenesPanel
+        scenes={scenes}
+        activeScene={activeScene}
+        onSelect={(sceneId) => {
+          setActiveScene(sceneId)
+
+          setSelectedSource(
+            sources.find(
+              (source) => source.sceneId === sceneId,
+            )?.id ?? null,
+          )
+        }}
+        onAdd={() => setModal('scene')}
+        onRemove={removeScene}
+        onProperties={() => setModal('scene-properties')}
+        onMove={moveScene}
+      />
+
+      <SourcesPanel
+        sources={sources.filter(
+          (source) => source.sceneId === activeScene,
+        )}
+        selectedSource={selectedSource}
+        onSelect={setSelectedSource}
+        onAdd={() => setModal('source')}
+        onRemove={removeSource}
+        onToggleVisibility={toggleSourceVisibility}
+        onToggleLock={toggleSourceLock}
+        onProperties={() =>
+          selectedSource && setModal('source-properties')
+        }
+        onMove={moveSource}
+      />
+
+      <AudioMixer
+        volume={audioVolume}
+        muted={audioMuted}
+        monitoringMode={audioMonitoringMode}
+        onVolumeChange={setAudioVolume}
+        onMuteToggle={() =>
+          setAudioMuted((value) => !value)
+        }
+        onProperties={() =>
+          setModal('audio-properties')
+        }
+      />
+    </div>
+
+    <div className="stream-grid">
+      <PlatformsPanel
+        platforms={platforms}
+        selectedPlatform={selectedPlatform}
+        onSelect={selectPlatform}
+        onAdd={() => {
+          setSelectedPlatform(null)
+
+          setSettingsDraft((current) => ({
+            ...current,
+            stream: {
+              ...current.stream,
+              service: 'Custom',
+              customServiceName: '',
+              server: '',
+              streamKey: '',
+            },
+          }))
+
+          setPage('settings')
+          setSettingsSection('Stream')
+        }}
+        onRemove={removePlatform}
+        onToggle={togglePlatform}
+        onEdit={editPlatform}
+      />
+
+      <ControlsPanel />
+    </div>
+  </div>
+
+  {page === 'settings' && (
+    <div className="settings-overlay">
+      <SettingsPanel
+        section={settingsSection}
+        settings={settingsDraft}
+        onApply={(nextSettings) => {
+          setSettings(nextSettings)
+          setSettingsDraft(nextSettings)
+
+          if (settingsSection === 'Authorization') {
+            const nextCredentials = {
+              username: nextSettings.authorization.username.trim(),
+              password: nextSettings.authorization.password,
+            }
+
+            if (!nextCredentials.username) {
+              return
+            }
+
+            saveAuthCredentials(nextCredentials)
+
+            setAuthCredentials(nextCredentials)
+            setUsername(nextCredentials.username)
+
+            localStorage.setItem(
+              AUTH_SESSION_KEY,
+              'true',
+            )
+          }
+
+          try {
+            localStorage.setItem(
+              SETTINGS_STORAGE_KEY,
+              JSON.stringify(nextSettings),
+            )
+          } catch (error) {
+            console.error(
+              'Failed to save settings:',
+              error,
+            )
+          }
+
+          if (settingsSection === 'Stream') {
+            const stream = nextSettings.stream
+            const server = stream.server.trim()
+            const streamKey = stream.streamKey.trim()
+            const customServiceName =
+              stream.customServiceName.trim()
+
+            if (!server) {
+              console.error('Server is required.')
+              return
+            }
+
+            if (!streamKey) {
+              console.error('Stream key is required.')
+              return
+            }
+
+            if (
+              stream.service === 'Custom' &&
+              !customServiceName
+            ) {
+              console.error(
+                'Service Name is required for Custom service.',
+              )
+              return
+            }
+
+            const platformName: PlatformName =
+              stream.service === 'Custom'
+                ? 'Custom'
+                : stream.service
+
+            setPlatforms((current) => {
+              if (selectedPlatform) {
+                return current.map(
+                  (platform): Platform =>
+                    platform.id === selectedPlatform
+                      ? {
+                          ...platform,
+                          name: platformName,
+                          customName:
+                            stream.service === 'Custom'
+                              ? stream.customServiceName
+                              : undefined,
+                          server: stream.server,
+                          streamKey: stream.streamKey,
+                        }
+                      : platform,
+                )
+              }
+
+              const newPlatform: Platform = {
+                id: `platform-${Date.now()}`,
+                name: platformName,
+                customName:
+                  stream.service === 'Custom'
+                    ? stream.customServiceName
+                    : undefined,
+                enabled: true,
+                server: stream.server,
+                streamKey: stream.streamKey,
+              }
+
+              setSelectedPlatform(newPlatform.id)
+
+              return [...current, newPlatform]
+            })
+          }
+
+          setPage('editor')
+        }}
+        onCancel={() => {
+          setSettingsDraft(settings)
+          setPage('editor')
+        }}
+      />
+    </div>
   )}
-  enabled={previewEnabled}
-  onToggle={() =>
-    setPreviewEnabled((value) => !value)
-  }
-  selectedSource={selectedSource}
-  onSelectSource={setSelectedSource}
-  onUpdateSource={updateSource}
-  baseResolution={settings.video.baseResolution}
-  outputResolution={settings.video.outputResolution}
-  volume={audioVolume}
-  muted={audioMuted}
-  monitoringMode={audioMonitoringMode}
-/>
 </div>
 
-              <div className="workspace-grid">
-<ScenesPanel
-  scenes={scenes}
-  activeScene={activeScene}
-  onSelect={(sceneId) => {
-    setActiveScene(sceneId)
-
-    setSelectedSource(
-      sources.find(
-        (source) => source.sceneId === sceneId,
-      )?.id ?? null,
-    )
-  }}
-  onAdd={() => setModal('scene')}
-  onRemove={removeScene}
-  onProperties={() => setModal('scene-properties')}
-  onMove={moveScene}
-/>
-
- <SourcesPanel
-  sources={sources.filter(
-    (source) => source.sceneId === activeScene,
-  )}
-  selectedSource={selectedSource}
-  onSelect={setSelectedSource}
-  onAdd={() => setModal('source')}
-  onRemove={removeSource}
-  onToggleVisibility={toggleSourceVisibility}
-  onToggleLock={toggleSourceLock}
-  onProperties={() =>
-    selectedSource && setModal('source-properties')
-  }
-  onMove={moveSource}
-/>
-
- <AudioMixer
-  volume={audioVolume}
-  muted={audioMuted}
-  monitoringMode={audioMonitoringMode}
-  onVolumeChange={setAudioVolume}
-  onMuteToggle={() =>
-    setAudioMuted((value) => !value)
-  }
-  onProperties={() =>
-    setModal('audio-properties')
-  }
-/>
-
-              </div>
-
-              <div className="stream-grid">
-                <PlatformsPanel
-  platforms={platforms}
-  selectedPlatform={selectedPlatform}
-  onSelect={selectPlatform}
-  onAdd={() => {
-  setSelectedPlatform(null)
-
-  setSettingsDraft((current) => ({
-    ...current,
-    stream: {
-      ...current.stream,
-      service: 'Custom',
-      customServiceName: '',
-      server: '',
-      streamKey: '',
-    },
-  }))
-
-  setPage('settings')
-  setSettingsSection('Stream')
-}}
-  onRemove={removePlatform}
-  onToggle={togglePlatform}
-  onEdit={editPlatform}
-/>
-
-                <ControlsPanel />
-              </div>
-            </>
-          ) : (
-<SettingsPanel
-  section={settingsSection}
-  settings={settingsDraft}
-  onApply={(nextSettings) => {
-    setSettings(nextSettings)
-    setSettingsDraft(nextSettings)
-
-    if (settingsSection === 'Authorization') {
-  const nextCredentials = {
-    username: nextSettings.authorization.username.trim(),
-    password: nextSettings.authorization.password,
-  }
-
-  if (!nextCredentials.username) {
-    return
-  }
-
-  saveAuthCredentials(nextCredentials)
-
-  setAuthCredentials(nextCredentials)
-  setUsername(nextCredentials.username)
-
-  localStorage.setItem(
-    AUTH_SESSION_KEY,
-    'true',
-  )
-}
-
-    try {
-      localStorage.setItem(
-        SETTINGS_STORAGE_KEY,
-        JSON.stringify(nextSettings),
-      )
-    } catch (error) {
-      console.error(
-        'Failed to save settings:',
-        error,
-      )
-    }
-
-if (settingsSection === 'Stream') {
-  const stream = nextSettings.stream
-
-  const server = stream.server.trim()
-  const streamKey = stream.streamKey.trim()
-  const customServiceName = stream.customServiceName.trim()
-
-  if (!server) {
-    console.error('Server is required.')
-    return
-  }
-
-  if (!streamKey) {
-    console.error('Stream key is required.')
-    return
-  }
-
-  if (stream.service === 'Custom' && !customServiceName) {
-    console.error('Service Name is required for Custom service.')
-    return
-  }
-
-const platformName: PlatformName =
-  stream.service === 'Custom'
-    ? 'Custom'
-    : stream.service
-
-  setPlatforms((current) => {
-    // Existing platform edit
-    if (selectedPlatform) {
-      return current.map((platform): Platform =>
-        platform.id === selectedPlatform
-          ? {
-              ...platform,
-              name: platformName,
-              customName:
-                stream.service === 'Custom'
-                  ? stream.customServiceName
-                  : undefined,
-              server: stream.server,
-              streamKey: stream.streamKey,
-            }
-          : platform,
-      )
-    }
-
-    // New platform
-    const newPlatform: Platform = {
-      id: `platform-${Date.now()}`,
-      name: platformName,
-      customName:
-        stream.service === 'Custom'
-          ? stream.customServiceName
-          : undefined,
-      enabled: true,
-      server: stream.server,
-      streamKey: stream.streamKey,
-    }
-
-    setSelectedPlatform(newPlatform.id)
-
-    return [...current, newPlatform]
-  })
-}
-
-    setPage('editor')
-  }}
-  onCancel={() => {
-    setSettingsDraft(settings)
-
-    setPage('editor')
-  }}
-/>
-          )}
-
-          <UsageBar />
+<UsageBar />
 
         </div>
       </div>
