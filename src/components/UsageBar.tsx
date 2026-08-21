@@ -1,48 +1,38 @@
-interface UsageBarProps {
-  streaming: boolean
-  cpu: number
-  ram: number
-}
-
-export function UsageBar({
-  streaming,
-  cpu,
-  ram,
-}: UsageBarProps) {
+export function UsageBar() {
   return (
     <footer className="usage-bar">
       <div className="metric">
         <span>Uptime</span>
+        <strong>--</strong>
       </div>
 
       <div className="metric">
         <span>Bitrate</span>
         <strong>
-          {streaming ? '6000' : '0'}{' '}
-          <small>kbit/s</small>
+          -- <small>kbit/s</small>
         </strong>
       </div>
 
       <div className="metric">
         <span>FPS</span>
-        <strong>{streaming ? '60' : '0'}</strong>
+        <strong>--</strong>
       </div>
 
       <div className="metric">
         <span>CPU</span>
-        <strong>{cpu.toFixed(1)}%</strong>
+        <strong>--</strong>
       </div>
 
       <div className="metric">
         <span>RAM</span>
-        <strong>{ram.toFixed(1)}%</strong>
+        <strong>--</strong>
       </div>
 
       <div className="status-metric">
         <span>Status</span>
-        <strong className={streaming ? 'online' : 'offline'}>
+        <strong className="offline">
           <i />
-          {streaming ? 'Streaming' : 'Offline'}
+          Offline
         </strong>
       </div>
     </footer>
