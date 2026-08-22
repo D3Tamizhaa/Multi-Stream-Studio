@@ -1,12 +1,5 @@
-import {
-  CircleStop,
-  Play,
-  Radio,
-} from 'lucide-react'
-
-import type {
-  StreamingStatus,
-} from '../types/studio'
+import { CircleStop, Play, Radio } from 'lucide-react'
+import type { StreamingStatus } from '../types/studio'
 
 interface ControlsPanelProps {
   streaming: boolean
@@ -15,18 +8,7 @@ interface ControlsPanelProps {
   onStop: () => void
 }
 
-export function ControlsPanel({
-  streaming,
-  status,
-  onStart,
-  onStop,
-}: ControlsPanelProps) {
-  const starting =
-    status === 'starting'
-
-  const stopping =
-    status === 'stopping'
-
+export function ControlsPanel() {
   return (
     <section className="bottom-panel controls-panel">
       <div className="panel-header">
@@ -36,55 +18,32 @@ export function ControlsPanel({
       </div>
 
       <div className="control-buttons">
-        <button
-          type="button"
-          className="start-stream-button"
-          onClick={onStart}
-          disabled={
-            streaming ||
-            starting ||
-            stopping
-          }
-        >
-          <Play
-            size={16}
-            fill="currentColor"
-          />
+        
+<button
+  type="button"
+  className="start-stream-button"
+  onClick={onStart}
+  disabled={streaming}
+>
+  <Play size={16} fill="currentColor" />
+  Start Streaming
+</button>
 
-          {starting
-            ? 'Starting Streaming...'
-            : 'Start Streaming'}
-        </button>
+<button
+  type="button"
+  className="end-stream-button"
+  onClick={onStop}
+  disabled={!streaming}
+>
+  <CircleStop size={16} />
+  End Streaming
+</button>
 
-        <button
-          type="button"
-          className="end-stream-button"
-          onClick={onStop}
-          disabled={
-            !streaming &&
-            !starting
-          }
-        >
-          <CircleStop size={16} />
-
-          {stopping
-            ? 'Ending Streaming...'
-            : 'End Streaming'}
-        </button>
       </div>
 
       <div className="control-note">
         <Radio size={12} />
-
-        {status === 'streaming'
-          ? 'FFmpeg streaming active'
-          : status === 'starting'
-            ? 'Starting FFmpeg'
-            : status === 'stopping'
-              ? 'Stopping FFmpeg'
-              : status === 'error'
-                ? 'Streaming error'
-                : 'Streaming idle'}
+        Streaming controls unavailable
       </div>
     </section>
   )
