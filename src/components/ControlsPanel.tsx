@@ -1,12 +1,4 @@
 import { CircleStop, Play, Radio } from 'lucide-react'
-import type { StreamingStatus } from '../types/studio'
-
-interface ControlsPanelProps {
-  streaming: boolean
-  status: StreamingStatus
-  onStart: () => void
-  onStop: () => void
-}
 
 export function ControlsPanel() {
   return (
@@ -18,27 +10,23 @@ export function ControlsPanel() {
       </div>
 
       <div className="control-buttons">
-        
-<button
-  type="button"
-  className="start-stream-button"
-  onClick={onStart}
-  disabled={streaming}
->
-  <Play size={16} fill="currentColor" />
-  Start Streaming
-</button>
+        <button
+          type="button"
+          className="start-stream-button"
+          disabled
+        >
+          <Play size={16} fill="currentColor" />
+          Start Streaming
+        </button>
 
-<button
-  type="button"
-  className="end-stream-button"
-  onClick={onStop}
-  disabled={!streaming}
->
-  <CircleStop size={16} />
-  End Streaming
-</button>
-
+        <button
+          type="button"
+          className="end-stream-button"
+          disabled
+        >
+          <CircleStop size={16} />
+          End Streaming
+        </button>
       </div>
 
       <div className="control-note">
