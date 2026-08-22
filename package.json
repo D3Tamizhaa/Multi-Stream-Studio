@@ -7,15 +7,14 @@
   },
   "type": "module",
   "description": "Multi Stream Studio - browser-based live production studio UI",
-"scripts": {
-  "dev": "concurrently -k \"vite --host 127.0.0.1\" \"node server.mjs\" \"electron electron/main.cjs\"",
-  "build": "tsc -b && vite build",
-  "desktop": "electron electron/main.cjs",
-  "start": "node server.mjs",
-  "preview": "vite preview",
-  "lint": "tsc --noEmit",
-  "check:ffmpeg": "node electron/ffmpeg-check.cjs"
-},
+  "scripts": {
+    "dev": "concurrently -k \"vite --host 127.0.0.1\" \"node server.mjs\" \"electron electron/main.cjs\"",
+    "build": "tsc -b && vite build",
+    "desktop": "electron electron/main.cjs",
+    "start": "node server.mjs",
+    "preview": "vite preview",
+    "lint": "tsc --noEmit"
+  },
   "dependencies": {
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",
