@@ -14,7 +14,6 @@ import { ScenesPanel } from './components/ScenesPanel'
 import { SettingsPanel } from './components/SettingsPanel'
 import { SourcesPanel } from './components/SourcesPanel'
 import { UsageBar } from './components/UsageBar'
-
 import {
   defaultPlatforms,
   defaultScenes,
@@ -29,18 +28,6 @@ import type {
   SettingsSection,
   Source,
   StudioSettings,
-} from './types/studio'
-
-import {
-  startFfmpegStreaming,
-  stopFfmpegStreaming,
-  subscribeToStreamingEvents,
-} from './services/ffmpeg'
-
-import type {
-  FfmpegStreamConfig,
-  StreamingState,
-  StreamingEvent,
 } from './types/studio'
 
 type Page = 'editor' | 'settings'
@@ -313,93 +300,6 @@ const [audioMonitoringMode, setAudioMonitoringMode] =
   audioMuted,
   audioMonitoringMode,
 ])
-
-  const [streamingState, setStreamingState] =
-  useState<StreamingState>({
-    status: 'idle',
-    startedAt: null,
-    platforms: platforms.map(
-      (platform) => ({
-        platformId: platform.id,
-        enabled: platform.enabled,
-        connected: false,
-      }),
-    ),
-    error: null,
-  })
-
-const [programCanvas, setProgramCanvas] =
-  useState<HTMLCanvasElement | null>(null)
-
-  useEffect(() => {
-  return subscribeToStreamingEvents(
-    (event: StreamingEvent) => {
-      if (event.type === 'started') {
-        setStreamingState(
-          (current) => ({
-            ...current,
-            status: 'streaming',
-            startedAt:
-              event.startedAt,
-            error: null,
-          }),
-        )
-      }
-
-      if (event.type === 'connected') {
-        setStreamingState(
-          (current) => ({
-            ...current,
-            platforms:
-              current.platforms.map(
-                (platform) =>
-                  platform.platformId ===
-                  event.platformId
-                    ? {
-                        ...platform,
-                        connected: true,
-                        error: undefined,
-                      }
-                    : platform,
-              ),
-          }),
-        )
-      }
-
-      if (event.type === 'error') {
-        setStreamingState(
-          (current) => ({
-            ...current,
-            status: 'error',
-            error: event.error,
-          }),
-        )
-      }
-
-      if (event.type === 'exit') {
-        setStreamingState(
-          (current) => ({
-            ...current,
-            status: event.intentional
-              ? 'idle'
-              : 'error',
-            startedAt:
-              event.intentional
-                ? null
-                : current.startedAt,
-            platforms:
-              current.platforms.map(
-                (platform) => ({
-                  ...platform,
-                  connected: false,
-                }),
-              ),
-          }),
-        )
-      }
-    },
-  )
-}, [])
   
 const [modal, setModal] = useState<
   | 'scene'
@@ -607,6 +507,7 @@ function removeSource() {
     setSources(next)
   }
 
+
 function removePlatform() {
   if (!selectedPlatform) return
 
@@ -661,285 +562,6 @@ setSettingsDraft((current) => ({
   setPage('settings')
   setSettingsSection('Stream')
 }
-
-  function tokenizeFfmpegArgs(
-  value: string,
-): string[] {
-  const result: string[] = []
-
-  const regex =
-    /"([^"]*)"|'([^']*)'|[^\s]+/g
-
-  let match: RegExpExecArray | null
-
-  while (
-    (match = regex.exec(value)) !== null
-  ) {
-    result.push(
-      match[1] ??
-        match[2] ??
-        match[0],
-    )
-  }
-
-  return result
-}
-
-  function parseResolution(
-  value: string,
-) {
-  const match =
-    value.match(
-      /^(\d+)\s*x\s*(\d+)$/i,
-    )
-
-  if (!match) {
-    throw new Error(
-      `Invalid output resolution: ${value}`,
-    )
-  }
-
-  return {
-    width: Number(match[1]),
-    height: Number(match[2]),
-  }
-}
-  
-  function buildEnabledOutputs() {
-  return platforms
-    .filter(
-      (platform) =>
-        platform.enabled,
-    )
-    .map((platform) => {
-      const server =
-        platform.server.trim()
-
-      const streamKey =
-        platform.streamKey.trim()
-
-      if (!server) {
-        throw new Error(
-          `${platform.name}: server is required.`,
-        )
-      }
-
-      if (!streamKey) {
-        throw new Error(
-          `${platform.name}: stream key is required.`,
-        )
-      }
-
-      return {
-        platformId:
-          platform.id,
-
-        platformName:
-          platform.name,
-
-        url:
-          `${server.replace(/\/+$/, '')}/${streamKey}`,
-      }
-    })
-}
-
-function isFfmpegAudioEnabled() {
-  return (
-    audioMonitoringMode ===
-      'off' ||
-    audioMonitoringMode ===
-      'monitor-and-output'
-  )
-}
-
-  function getFfmpegVolume() {
-  return Math.max(
-    0,
-    Math.min(
-      1,
-      audioVolume / 100,
-    ),
-  )
-}
-
-async function startStreaming() {
-  if (
-    streamingState.status ===
-      'starting' ||
-    streamingState.status ===
-      'streaming'
-  ) {
-    return
-  }
-
-  try {
-    const outputs =
-      buildEnabledOutputs()
-
-    if (outputs.length === 0) {
-      throw new Error(
-        'Enable at least one streaming platform.',
-      )
-    }
-
-    if (!programCanvas) {
-      throw new Error(
-        'Program output canvas is unavailable.',
-      )
-    }
-
-    const {
-      width,
-      height,
-    } = parseResolution(
-      settings.video.outputResolution,
-    )
-
-    const fps = Number(
-      settings.video.fps
-        .replace(' NTSC', ''),
-    )
-
-    if (!Number.isFinite(fps)) {
-      throw new Error(
-        'Invalid FPS value.',
-      )
-    }
-
-    const audioEnabled =
-      isFfmpegAudioEnabled()
-
-    const audioArgs =
-      tokenizeFfmpegArgs(
-        settings.advanced
-          .ffmpegAudioArgs,
-      )
-
-    if (
-      audioEnabled &&
-      audioVolume !== 100
-    ) {
-      audioArgs.push(
-        '-af',
-        `volume=${getFfmpegVolume()}`,
-      )
-    }
-
-    const config:
-      FfmpegStreamConfig = {
-        inputArgs:
-          tokenizeFfmpegArgs(
-            settings.advanced
-              .ffmpegInputArgs,
-          ),
-
-        videoArgs:
-          tokenizeFfmpegArgs(
-            settings.advanced
-              .ffmpegVideoArgs,
-          ),
-
-        audioArgs,
-
-        advancedArgs:
-          tokenizeFfmpegArgs(
-            settings.advanced
-              .ffmpegOutputArgs,
-          ),
-
-        video: {
-          width,
-          height,
-          fps,
-        },
-
-        audio: {
-          enabled:
-            audioEnabled,
-          volume:
-            getFfmpegVolume(),
-        },
-
-        outputs,
-      }
-
-    setStreamingState({
-      status: 'starting',
-      startedAt: null,
-      platforms:
-        platforms.map(
-          (platform) => ({
-            platformId:
-              platform.id,
-            enabled:
-              platform.enabled,
-            connected: false,
-          }),
-        ),
-      error: null,
-    })
-
-    const result =
-      await startFfmpegStreaming(
-        config,
-      )
-
-    if (!result.ok) {
-      throw new Error(
-        result.error ??
-          'FFmpeg failed to start.',
-      )
-    }
-  } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : String(error)
-
-    setStreamingState(
-      (current) => ({
-        ...current,
-        status: 'error',
-        error: message,
-      }),
-    )
-  }
-}
-
-async function stopStreaming() {
-  if (
-    streamingState.status ===
-      'idle'
-  ) {
-    return
-  }
-
-  setStreamingState(
-    (current) => ({
-      ...current,
-      status: 'stopping',
-    }),
-  )
-
-  try {
-    await stopFfmpegStreaming()
-  } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : String(error)
-
-    setStreamingState(
-      (current) => ({
-        ...current,
-        status: 'error',
-        error: message,
-      }),
-    )
-  }
-}
-
-
   
 
   if (!loggedIn) {
@@ -974,41 +596,23 @@ async function stopStreaming() {
 <div className="studio-workspace">
   <div className="editor-view">
     <div className="editor-main">
-<PreviewCanvas
-  sources={sources.filter(
-    (source) =>
-      source.sceneId === activeScene,
-  )}
-  enabled={previewEnabled}
-  onToggle={() =>
-    setPreviewEnabled(
-      (value) => !value,
-    )
-  }
-  selectedSource={
-    selectedSource
-  }
-  onSelectSource={
-    setSelectedSource
-  }
-  onUpdateSource={
-    updateSource
-  }
-  baseResolution={
-    settings.video.baseResolution
-  }
-  outputResolution={
-    settings.video.outputResolution
-  }
-  volume={audioVolume}
-  muted={audioMuted}
-  monitoringMode={
-    audioMonitoringMode
-  }
-  onProgramCanvasReady={
-    setProgramCanvas
-  }
-/>
+      <PreviewCanvas
+        sources={sources.filter(
+          (source) => source.sceneId === activeScene,
+        )}
+        enabled={previewEnabled}
+        onToggle={() =>
+          setPreviewEnabled((value) => !value)
+        }
+        selectedSource={selectedSource}
+        onSelectSource={setSelectedSource}
+        onUpdateSource={updateSource}
+        baseResolution={settings.video.baseResolution}
+        outputResolution={settings.video.outputResolution}
+        volume={audioVolume}
+        muted={audioMuted}
+        monitoringMode={audioMonitoringMode}
+      />
     </div>
 
     <div className="workspace-grid">
@@ -1046,27 +650,18 @@ async function stopStreaming() {
         onMove={moveSource}
       />
 
-<AudioMixer
-  volume={audioVolume}
-  monitorMuted={audioMuted}
-  monitoringMode={
-    audioMonitoringMode
-  }
-  onVolumeChange={
-    setAudioVolume
-  }
-  onMonitorMuteToggle={() =>
-    setAudioMuted(
-      (value) => !value,
-    )
-  }
-  onProperties={() =>
-    setModal(
-      'audio-properties',
-    )
-  }
-/>
-
+      <AudioMixer
+        volume={audioVolume}
+        muted={audioMuted}
+        monitoringMode={audioMonitoringMode}
+        onVolumeChange={setAudioVolume}
+        onMuteToggle={() =>
+          setAudioMuted((value) => !value)
+        }
+        onProperties={() =>
+          setModal('audio-properties')
+        }
+      />
     </div>
 
     <div className="stream-grid">
@@ -1096,24 +691,7 @@ async function stopStreaming() {
         onEdit={editPlatform}
       />
 
-      <ControlsPanel
-  streaming={
-    streamingState.status ===
-      'streaming' ||
-    streamingState.status ===
-      'starting'
-  }
-  status={
-    streamingState.status
-  }
-  onStart={
-    startStreaming
-  }
-  onStop={
-    stopStreaming
-  }
-/>
-
+      <ControlsPanel />
     </div>
   </div>
 
