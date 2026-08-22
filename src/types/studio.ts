@@ -23,6 +23,32 @@ export interface FfmpegInputConfig {
   advancedArgs: string[]
 }
 
+export interface FfmpegOutput {
+  platformId: string
+  platformName: PlatformName
+  url: string
+}
+
+export interface FfmpegStreamConfig {
+  inputArgs: string[]
+  videoArgs: string[]
+  audioArgs: string[]
+  advancedArgs: string[]
+
+  video: {
+    width: number
+    height: number
+    fps: number
+  }
+
+  audio: {
+    enabled: boolean
+    volume: number
+  }
+
+  outputs: FfmpegOutput[]
+}
+
 export interface PlatformStreamStatus {
   platformId: string
   enabled: boolean
@@ -36,6 +62,38 @@ export interface StreamingState {
   platforms: PlatformStreamStatus[]
   error: string | null
 }
+
+export type StreamingEvent =
+  | {
+      type: 'started'
+      startedAt: number
+    }
+  | {
+      type: 'connected'
+      platformId: string
+    }
+  | {
+      type: 'disconnected'
+      platformId: string
+    }
+  | {
+      type: 'stderr'
+      data: string
+    }
+  | {
+      type: 'stdout'
+      data: string
+    }
+  | {
+      type: 'error'
+      error: string
+    }
+  | {
+      type: 'exit'
+      code: number | null
+      signal: string | null
+      intentional: boolean
+    }
 
 export type SettingsSection =
   | 'Authorization'
@@ -134,12 +192,12 @@ stream: {
     outputResolution: string
     fps: string
   }
-  advanced: {
-    automaticallyReconnect: true,
-    network: 'Auto',
-    ffmpegInputArgs: '',
-    ffmpegOutputArgs: '',
-    ffmpegAudioArgs: '',
-    ffmpegVideoArgs: '',
-  }
+advanced: {
+  automaticallyReconnect: boolean
+  network: 'Auto' | 'IPv4' | 'IPv6'
+  ffmpegInputArgs: string
+  ffmpegOutputArgs: string
+  ffmpegAudioArgs: string
+  ffmpegVideoArgs: string
+}
 }
