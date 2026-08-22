@@ -7,10 +7,10 @@ import type { AudioMonitoringMode } from '../types/studio'
 
 interface AudioMixerProps {
   volume: number
-  monitorMuted: boolean
+  muted: boolean
   monitoringMode: AudioMonitoringMode
   onVolumeChange: (value: number) => void
-  onMonitorMuteToggle: () => void
+  onMuteToggle: () => void
   onProperties: () => void
 }
 
