@@ -171,14 +171,15 @@ stream: {
   server: string
   streamKey: string
 }
-  output: {
-    encoder: 'H.264',
-    rateControl: 'CBR',
-    bitrate: '2500',
-    keyframeInterval: '2',
-    preset: 'veryfast',
-    profile: 'High',
-    tune: 'zerolatency',
+  
+output: {
+  encoder: string
+  rateControl: string
+  bitrate: string
+  keyframeInterval: string
+  preset: string
+  profile: string
+  tune: string
 }
 
   audio: {
