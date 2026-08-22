@@ -974,23 +974,41 @@ async function stopStreaming() {
 <div className="studio-workspace">
   <div className="editor-view">
     <div className="editor-main">
-      <PreviewCanvas
-        sources={sources.filter(
-          (source) => source.sceneId === activeScene,
-        )}
-        enabled={previewEnabled}
-        onToggle={() =>
-          setPreviewEnabled((value) => !value)
-        }
-        selectedSource={selectedSource}
-        onSelectSource={setSelectedSource}
-        onUpdateSource={updateSource}
-        baseResolution={settings.video.baseResolution}
-        outputResolution={settings.video.outputResolution}
-        volume={audioVolume}
-        muted={audioMuted}
-        monitoringMode={audioMonitoringMode}
-      />
+<PreviewCanvas
+  sources={sources.filter(
+    (source) =>
+      source.sceneId === activeScene,
+  )}
+  enabled={previewEnabled}
+  onToggle={() =>
+    setPreviewEnabled(
+      (value) => !value,
+    )
+  }
+  selectedSource={
+    selectedSource
+  }
+  onSelectSource={
+    setSelectedSource
+  }
+  onUpdateSource={
+    updateSource
+  }
+  baseResolution={
+    settings.video.baseResolution
+  }
+  outputResolution={
+    settings.video.outputResolution
+  }
+  volume={audioVolume}
+  muted={audioMuted}
+  monitoringMode={
+    audioMonitoringMode
+  }
+  onProgramCanvasReady={
+    setProgramCanvas
+  }
+/>
     </div>
 
     <div className="workspace-grid">
@@ -1028,18 +1046,27 @@ async function stopStreaming() {
         onMove={moveSource}
       />
 
-      <AudioMixer
-        volume={audioVolume}
-        muted={audioMuted}
-        monitoringMode={audioMonitoringMode}
-        onVolumeChange={setAudioVolume}
-        onMuteToggle={() =>
-          setAudioMuted((value) => !value)
-        }
-        onProperties={() =>
-          setModal('audio-properties')
-        }
-      />
+<AudioMixer
+  volume={audioVolume}
+  monitorMuted={audioMuted}
+  monitoringMode={
+    audioMonitoringMode
+  }
+  onVolumeChange={
+    setAudioVolume
+  }
+  onMonitorMuteToggle={() =>
+    setAudioMuted(
+      (value) => !value,
+    )
+  }
+  onProperties={() =>
+    setModal(
+      'audio-properties',
+    )
+  }
+/>
+
     </div>
 
     <div className="stream-grid">
@@ -1069,7 +1096,24 @@ async function stopStreaming() {
         onEdit={editPlatform}
       />
 
-      <ControlsPanel />
+      <ControlsPanel
+  streaming={
+    streamingState.status ===
+      'streaming' ||
+    streamingState.status ===
+      'starting'
+  }
+  status={
+    streamingState.status
+  }
+  onStart={
+    startStreaming
+  }
+  onStop={
+    stopStreaming
+  }
+/>
+
     </div>
   </div>
 
