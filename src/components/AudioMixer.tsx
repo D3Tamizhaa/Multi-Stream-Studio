@@ -25,10 +25,10 @@ const monitoringLabels: Record<
 
 export function AudioMixer({
   volume,
-  monitorMuted,
+  muted,
   monitoringMode,
   onVolumeChange,
-  onMonitorMuteToggle,
+  onMuteToggle,
   onProperties,
 }: AudioMixerProps) {
   return (
@@ -47,17 +47,17 @@ export function AudioMixer({
           <button
             type="button"
             className={`volume-mute-button ${
-              monitorMuted ? 'muted' : ''
+              muted ? 'muted' : ''
             }`}
-            onClick={onMonitorMuteToggle}
+            onClick={onMuteToggle}
             aria-label={
-              monitorMuted
+              muted
                 ? 'Unmute audio'
                 : 'Mute audio'
             }
-            title={monitorMuted ? 'Unmute' : 'Mute'}
+            title={muted ? 'Unmute' : 'Mute'}
           >
-            {monitorMuted ? (
+            {muted ? (
               <VolumeX size={14} />
             ) : (
               <Volume2 size={14} />
