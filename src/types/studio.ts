@@ -9,32 +9,11 @@ export type AudioMonitoringMode =
   | 'monitor-only'
   | 'monitor-and-output'
 
-export type StreamingStatus =
-  | 'idle'
-  | 'starting'
-  | 'streaming'
-  | 'stopping'
-  | 'error'
-
-export interface FfmpegInputConfig {
-  inputArgs: string[]
-  videoArgs: string[]
-  audioArgs: string[]
-  advancedArgs: string[]
-}
-
 export interface PlatformStreamStatus {
   platformId: string
   enabled: boolean
   connected: boolean
   error?: string
-}
-
-export interface StreamingState {
-  status: StreamingStatus
-  startedAt: number | null
-  platforms: PlatformStreamStatus[]
-  error: string | null
 }
 
 export type SettingsSection =
@@ -137,9 +116,5 @@ stream: {
   advanced: {
     automaticallyReconnect: true,
     network: 'Auto',
-    ffmpegInputArgs: '',
-    ffmpegOutputArgs: '',
-    ffmpegAudioArgs: '',
-    ffmpegVideoArgs: '',
   }
 }
