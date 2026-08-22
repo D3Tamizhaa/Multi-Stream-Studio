@@ -47,17 +47,17 @@ export function AudioMixer({
           <button
             type="button"
             className={`volume-mute-button ${
-              muted ? 'muted' : ''
+              monitorMuted ? 'muted' : ''
             }`}
-            onClick={onMuteToggle}
+            onClick={onMonitorMuteToggle}
             aria-label={
-              muted
+              monitorMuted
                 ? 'Unmute audio'
                 : 'Mute audio'
             }
-            title={muted ? 'Unmute' : 'Mute'}
+            title={monitorMuted ? 'Unmute' : 'Mute'}
           >
-            {muted ? (
+            {monitorMuted ? (
               <VolumeX size={14} />
             ) : (
               <Volume2 size={14} />
