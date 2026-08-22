@@ -28,6 +28,10 @@ interface PreviewCanvasProps {
   volume?: number
   muted?: boolean
   monitoringMode?: AudioMonitoringMode
+
+  onProgramCanvasReady?: (
+  canvas: HTMLCanvasElement | null,
+) => void
 }
 
 function parseResolution(value: string) {
@@ -243,6 +247,7 @@ export function PreviewCanvas({
   volume = 80,
   muted = false,
   monitoringMode = 'off',
+  onProgramCanvasReady,
 }: PreviewCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null)
   const streamCanvasRef = useRef<HTMLCanvasElement>(null)
