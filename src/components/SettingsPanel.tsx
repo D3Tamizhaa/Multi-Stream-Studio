@@ -348,6 +348,23 @@ function cancel() {
 <option>None</option>
               </select>
             </Field>
+            
+<Field label="FFmpeg Output Arguments">
+  <textarea
+    value={draft.advanced.ffmpegOutputArgs}
+    onChange={(event) =>
+      update('advanced', {
+        ...draft.advanced,
+        ffmpegOutputArgs: event.target.value,
+      })
+    }
+    placeholder="-f flv"
+    rows={4}
+  />
+  <small className="field-hint">
+    Additional FFmpeg output arguments.
+  </small>
+</Field>
           </div>
         )}
 
@@ -434,7 +451,7 @@ function cancel() {
   </small>
 </Field>
 
-<Field label="Output Resolution (Stream)">
+<Field label="Output Resolution (Output)">
   <select
     value={draft.video.outputResolution}
     onChange={(event) =>
@@ -468,46 +485,135 @@ function cancel() {
                   <option key={value}>{value}</option>
                 ))}
               </select>
+              
+<small className="field-hint">
+  Stream output frame rate.
+</small>
+              
             </Field>
           </div>
         )}
 
-        {section === 'Advanced' && (
-          <div className="settings-form">
-            <label className="checkbox-setting">
-              <input
-                type="checkbox"
-                checked={draft.advanced.automaticallyReconnect}
-                onChange={(event) =>
-                  update('advanced', {
-                    ...draft.advanced,
-                    automaticallyReconnect: event.target.checked,
-                  })
-                }
-              />
-              <span>
-                <strong>Automatically Reconnect</strong>
-                <small>Reconnect after a temporary network interruption.</small>
-              </span>
-            </label>
+{section === 'Advanced' && (
+  <div className="settings-form">
+    <label className="checkbox-setting">
+      <input
+        type="checkbox"
+        checked={
+          draft.advanced.automaticallyReconnect
+        }
+        onChange={(event) =>
+          update('advanced', {
+            ...draft.advanced,
+            automaticallyReconnect:
+              event.target.checked,
+          })
+        }
+      />
 
-            <Field label="Network">
-              <select
-                value={draft.advanced.network}
-                onChange={(event) =>
-                  update('advanced', {
-                    ...draft.advanced,
-                    network: event.target.value,
-                  })
-                }
-              >
-                <option>Auto</option>
-                <option>IPv4</option>
-                <option>IPv6</option>
-              </select>
-            </Field>
-          </div>
-        )}
+      <span>
+        <strong>Automatically Reconnect</strong>
+        <small>
+          Reconnect after an unexpected FFmpeg/network
+          failure. Never reconnect after End Streaming.
+        </small>
+      </span>
+    </label>
+
+    <Field label="Network">
+      <select
+        value={draft.advanced.network}
+        onChange={(event) =>
+          update('advanced', {
+            ...draft.advanced,
+            network:
+              event.target.value as
+                StudioSettings['advanced']['network'],
+          })
+        }
+      >
+        <option value="Auto">Auto</option>
+        <option value="IPv4">IPv4</option>
+        <option value="IPv6">IPv6</option>
+      </select>
+    </Field>
+
+    <Field label="FFmpeg Input Arguments">
+      <textarea
+        value={draft.advanced.ffmpegInputArgs}
+        onChange={(event) =>
+          update('advanced', {
+            ...draft.advanced,
+            ffmpegInputArgs:
+              event.target.value,
+          })
+        }
+        placeholder="-re"
+        rows={5}
+      />
+      <small className="field-hint">
+        Input-side FFmpeg arguments such as -i,
+        -re, -thread_queue_size, etc.
+      </small>
+    </Field>
+
+    <Field label="FFmpeg Video Arguments">
+      <textarea
+        value={draft.advanced.ffmpegVideoArgs}
+        onChange={(event) =>
+          update('advanced', {
+            ...draft.advanced,
+            ffmpegVideoArgs:
+              event.target.value,
+          })
+        }
+        placeholder="-c:v libx264 -preset veryfast"
+        rows={5}
+      />
+      <small className="field-hint">
+        FFmpeg video arguments such as -c:v,
+        -b:v, -r, -g, -vf, etc.
+      </small>
+    </Field>
+
+    <Field label="FFmpeg Audio Arguments">
+      <textarea
+        value={draft.advanced.ffmpegAudioArgs}
+        onChange={(event) =>
+          update('advanced', {
+            ...draft.advanced,
+            ffmpegAudioArgs:
+              event.target.value,
+          })
+        }
+        placeholder="-c:a aac -b:a 160k"
+        rows={5}
+      />
+      <small className="field-hint">
+        FFmpeg audio arguments such as -c:a,
+        -b:a, -ar, -ac, -af, etc.
+      </small>
+    </Field>
+
+    <Field label="FFmpeg Output Arguments">
+      <textarea
+        value={draft.advanced.ffmpegOutputArgs}
+        onChange={(event) =>
+          update('advanced', {
+            ...draft.advanced,
+            ffmpegOutputArgs:
+              event.target.value,
+          })
+        }
+        placeholder="-f flv"
+        rows={5}
+      />
+      <small className="field-hint">
+        Additional FFmpeg output/muxer arguments.
+      </small>
+    </Field>
+  </div>
+)}
 
 <div className="settings-actions">
   <button
