@@ -1,7 +1,27 @@
 const {
   app,
   BrowserWindow,
+  ipcMain,
 } = require('electron')
+
+const { FfmpegManager } =
+  require('./ffmpeg-manager.cjs')
+
+let mainWindow = null
+
+const ffmpegManager =
+  new FfmpegManager()
+
+function sendStreamingEvent(data) {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    return
+  }
+
+  mainWindow.webContents.send(
+    'streaming:event',
+    data,
+  )
+}
 
 const path = require('node:path')
 const fs = require('node:fs')
@@ -36,6 +56,10 @@ async function createWindow() {
         '#080b12',
 
 webPreferences: {
+  preload: path.join(
+    __dirname,
+    'preload.cjs',
+  ),
   contextIsolation: true,
   nodeIntegration: false,
   sandbox: false,
@@ -87,6 +111,70 @@ webPreferences: {
     },
   )
 }
+
+ipcMain.handle(
+  'streaming:start',
+  async (_event, config) => {
+    try {
+      const result =
+        ffmpegManager.start(
+          config,
+          sendStreamingEvent,
+        )
+
+      return {
+        ok: true,
+        ...result,
+      }
+    } catch (error) {
+      sendStreamingEvent({
+        type: 'error',
+        error: error.message,
+      })
+
+      return {
+        ok: false,
+        error: error.message,
+      }
+    }
+  },
+)
+
+ipcMain.handle(
+  'streaming:stop',
+  async () => {
+    ffmpegManager.stop()
+
+    return {
+      ok: true,
+    }
+  },
+)
+
+ipcMain.handle(
+  'streaming:status',
+  async () => {
+    return ffmpegManager.status()
+  },
+)
+
+ipcMain.on(
+  'streaming:video-frame',
+  (_event, data) => {
+    ffmpegManager.writeVideoFrame(
+      Buffer.from(data),
+    )
+  },
+)
+
+ipcMain.on(
+  'streaming:audio-chunk',
+  (_event, data) => {
+    ffmpegManager.writeAudioChunk(
+      Buffer.from(data),
+    )
+  },
+)
 
 app.whenReady().then(
   async () => {
