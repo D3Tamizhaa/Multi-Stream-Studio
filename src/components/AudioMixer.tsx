@@ -25,10 +25,10 @@ const monitoringLabels: Record<
 
 export function AudioMixer({
   volume,
-  muted,
+  monitorMuted,
   monitoringMode,
   onVolumeChange,
-  onMuteToggle,
+  onMonitorMuteToggle,
   onProperties,
 }: AudioMixerProps) {
   return (
