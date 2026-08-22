@@ -52,8 +52,12 @@ video: {
   fps: '30',
 },
 
-  advanced: {
-    automaticallyReconnect: true,
-    network: 'Auto',
-  },
+advanced: {
+  automaticallyReconnect: true,
+  network: 'Auto',
+  ffmpegInputArgs: '',
+  ffmpegOutputArgs: '',
+  ffmpegAudioArgs: '',
+  ffmpegVideoArgs: '',
+},
 }
