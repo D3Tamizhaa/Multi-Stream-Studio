@@ -251,6 +251,16 @@ export function PreviewCanvas({
 }: PreviewCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null)
   const streamCanvasRef = useRef<HTMLCanvasElement>(null)
+  useEffect(() => {
+  onProgramCanvasReady?.(
+    streamCanvasRef.current,
+  )
+
+  return () => {
+    onProgramCanvasReady?.(null)
+  }
+}, [onProgramCanvasReady])
+
   const interactionRef =
     useRef<Interaction>(null)
 
