@@ -86,21 +86,23 @@ export interface StudioSettings {
     username: string
     password: string
   }
-stream: {
-  service: PlatformName
-  customServiceName: string
-  server: string
-  streamKey: string
-}
+
+  stream: {
+    service: PlatformName
+    customServiceName: string
+    server: string
+    streamKey: string
+  }
+
   output: {
-    encoder: 'H.264',
-    rateControl: 'CBR',
-    bitrate: '2500',
-    keyframeInterval: '2',
-    preset: 'veryfast',
-    profile: 'High',
-    tune: 'zerolatency',
-}
+    encoder: string
+    rateControl: string
+    bitrate: string
+    keyframeInterval: string
+    preset: string
+    profile: string
+    tune: string
+  }
 
   audio: {
     encoder: string
@@ -108,13 +110,15 @@ stream: {
     sampleRate: string
     channels: string
   }
+
   video: {
     baseResolution: string
     outputResolution: string
     fps: string
   }
+
   advanced: {
-    automaticallyReconnect: true,
-    network: 'Auto',
+    automaticallyReconnect: boolean
+    network: string
   }
 }
