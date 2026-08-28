@@ -98,6 +98,7 @@ class StreamManager extends EventEmitter {
 
     this.proc.stderr.on('data', (chunk) => {
       const line = chunk.toString();
+      console.log('[FFMPEG]', line.trim());
       this._parseProgress(line);
       if (this.status === 'starting' && /Opening|Stream mapping|frame=/.test(line)) {
         this.status = 'live';
