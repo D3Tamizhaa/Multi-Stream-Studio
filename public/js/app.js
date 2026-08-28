@@ -248,17 +248,21 @@ const App = (() => {
   });
 
   // ---------- Streaming controls ----------
-  document.getElementById('start-streaming-btn').addEventListener('click', async () => {
+document.getElementById('start-streaming-btn').addEventListener('click', async () => {
+  try {
+    await API.post('/api/stream/start');
+    await Streaming.start(videoSettings ? videoSettings.fps : 30);
+    document.getElementById('start-streaming-btn').classList.add('hidden');
+    document.getElementById('end-streaming-btn').classList.remove('hidden');
+  } catch (e) {
+    alert('Failed to start streaming: ' + e.message);
+    Streaming.stop();
     try {
-      await Streaming.start(videoSettings ? videoSettings.fps : 30);
-      await API.post('/api/stream/start');
-      document.getElementById('start-streaming-btn').classList.add('hidden');
-      document.getElementById('end-streaming-btn').classList.remove('hidden');
-    } catch (e) {
-      alert('Failed to start streaming: ' + e.message);
-      Streaming.stop();
-    }
-  });
+      await API.post('/api/stream/stop');
+    } catch (_) {}
+  }
+});
+
   document.getElementById('end-streaming-btn').addEventListener('click', async () => {
     Streaming.stop();
     await API.post('/api/stream/stop');
