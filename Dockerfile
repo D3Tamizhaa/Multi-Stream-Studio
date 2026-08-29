@@ -16,7 +16,9 @@ RUN npm install --omit=dev
 
 COPY . .
 
-RUN mkdir -p /app/data /app/uploads
+RUN mkdir -p /app/uploads/images \
+    /app/uploads/videos \
+    /app/data
 
 ENV NODE_ENV=production
 
