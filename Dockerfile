@@ -24,4 +24,4 @@ ENV NODE_ENV=production
 
 EXPOSE 8080
 
-CMD ["npm", "start"]
+CMD ["sh", "-c", "mkdir -p /app/uploads/images /app/uploads/videos /app/data && npm start"]
