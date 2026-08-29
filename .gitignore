@@ -1,1 +1,10 @@
-
+node_modules/
+data/db.json
+uploads/images/*
+uploads/media/*
+uploads/fonts/*
+!uploads/images/.gitkeep
+!uploads/media/.gitkeep
+!uploads/fonts/.gitkeep
+*.log
+.DS_Store
