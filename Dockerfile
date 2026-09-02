@@ -1,7 +1,10 @@
 FROM node:20-alpine
 
 # Install FFmpeg
-RUN apk add --no-cache ffmpeg
+RUN apk add --no-cache \
+    ffmpeg \
+    fontconfig \
+    ttf-dejavu
 
 WORKDIR /app
 
