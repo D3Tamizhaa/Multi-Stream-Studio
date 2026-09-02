@@ -17,7 +17,7 @@ const RTMP_SERVERS = {
   YouTube: 'rtmp://a.rtmp.youtube.com/live2',
   Facebook: 'rtmps://live-api-s.facebook.com:443/rtmp',
   Twitch: 'rtmp://live.twitch.tv/app',
-  Kick: 'rtmps://fa723fc1b171.global-contribute.live-video.net'
+  Kick: 'rtmps://fa723fc1b171.global-contribute.live-video.net:443/app'
 };
 
 function escapeDrawtext(text) {
