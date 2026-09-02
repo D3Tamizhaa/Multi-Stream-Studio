@@ -140,76 +140,175 @@
     open({ title: 'Add Source', bodyNode: body, footer: [cancelBtn()] });
   }
 
-  function openAddSourceForm(type) {
-    const scene = store.selectedScene();
-    const body = document.createElement('div');
-    const nameEl = textInput('', 'Source name');
-    body.appendChild(field('Source Name', nameEl));
+function openAddSourceForm(type) {
+  const scene = store.selectedScene();
+  const body = document.createElement('div');
 
-    const errBox = document.createElement('div');
-    errBox.className = 'login-error hidden';
+  const nameEl = textInput('', 'Source name');
+  body.appendChild(field('Source Name', nameEl));
 
-    let fileInput, widthEl, heightEl, xEl, yEl, loopEl, textEl, fontFamilyEl, fontSizeEl, colorEl;
+  const errBox = document.createElement('div');
+  errBox.className = 'login-error hidden';
 
-    if (type === 'image') {
-      body.innerHTML += '<div class="modal-desc">Add images to your scene. Supported: PNG, JPG, JPEG, GIF, TGA, BMP</div>';
-      fileInput = document.createElement('input');
-      fileInput.type = 'file';
-      fileInput.accept = '.png,.jpg,.jpeg,.gif,.tga,.bmp';
-      body.appendChild(field('Image File', fileInput));
-      widthEl = numberInput(320); heightEl = numberInput(240);
-      body.appendChild(fieldRow(field('Width', widthEl), field('Height', heightEl)));
-      xEl = numberInput(0); yEl = numberInput(0);
-      body.appendChild(fieldRow(field('Position X', xEl), field('Position Y', yEl)));
-    } else if (type === 'media') {
-      body.innerHTML += '<div class="modal-desc">Add videos or audio clips to your scene. Supported: MP4, MP3, WEBM</div>';
-      fileInput = document.createElement('input');
-      fileInput.type = 'file';
-      fileInput.accept = '.mp4,.mp3,.webm';
-      body.appendChild(field('Local File', fileInput));
-      loopEl = document.createElement('input'); loopEl.type = 'checkbox';
-      const loopWrap = document.createElement('label');
-      loopWrap.style.display = 'flex'; loopWrap.style.alignItems = 'center'; loopWrap.style.gap = '6px';
-      loopWrap.appendChild(loopEl); loopWrap.appendChild(document.createTextNode('Loop'));
-      body.appendChild(loopWrap);
-      widthEl = numberInput(320); heightEl = numberInput(240);
-      body.appendChild(fieldRow(field('Width', widthEl), field('Height', heightEl)));
-      xEl = numberInput(0); yEl = numberInput(0);
-      body.appendChild(fieldRow(field('Position X', xEl), field('Position Y', yEl)));
-    } else if (type === 'text') {
-      body.innerHTML += '<div class="modal-desc">Add text to your scene and adjust its style.</div>';
-      fontFamilyEl = textInput('Sans');
-      body.appendChild(field('Font Family', fontFamilyEl));
-      fontSizeEl = numberInput(32);
-      body.appendChild(field('Font Size', fontSizeEl));
-      textEl = document.createElement('textarea'); textEl.rows = 3;
-      body.appendChild(field('Text', textEl));
-      colorEl = document.createElement('input'); colorEl.type = 'color'; colorEl.value = '#ffffff';
-      body.appendChild(field('Color', colorEl));
-      xEl = numberInput(40); yEl = numberInput(40);
-      body.appendChild(fieldRow(field('Position X', xEl), field('Position Y', yEl)));
-    }
+  let fileInput, widthEl, heightEl, xEl, yEl, loopEl;
+  let textEl, fontFamilyEl, fontSizeEl, colorEl;
 
-    body.appendChild(errBox);
+  if (type === 'image') {
+    const desc = document.createElement('div');
+    desc.className = 'modal-desc';
+    desc.textContent =
+      'Add images to your scene. Supported: PNG, JPG, JPEG, GIF, TGA, BMP';
+    body.appendChild(desc);
 
-    open({
-      title: `Add ${type[0].toUpperCase() + type.slice(1)} Source`,
-      bodyNode: body,
-      footer: [cancelBtn(), btn('Add Source', 'btn-primary', async () => {
+    fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.png,.jpg,.jpeg,.gif,.tga,.bmp';
+
+    body.appendChild(field('Image File', fileInput));
+
+    widthEl = numberInput(320);
+    heightEl = numberInput(240);
+
+    body.appendChild(
+      fieldRow(
+        field('Width', widthEl),
+        field('Height', heightEl)
+      )
+    );
+
+    xEl = numberInput(0);
+    yEl = numberInput(0);
+
+    body.appendChild(
+      fieldRow(
+        field('Position X', xEl),
+        field('Position Y', yEl)
+      )
+    );
+
+  } else if (type === 'media') {
+    const desc = document.createElement('div');
+    desc.className = 'modal-desc';
+    desc.textContent =
+      'Add videos or audio clips to your scene. Supported: MP4, MP3, WEBM';
+    body.appendChild(desc);
+
+    fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.mp4,.mp3,.webm';
+
+    body.appendChild(field('Local File', fileInput));
+
+    loopEl = document.createElement('input');
+    loopEl.type = 'checkbox';
+
+    const loopWrap = document.createElement('label');
+    loopWrap.style.display = 'flex';
+    loopWrap.style.alignItems = 'center';
+    loopWrap.style.gap = '6px';
+
+    loopWrap.appendChild(loopEl);
+    loopWrap.appendChild(document.createTextNode('Loop'));
+
+    body.appendChild(loopWrap);
+
+    widthEl = numberInput(320);
+    heightEl = numberInput(240);
+
+    body.appendChild(
+      fieldRow(
+        field('Width', widthEl),
+        field('Height', heightEl)
+      )
+    );
+
+    xEl = numberInput(0);
+    yEl = numberInput(0);
+
+    body.appendChild(
+      fieldRow(
+        field('Position X', xEl),
+        field('Position Y', yEl)
+      )
+    );
+
+  } else if (type === 'text') {
+    const desc = document.createElement('div');
+    desc.className = 'modal-desc';
+    desc.textContent = 'Add text to your scene and adjust its style.';
+    body.appendChild(desc);
+
+    fontFamilyEl = textInput('Sans');
+    body.appendChild(field('Font Family', fontFamilyEl));
+
+    fontSizeEl = numberInput(32);
+    body.appendChild(field('Font Size', fontSizeEl));
+
+    textEl = document.createElement('textarea');
+    textEl.rows = 3;
+    body.appendChild(field('Text', textEl));
+
+    colorEl = document.createElement('input');
+    colorEl.type = 'color';
+    colorEl.value = '#ffffff';
+    body.appendChild(field('Color', colorEl));
+
+    xEl = numberInput(40);
+    yEl = numberInput(40);
+
+    body.appendChild(
+      fieldRow(
+        field('Position X', xEl),
+        field('Position Y', yEl)
+      )
+    );
+  }
+
+  body.appendChild(errBox);
+
+  open({
+    title: `Add ${type[0].toUpperCase() + type.slice(1)} Source`,
+    bodyNode: body,
+
+    footer: [
+      cancelBtn(),
+
+      btn('Add Source', 'btn-primary', async () => {
         errBox.classList.add('hidden');
-        if (!nameEl.value.trim()) { errBox.textContent = 'Source name is required'; errBox.classList.remove('hidden'); return; }
+
+        // Validate source name
+        const sourceName = nameEl.value.trim();
+
+        if (!sourceName) {
+          errBox.textContent = 'Source name is required';
+          errBox.classList.remove('hidden');
+          return;
+        }
+
         try {
           const fd = new FormData();
+
           fd.append('type', type);
-          fd.append('name', nameEl.value.trim());
+          fd.append('name', sourceName);
+
           if (type === 'image' || type === 'media') {
-            if (!fileInput.files[0]) { throw new Error('Please choose a file'); }
+            if (!fileInput.files || !fileInput.files[0]) {
+              throw new Error('Please choose a file');
+            }
+
             fd.append('file', fileInput.files[0]);
             fd.append('width', widthEl.value);
             fd.append('height', heightEl.value);
             fd.append('x', xEl.value);
             fd.append('y', yEl.value);
-            if (type === 'media') fd.append('loop', loopEl.checked ? 'true' : 'false');
+
+            if (type === 'media') {
+              fd.append(
+                'loop',
+                loopEl.checked ? 'true' : 'false'
+              );
+            }
+
           } else if (type === 'text') {
             fd.append('text', textEl.value);
             fd.append('fontFamily', fontFamilyEl.value);
@@ -217,19 +316,31 @@
             fd.append('color', colorEl.value + 'FF');
             fd.append('x', xEl.value);
             fd.append('y', yEl.value);
-            fd.append('width', Math.max(120, textEl.value.length * fontSizeEl.value * 0.6));
-            fd.append('height', Number(fontSizeEl.value) * 1.4);
+            fd.append(
+              'width',
+              Math.max(
+                120,
+                textEl.value.length * fontSizeEl.value * 0.6
+              )
+            );
+            fd.append(
+              'height',
+              Number(fontSizeEl.value) * 1.4
+            );
           }
+
           await api.addSource(scene.id, fd);
           await store.refreshScenes();
           close();
+
         } catch (e) {
           errBox.textContent = e.message;
           errBox.classList.remove('hidden');
         }
-      })]
-    });
-  }
+      })
+    ]
+  });
+}
 
   // ---------------- Source Properties ----------------
   function openSourceProperties(source) {
