@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Multi Stream Studio</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<header id="app-header">
+  <button class="btn-icon" id="menu-btn" aria-label="Menu" title="Menu">&#9776;</button>
+  <div id="app-title">Multi Stream Studio</div>
+  <div id="user-menu">
+    <button class="btn-icon" id="username-btn">admin</button>
+    <button class="btn-icon" id="logout-btn" title="Logout">&#9211;</button>
+  </div>
+</header>
+
+<div id="menu-backdrop" hidden></div>
+<nav id="side-menu" hidden>
+  <ul>
+    <li data-view="editor">Editor</li>
+    <li class="menu-group">Settings
+      <ul>
+        <li data-view="settings-authorization">Authorization</li>
+        <li data-view="settings-stream">Stream</li>
+        <li data-view="settings-output">Output</li>
+        <li data-view="settings-audio">Audio</li>
+        <li data-view="settings-video">Video</li>
+        <li data-view="settings-advanced">Advanced</li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+<!-- ================= EDITOR ================= -->
+<main class="view" id="view-editor">
+
+  <section id="workspace-row">
+    <div id="workspace-container">
+      <div id="workspace"></div>
+    </div>
+    <button id="preview-toggle" class="btn-icon" title="Toggle preview (hide edit handles)">&#128065;</button>
+  </section>
+
+  <section id="production-panels">
+    <div class="panel" id="panel-scenes">
+      <div class="panel-header">
+        <span>Scenes</span>
+        <span class="actions">
+          <button class="btn-icon" id="scene-add-btn" title="Add Scene">+</button>
+          <button class="btn-icon" id="scene-remove-btn" title="Remove Scene">&minus;</button>
+        </span>
+      </div>
+      <ul class="panel-list" id="scene-list"></ul>
+    </div>
+
+    <div class="panel" id="panel-sources">
+      <div class="panel-header">
+        <span>Sources</span>
+        <span class="actions">
+          <button class="btn-icon" id="source-add-btn" title="Add Source">+</button>
+          <button class="btn-icon" id="source-remove-btn" title="Remove Source">&minus;</button>
+        </span>
+      </div>
+      <ul class="panel-list" id="source-list"></ul>
+    </div>
+
+    <div class="panel" id="panel-audio-mixer">
+      <div class="panel-header"><span>Audio Mixer</span></div>
+      <div id="mixer-strips" style="overflow-y:auto;"></div>
+    </div>
+  </section>
+
+  <section id="streaming-controls">
+    <div class="panel" id="panel-platforms">
+      <div class="panel-header">
+        <span>Platforms</span>
+        <span class="actions">
+          <button class="btn-icon" id="platform-add-btn" title="Add Platform">+</button>
+          <button class="btn-icon" id="platform-remove-btn" title="Remove Platform">&minus;</button>
+        </span>
+      </div>
+      <ul class="panel-list" id="platform-list"></ul>
+    </div>
+
+    <div class="panel" id="panel-controls">
+      <div class="panel-header"><span>Controls</span></div>
+      <div class="controls-body">
+        <button class="btn btn-primary btn-block" id="start-stream-btn">Start Streaming</button>
+        <button class="btn btn-danger btn-block" id="stop-stream-btn">End Streaming</button>
+        <p id="controls-error" class="error-text" hidden></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ================= SETTINGS: AUTHORIZATION ================= -->
+<main class="view settings-view" id="view-settings-authorization" hidden>
+  <h2>Authorization</h2>
+  <form id="form-authorization">
+    <div class="field-row"><label>Username <input type="text" id="auth-username"></label></div>
+    <div class="field-row"><label>Current Password <input type="password" id="auth-current-password" required></label></div>
+    <div class="field-row"><label>Password (New) <input type="password" id="auth-new-password" placeholder="Leave blank to keep current password"></label></div>
+    <p id="auth-error" class="error-text" hidden></p>
+    <div class="actions">
+      <button type="submit" class="btn btn-primary">Update</button>
+      <button type="button" class="btn" data-nav="editor">Cancel</button>
+    </div>
+  </form>
+</main>
+
+<!-- ================= SETTINGS: STREAM ================= -->
+<main class="view settings-view" id="view-settings-stream" hidden>
+  <h2>Stream</h2>
+  <form id="form-stream">
+    <div class="field-row">
+      <label>Service
+        <select id="stream-service">
+          <option value="youtube">YouTube</option>
+          <option value="facebook">Facebook</option>
+          <option value="twitch">Twitch</option>
+          <option value="kick">Kick</option>
+          <option value="rtmp">RTMP</option>
+        </select>
+      </label>
+    </div>
+    <div class="field-row" id="stream-servicename-row" hidden>
+      <label>Service Name <input type="text" id="stream-servicename" placeholder="e.g. My Backup Server"></label>
+    </div>
+    <div class="field-row">
+      <label>Server <input type="text" id="stream-server"></label>
+    </div>
+    <div class="field-row">
+      <label>Stream Key
+        <div style="display:flex; gap:6px;">
+          <input type="password" id="stream-key" style="flex:1;">
+          <button type="button" class="btn btn-sm" id="stream-key-toggle">Show</button>
+        </div>
+      </label>
+    </div>
+    <p id="stream-error" class="error-text" hidden></p>
+    <div class="actions">
+      <button type="submit" class="btn btn-primary" id="stream-submit-btn">Add Service</button>
+      <button type="button" class="btn" data-nav="editor">Cancel</button>
+    </div>
+  </form>
+</main>
+
+<!-- ================= SETTINGS: OUTPUT ================= -->
+<main class="view settings-view" id="view-settings-output" hidden>
+  <h2>Output</h2>
+  <div class="field-row">
+    <label>Output Mode
+      <select id="output-mode">
+        <option value="simple">Simple</option>
+        <option value="advanced">Advanced</option>
+      </select>
+    </label>
+  </div>
+
+  <div id="output-simple">
+    <h3 class="hint">Video</h3>
+    <div class="two-col">
+      <label>Encoder <select id="simple-video-encoder"></select></label>
+      <label>Bitrate (kbps) <input type="number" id="simple-video-bitrate" min="100" step="100"></label>
+    </div>
+    <h3 class="hint">Audio</h3>
+    <div class="two-col">
+      <label>Encoder <select id="simple-audio-encoder"></select></label>
+      <label>Bitrate (kbps) <input type="number" id="simple-audio-bitrate" min="32" step="32"></label>
+    </div>
+    <div class="field-row"><label>Preset <select id="simple-preset"></select></label></div>
+  </div>
+
+  <div id="output-advanced" hidden>
+    <h3 class="hint">Video</h3>
+    <div class="field-row"><label>Encoder <select id="adv-video-encoder"></select></label></div>
+    <div class="two-col">
+      <label>Rate Control <select id="adv-rate-control"></select></label>
+      <label id="adv-bitrate-label">Bitrate (kbps) <input type="number" id="adv-video-bitrate"></label>
+    </div>
+    <div class="two-col">
+      <label id="adv-keyframe-row">Keyframe Interval (sec) <input type="number" id="adv-keyframe" min="0" step="1"></label>
+      <label>Preset <select id="adv-preset"></select></label>
+    </div>
+    <div class="two-col">
+      <label>Profile <select id="adv-profile"></select></label>
+      <label>Tune <select id="adv-tune"></select></label>
+    </div>
+    <h3 class="hint">Audio</h3>
+    <div class="two-col">
+      <label>Encoder <select id="adv-audio-encoder"></select></label>
+      <label>Bitrate (kbps) <input type="number" id="adv-audio-bitrate" min="32" step="32"></label>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" id="output-apply-btn">Apply</button>
+    <button class="btn" data-nav="editor">Cancel</button>
+  </div>
+</main>
+
+<!-- ================= SETTINGS: AUDIO ================= -->
+<main class="view settings-view" id="view-settings-audio" hidden>
+  <h2>Audio</h2>
+  <div class="field-row">
+    <label>Sample Rate
+      <select id="audio-sample-rate">
+        <option value="44100">44.1 kHz</option>
+        <option value="48000">48 kHz</option>
+      </select>
+    </label>
+  </div>
+  <div class="field-row">
+    <label>Channels
+      <select id="audio-channels">
+        <option>Mono</option>
+        <option>Stereo</option>
+        <option>5.1 surround</option>
+        <option>7.1 surround</option>
+      </select>
+    </label>
+  </div>
+  <div class="actions">
+    <button class="btn btn-primary" id="audio-apply-btn">Apply</button>
+    <button class="btn" data-nav="editor">Cancel</button>
+  </div>
+</main>
+
+<!-- ================= SETTINGS: VIDEO ================= -->
+<main class="view settings-view" id="view-settings-video" hidden>
+  <h2>Video</h2>
+  <div class="field-row">
+    <label>Output Resolution
+      <select id="video-resolution">
+        <option value="1920x1080">1920x1080</option>
+        <option value="1280x720">1280x720</option>
+        <option value="852x480">852x480</option>
+        <option value="640x360">640x360</option>
+        <option value="Custom">Custom</option>
+      </select>
+    </label>
+  </div>
+  <div class="two-col" id="video-custom-row" hidden>
+    <label>Width <input type="number" id="video-custom-width" min="2"></label>
+    <label>Height <input type="number" id="video-custom-height" min="2"></label>
+  </div>
+  <div class="field-row">
+    <label>FPS
+      <select id="video-fps">
+        <option>10</option><option>20</option><option>24</option><option>25</option>
+        <option>29.97</option><option>30</option><option>48</option><option>59.94</option><option>60</option>
+      </select>
+    </label>
+  </div>
+  <div class="actions">
+    <button class="btn btn-primary" id="video-apply-btn">Apply</button>
+    <button class="btn" data-nav="editor">Cancel</button>
+  </div>
+</main>
+
+<!-- ================= SETTINGS: ADVANCED ================= -->
+<main class="view settings-view" id="view-settings-advanced" hidden>
+  <h2>Advanced</h2>
+  <div class="field-row">
+    <label>Automatically Reconnect
+      <select id="advanced-reconnect">
+        <option value="true">Enable</option>
+        <option value="false">Disable</option>
+      </select>
+    </label>
+  </div>
+  <div class="field-row">
+    <label>Network (bind IP, optional) <input type="text" id="advanced-network-ip" placeholder="0.0.0.0"></label>
+  </div>
+  <div class="actions">
+    <button class="btn btn-primary" id="advanced-apply-btn">Apply</button>
+    <button class="btn" data-nav="editor">Cancel</button>
+  </div>
+</main>
+
+<footer id="status-bar">
+  <span><span class="status-dot"></span><span id="stream-status">Offline</span></span>
+  <span class="mono">Uptime: <span id="uptime">00:00:00</span></span>
+</footer>
+
+<!-- Modal root -->
+<div id="modal-root"></div>
+
+<script src="/js/api.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/workspace.js"></script>
+<script src="/js/editor.js"></script>
+<script src="/js/settings.js"></script>
+</body>
+</html>
