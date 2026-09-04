@@ -519,31 +519,78 @@ const App = (() => {
     return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
-  async function init() {
+async function init() {
+  try {
     wireHeader();
     wireControls();
     wirePreviewToggle();
+
     Workspace.init(document.getElementById('workspace'));
+
     Workspace.setHandlers({
       change: async (sourceId, rect) => {
         const scene = activeScene();
-        await api.put(`/api/scenes/${scene.id}/sources/${sourceId}`, rect);
+        if (!scene) return;
+
+        await api.put(
+          `/api/scenes/${scene.id}/sources/${sourceId}`,
+          rect
+        );
+
         const src = scene.sources.find(s => s.id === sourceId);
         if (src) Object.assign(src, rect);
       },
-      select: (id) => { state.selectedSourceId = id; renderSources(); }
+
+      select: (id) => {
+        state.selectedSourceId = id;
+        renderSources();
+      }
     });
 
-    await reloadCanvasSize();
-    await loadScenes();
-    await reloadPlatforms();
+    // Show editor immediately.
+    goToView('editor');
 
-    const status = await api.get('/api/stream/status');
-    applyStatus(status);
+    // Load data independently so one failed API doesn't destroy the UI.
+    try {
+      await reloadCanvasSize();
+    } catch (err) {
+      console.error('Failed to load video settings:', err);
+    }
+
+    try {
+      await loadScenes();
+    } catch (err) {
+      console.error('Failed to load scenes:', err);
+    }
+
+    try {
+      await reloadPlatforms();
+    } catch (err) {
+      console.error('Failed to load platforms:', err);
+    }
+
+    try {
+      const status = await api.get('/api/stream/status');
+      applyStatus(status);
+    } catch (err) {
+      console.error('Failed to load stream status:', err);
+    }
+
     connectStatusSocket();
 
+  } catch (err) {
+    console.error('Studio initialization failed:', err);
+
+    // Never leave the application blank.
     goToView('editor');
+
+    const sceneList = document.getElementById('scene-list');
+    if (sceneList && !sceneList.children.length) {
+      sceneList.innerHTML =
+        '<li class="empty-hint">Studio loaded. Some data could not be loaded.</li>';
+    }
   }
+}
 
   return { goToView, reloadPlatforms, reloadCanvasSize, init };
 })();
