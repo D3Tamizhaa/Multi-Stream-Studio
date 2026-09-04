@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multi Stream Studio</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button id="menu-btn" class="icon-btn" title="Menu" aria-haspopup="true">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <nav id="menu-dropdown" class="dropdown" hidden>
+      <a href="#" data-view="editor" class="dropdown-item">Editor</a>
+      <div class="dropdown-sep"></div>
+      <div class="dropdown-label">Settings</div>
+      <a href="#" data-view="settings-auth" class="dropdown-item indent">Authorization</a>
+      <a href="#" data-view="settings-stream" class="dropdown-item indent">Stream</a>
+      <a href="#" data-view="settings-output" class="dropdown-item indent">Output</a>
+      <a href="#" data-view="settings-audio" class="dropdown-item indent">Audio</a>
+      <a href="#" data-view="settings-video" class="dropdown-item indent">Video</a>
+      <a href="#" data-view="settings-advanced" class="dropdown-item indent">Advanced</a>
+    </nav>
+  </div>
+
+  <div class="topbar-center">Multi Stream Studio</div>
+
+  <div class="topbar-right">
+    <button id="user-btn" class="user-chip" aria-haspopup="true">
+      <span id="username-label">admin</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <nav id="user-dropdown" class="dropdown dropdown-right" hidden>
+      <a href="#" id="user-menu-username" class="dropdown-item">Account settings</a>
+      <a href="#" id="user-menu-logout" class="dropdown-item">Logout</a>
+    </nav>
+  </div>
+</header>
+
+<main id="app">
+
+  <!-- ============ EDITOR VIEW ============ -->
+  <section id="view-editor" class="view">
+
+    <!-- Main Workspace -->
+    <div class="workspace-row">
+      <div class="workspace-wrap">
+        <div id="workspace" class="workspace"></div>
+        <button id="preview-toggle" class="preview-toggle" title="Toggle preview">
+          <svg id="preview-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="2"/>
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Production Panels -->
+    <div class="panels-row">
+      <div class="panel" id="panel-scenes">
+        <div class="panel-header">
+          <span>Scenes</span>
+          <div class="panel-actions">
+            <button class="icon-btn sm" id="scene-add" title="Add Scene">＋</button>
+            <button class="icon-btn sm" id="scene-remove" title="Remove Scene">－</button>
+          </div>
+        </div>
+        <ul id="scene-list" class="list"></ul>
+      </div>
+
+      <div class="panel" id="panel-sources">
+        <div class="panel-header">
+          <span>Sources</span>
+          <div class="panel-actions">
+            <button class="icon-btn sm" id="source-add" title="Add Source">＋</button>
+            <button class="icon-btn sm" id="source-remove" title="Remove Source">－</button>
+          </div>
+        </div>
+        <ul id="source-list" class="list"></ul>
+      </div>
+
+      <div class="panel" id="panel-audio">
+        <div class="panel-header"><span>Audio Mixer</span></div>
+        <div id="audio-mixer" class="mixer"></div>
+      </div>
+    </div>
+
+    <!-- Streaming Controls -->
+    <div class="panels-row">
+      <div class="panel" id="panel-platforms">
+        <div class="panel-header">
+          <span>Platforms</span>
+          <div class="panel-actions">
+            <button class="icon-btn sm" id="platform-add" title="Add Platform">＋</button>
+            <button class="icon-btn sm" id="platform-remove" title="Remove Platform">－</button>
+          </div>
+        </div>
+        <ul id="platform-list" class="list"></ul>
+      </div>
+
+      <div class="panel" id="panel-controls">
+        <div class="panel-header"><span>Controls</span></div>
+        <div class="controls-body">
+          <button id="btn-start-stream" class="btn btn-primary btn-block">Start Streaming</button>
+          <button id="btn-end-stream" class="btn btn-danger btn-block" hidden>End Streaming</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Bar -->
+    <footer class="statusbar">
+      <div class="status-item">Uptime: <span id="status-uptime">00:00:00</span></div>
+      <div class="status-item">
+        Status: <span id="status-dot" class="status-dot idle"></span>
+        <span id="status-text">Idle</span>
+      </div>
+    </footer>
+  </section>
+
+  <!-- ============ SETTINGS: AUTHORIZATION ============ -->
+  <section id="view-settings-auth" class="view settings-view" hidden>
+    <h2>Authorization</h2>
+    <form id="form-auth" class="settings-form">
+      <label>Username</label>
+      <input type="text" id="auth-username" required>
+      <label>Current Password</label>
+      <input type="password" id="auth-current-password" required>
+      <label>Password (New)</label>
+      <input type="password" id="auth-new-password" placeholder="Leave blank to keep current password">
+      <div id="auth-error" class="form-error" hidden></div>
+      <div class="settings-actions">
+        <button type="submit" class="btn btn-primary">Update</button>
+        <button type="button" class="btn btn-ghost" data-cancel>Cancel</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ============ SETTINGS: STREAM ============ -->
+  <section id="view-settings-stream" class="view settings-view" hidden>
+    <h2>Stream</h2>
+    <form id="form-stream" class="settings-form">
+      <label>Service</label>
+      <select id="stream-service">
+        <option>YouTube</option>
+        <option>Facebook</option>
+        <option>Twitch</option>
+        <option>Kick</option>
+        <option>RTMP</option>
+      </select>
+
+      <div id="rtmp-name-row" hidden>
+        <label>Service Name</label>
+        <input type="text" id="stream-rtmp-name" placeholder="e.g. My Custom RTMP Server">
+      </div>
+
+      <label>Server</label>
+      <input type="text" id="stream-server" readonly>
+
+      <label>Stream Key</label>
+      <div class="input-with-btn">
+        <input type="password" id="stream-key">
+        <button type="button" id="stream-key-show" class="btn btn-ghost sm">Show</button>
+      </div>
+
+      <div id="stream-error" class="form-error" hidden></div>
+      <div class="settings-actions">
+        <button type="submit" class="btn btn-primary">Add Service</button>
+        <button type="button" class="btn btn-ghost" data-cancel>Cancel</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ============ SETTINGS: OUTPUT ============ -->
+  <section id="view-settings-output" class="view settings-view" hidden>
+    <h2>Output</h2>
+    <form id="form-output" class="settings-form">
+      <label>Output Mode</label>
+      <select id="output-mode">
+        <option value="simple">Simple</option>
+        <option value="advanced">Advanced</option>
+      </select>
+
+      <div id="output-simple">
+        <h3>Video</h3>
+        <label>Encoder</label>
+        <select id="simple-video-encoder"></select>
+        <label>Bitrate (kbps)</label>
+        <input type="number" id="simple-video-bitrate" min="500" step="100">
+        <h3>Audio</h3>
+        <label>Encoder</label>
+        <select id="simple-audio-encoder"></select>
+        <label>Bitrate (kbps)</label>
+        <input type="number" id="simple-audio-bitrate" min="64" step="16">
+        <label>Preset</label>
+        <select id="simple-preset"></select>
+      </div>
+
+      <div id="output-advanced" hidden>
+        <h3>Audio</h3>
+        <label>Encoder</label>
+        <select id="adv-audio-encoder"></select>
+        <label>Bitrate (kbps)</label>
+        <input type="number" id="adv-audio-bitrate" min="64" step="16">
+
+        <h3>Video</h3>
+        <label>Encoder</label>
+        <select id="adv-video-encoder"></select>
+        <label>Rate Control</label>
+        <select id="adv-rate-control"></select>
+        <label>Bitrate (kbps)</label>
+        <input type="number" id="adv-video-bitrate" min="500" step="100">
+        <label>Keyframe Interval (s)</label>
+        <input type="number" id="adv-keyframe-interval" min="1" step="1">
+        <label>Preset</label>
+        <select id="adv-preset"></select>
+        <label>Profile</label>
+        <select id="adv-profile"></select>
+        <label>Tune</label>
+        <select id="adv-tune"></select>
+      </div>
+
+      <div class="settings-actions">
+        <button type="submit" class="btn btn-primary">Apply</button>
+        <button type="button" class="btn btn-ghost" data-cancel>Cancel</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ============ SETTINGS: AUDIO ============ -->
+  <section id="view-settings-audio" class="view settings-view" hidden>
+    <h2>Audio</h2>
+    <form id="form-audio" class="settings-form">
+      <label>Sample Rate</label>
+      <select id="audio-sample-rate">
+        <option value="44100">44.1 kHz</option>
+        <option value="48000">48 kHz</option>
+      </select>
+      <label>Channels</label>
+      <select id="audio-channels">
+        <option value="mono">Mono</option>
+        <option value="stereo">Stereo</option>
+        <option value="5.1 surround">5.1 surround</option>
+        <option value="7.1 surround">7.1 surround</option>
+      </select>
+      <div class="settings-actions">
+        <button type="submit" class="btn btn-primary">Apply</button>
+        <button type="button" class="btn btn-ghost" data-cancel>Cancel</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ============ SETTINGS: VIDEO ============ -->
+  <section id="view-settings-video" class="view settings-view" hidden>
+    <h2>Video</h2>
+    <form id="form-video" class="settings-form">
+      <label>Output Resolution</label>
+      <select id="video-resolution">
+        <option value="1920x1080">1920×1080</option>
+        <option value="1280x720">1280×720</option>
+        <option value="852x480">852×480</option>
+        <option value="640x360">640×360</option>
+        <option value="custom">Custom</option>
+      </select>
+      <div id="video-custom-row" hidden>
+        <label>Custom Width</label>
+        <input type="number" id="video-custom-width" min="128" step="2">
+        <label>Custom Height</label>
+        <input type="number" id="video-custom-height" min="128" step="2">
+      </div>
+      <label>FPS</label>
+      <select id="video-fps">
+        <option>10</option><option>20</option><option>24</option><option>25</option>
+        <option>29.97</option><option>30</option><option>48</option><option>59.94</option><option>60</option>
+      </select>
+      <div class="settings-actions">
+        <button type="submit" class="btn btn-primary">Apply</button>
+        <button type="button" class="btn btn-ghost" data-cancel>Cancel</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ============ SETTINGS: ADVANCED ============ -->
+  <section id="view-settings-advanced" class="view settings-view" hidden>
+    <h2>Advanced</h2>
+    <form id="form-advanced" class="settings-form">
+      <label class="checkbox-row"><input type="checkbox" id="advanced-auto-reconnect"> Automatically Reconnect</label>
+      <label>Network Bind IP</label>
+      <input type="text" id="advanced-network" placeholder="default">
+      <div class="settings-actions">
+        <button type="submit" class="btn btn-primary">Apply</button>
+        <button type="button" class="btn btn-ghost" data-cancel>Cancel</button>
+      </div>
+    </form>
+  </section>
+
+</main>
+
+<!-- ============ MODAL: ADD SOURCE ============ -->
+<div id="modal-source" class="modal-overlay" hidden>
+  <div class="modal">
+    <div class="modal-tabs">
+      <button class="tab-btn active" data-type="image">Image</button>
+      <button class="tab-btn" data-type="media">Media</button>
+      <button class="tab-btn" data-type="text">Text</button>
+    </div>
+
+    <p id="source-desc" class="modal-desc">Add images to your scene. Supported formats: PNG, JPG, JPEG, GIF, TGA, BMP</p>
+
+    <form id="form-source">
+      <label>Source Name</label>
+      <input type="text" id="source-name" required>
+
+      <div id="source-image-fields" class="source-fields">
+        <label>Image File</label>
+        <input type="file" id="source-image-file" accept=".png,.jpg,.jpeg,.gif,.tga,.bmp">
+        <div id="source-image-progress" class="upload-progress" hidden><div class="upload-progress-bar"></div></div>
+      </div>
+
+      <div id="source-media-fields" class="source-fields" hidden>
+        <label>Local File</label>
+        <input type="file" id="source-media-file" accept=".mp4,.mp3,.webm">
+        <div id="source-media-progress" class="upload-progress" hidden><div class="upload-progress-bar"></div></div>
+        <label class="checkbox-row"><input type="checkbox" id="source-media-loop"> Loop</label>
+      </div>
+
+      <div id="source-text-fields" class="source-fields" hidden>
+        <label>Text</label>
+        <textarea id="source-text-value" rows="2"></textarea>
+        <label>Font Family</label>
+        <input type="text" id="source-text-font" value="Arial">
+        <label>Font Size</label>
+        <input type="number" id="source-text-size" value="32" min="6">
+        <label>Color</label>
+        <input type="color" id="source-text-color" value="#ffffff">
+      </div>
+
+      <div class="grid-2">
+        <div><label>Width</label><input type="number" id="source-width" value="320"></div>
+        <div><label>Height</label><input type="number" id="source-height" value="180"></div>
+        <div><label>Position X</label><input type="number" id="source-x" value="0"></div>
+        <div><label>Position Y</label><input type="number" id="source-y" value="0"></div>
+      </div>
+
+      <div id="source-error" class="form-error" hidden></div>
+      <div class="settings-actions">
+        <button type="submit" class="btn btn-primary">Add Source</button>
+        <button type="button" class="btn btn-ghost" id="source-close">Close</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ MODAL: SOURCE PROPERTIES ============ -->
+<div id="modal-props" class="modal-overlay" hidden>
+  <div class="modal">
+    <h3 id="props-title">Properties</h3>
+    <form id="form-props">
+      <div class="grid-2">
+        <div><label>Width</label><input type="number" id="props-width"></div>
+        <div><label>Height</label><input type="number" id="props-height"></div>
+        <div><label>Position X</label><input type="number" id="props-x"></div>
+        <div><label>Position Y</label><input type="number" id="props-y"></div>
+      </div>
+      <div id="props-text-fields" hidden>
+        <label>Text</label>
+        <textarea id="props-text-value" rows="2"></textarea>
+        <label>Font Family</label>
+        <input type="text" id="props-text-font">
+        <label>Font Size</label>
+        <input type="number" id="props-text-size">
+        <label>Color</label>
+        <input type="color" id="props-text-color">
+      </div>
+      <div id="props-media-fields" hidden>
+        <label class="checkbox-row"><input type="checkbox" id="props-media-loop"> Loop</label>
+      </div>
+      <div class="settings-actions">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-ghost" id="props-close">Close</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ MODAL: SCENE PROPERTIES (rename) ============ -->
+<div id="modal-scene-props" class="modal-overlay" hidden>
+  <div class="modal modal-sm">
+    <h3>Scene Properties</h3>
+    <form id="form-scene-props">
+      <label>Scene Name</label>
+      <input type="text" id="scene-props-name" required>
+      <div id="scene-props-error" class="form-error" hidden></div>
+      <div class="settings-actions">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-ghost" id="scene-props-close">Close</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ MODAL: ADD SCENE ============ -->
+<div id="modal-add-scene" class="modal-overlay" hidden>
+  <div class="modal modal-sm">
+    <h3>Add Scene</h3>
+    <form id="form-add-scene">
+      <label>Scene Name</label>
+      <input type="text" id="add-scene-name" required>
+      <div id="add-scene-error" class="form-error" hidden></div>
+      <div class="settings-actions">
+        <button type="submit" class="btn btn-primary">Add Scene</button>
+        <button type="button" class="btn btn-ghost" id="add-scene-close">Close</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ MODAL: PLATFORM EDIT ============ -->
+<div id="modal-platform-edit" class="modal-overlay" hidden>
+  <div class="modal modal-sm">
+    <h3 id="platform-edit-title">Edit Platform</h3>
+    <form id="form-platform-edit">
+      <div id="platform-edit-server-row">
+        <label>Server</label>
+        <input type="text" id="platform-edit-server">
+      </div>
+      <label>Stream Key</label>
+      <div class="input-with-btn">
+        <input type="password" id="platform-edit-key">
+        <button type="button" id="platform-edit-key-show" class="btn btn-ghost sm">Show</button>
+      </div>
+      <div class="settings-actions">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-ghost" id="platform-edit-close">Close</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/workspace.js"></script>
+<script src="/js/settings.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>
