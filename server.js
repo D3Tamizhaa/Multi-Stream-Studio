@@ -38,7 +38,7 @@ app.use('/api/stream', requireAuth, require('./routes/stream'));
 
 // SPA fallback: login page at root, studio app behind auth check done client-side
 // (studio.html itself calls /api/auth/me and redirects to / if not authenticated).
-app.get('/studio', (req, res) => {
+app.get('/studio', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'studio.html'));
 });
 app.get('/', (req, res) => {
